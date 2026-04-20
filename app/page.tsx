@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-black text-white">
+    <main className="min-h-screen flex items-center justify-center">
       <h1 className="text-4xl font-bold">fear.social</h1>
     </main>
   );
