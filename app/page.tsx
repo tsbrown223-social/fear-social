@@ -4,7 +4,7 @@ export default function Home() {
 
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-8 py-6">
-        <h1 className="text-xl font-semibold">fear.social v2<h1 className="text-4xl font-bold">fear.social v2</h1>ocial</h1>
+        <span className="text-xl font-semibold">fear.social v2</span>
         <div className="flex gap-8 items-center">
           <a href="#" className="text-sm">Services</a>
           <a href="#" className="text-sm">About</a>
