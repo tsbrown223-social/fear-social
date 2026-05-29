@@ -1,17 +1,20 @@
 # fear.social
 
+Founder community platform prototype built with Vite and React.
+
 ## Development
 
 ```bash
+npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy
+## Build
 
 ```bash
-npm run deploy
+npm run build
 ```
 
-Deploys to Cloudflare Pages via Wrangler.
+The static output is written to `dist/` for Cloudflare Pages.
