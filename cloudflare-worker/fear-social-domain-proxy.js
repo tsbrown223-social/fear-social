@@ -1,7 +1,7 @@
 export default {
   async fetch(request) {
     const incomingUrl = new URL(request.url);
-    const pagesUrl = new URL(incomingUrl.pathname + incomingUrl.search, "https://606df6a2.fear-social.pages.dev");
+    const pagesUrl = new URL(incomingUrl.pathname + incomingUrl.search, "https://fear-social.pages.dev");
 
     const proxyRequest = new Request(pagesUrl, request);
     proxyRequest.headers.set("Host", pagesUrl.hostname);
