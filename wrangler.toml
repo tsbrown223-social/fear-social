@@ -6,4 +6,5 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "fear-social-db"
-database_id = "e7bc6f80-e711-461f-a4cd-97daab9ed7d2"
+database_id = "046cdb1b-68c0-45c4-b4a6-e9e40d980bfa"
+migrations_dir = "migrations"

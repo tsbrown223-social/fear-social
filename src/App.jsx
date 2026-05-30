@@ -7,7 +7,7 @@ const C = {
   bg:"#F0F2F5", card:"#FFFFFF", border:"#E2E6EE", accent:"#16C74E",
   aLight:"#E8FBF0", aSoft:"#B8F5CE", text:"#0D0F14", tSoft:"#2A2D38",
   muted:"#6B7280", dim:"#9CA3AF", dark:"#0C0D10", dCard:"#1A1D24",
-  dBorder:"#252830", coral:"#E53935", navy:"#1E2235",
+  dBorder:"#252830", coral:"#E53935",
   ind:{
     Tech:{bg:"#EEF2FF",color:"#3730A3"}, Finance:{bg:"#E8FBF0",color:"#14532D"},
     Fashion:{bg:"#FDF2F8",color:"#9D174D"}, Food:{bg:"#FFF7ED",color:"#C2410C"},
@@ -15,7 +15,7 @@ const C = {
     Networking:{bg:"#FFF7ED",color:"#C2410C"}, Growth:{bg:"#F0FDFA",color:"#0F766E"},
   }
 };
-const SS = { Idea:{bg:"#ECEEF4",color:"#1E2235"}, Building:{bg:"#E8FBF0",color:"#16C74E"}, Launched:{bg:"#F3F4F6",color:"#6B7280"} };
+const fmt=n=>Number(n||0).toLocaleString();
 
 const css = `
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -24,14 +24,12 @@ body{background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Inter','Se
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;}
 input,textarea,select{outline:none;font-family:inherit;}button{font-family:inherit;cursor:pointer;}::placeholder{color:${C.dim};}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(22,199,78,0.3);}50%{box-shadow:0 0 50px rgba(22,199,78,0.7);}}
 @keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 @keyframes popIn{from{opacity:0;transform:scale(0.85);}to{opacity:1;transform:scale(1);}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);}}
 @keyframes heartbeat{0%,100%{transform:scale(1);}25%{transform:scale(1.4);}50%{transform:scale(1.1);}75%{transform:scale(1.3);}}
-@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -39,7 +37,8 @@ input,textarea,select{outline:none;font-family:inherit;}button{font-family:inher
 .bs{transition:all 0.15s ease;}.bs:hover{transform:translateY(-2px);filter:brightness(1.08);}.bs:active{transform:scale(0.96);}
 .nl:hover{color:#16C74E!important;}
 .if:focus{border-color:#16C74E!important;box-shadow:0 0 0 3px rgba(22,199,78,0.18)!important;}
-.rh:hover{background:rgba(22,199,78,0.04);}
+input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-results-button,input[type="search"]::-webkit-search-results-decoration{display:none;}
+.desktop-app-search{background-image:none!important;}
 .uh:hover{background:rgba(22,199,78,0.06);border-radius:10px;}
 .mobile-bottom-nav{display:none;}
 @media(max-width:980px){
@@ -189,7 +188,6 @@ const ToastCtx=({toasts,remove})=>(
 );
 
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
-const fmt=n=>Number(n||0).toLocaleString();
 
 const POSTS=[
   {id:1,user:"Maya Kim",handle:"@mayabuilds",av:"MK",tag:"Tech",stage:"Launched",time:"2h",content:"Sharing a build note from the demo feed. Replace this with a real post once you publish from your profile.",likes:0,comments:[],saved:false,liked:false},
@@ -229,26 +227,9 @@ const INITIAL_MESSAGES=[
   {id:3,name:"Aisha P.",av:"AP",online:true,thread:["That mentor session was excellent.", "I booked Alexis next week too."],draft:""},
 ];
 
-function Navbar({view,setView,screen,setScreen,notify}){
+function Navbar({setScreen,notify}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
-  if(screen==="app") return(
-    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:`1px solid ${C.border}`,padding:"0 40px",display:"flex",alignItems:"center",height:64,gap:8}}>
-      <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:21,color:C.text,letterSpacing:0,marginRight:32,cursor:"pointer"}} onClick={()=>setScreen("landing")}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
-      <div style={{display:"flex",gap:2}}>
-        {["feed","discover","events","mentors","messages"].map(v=>(
-          <button key={v} onClick={()=>setView(v)} className="bs nl" style={{background:view===v?C.aLight:"none",border:"none",padding:"7px 13px",fontSize:13,fontWeight:view===v?700:500,color:view===v?C.accent:C.muted,borderRadius:8,textTransform:"capitalize",transition:"all 0.15s"}}>{v}</button>
-        ))}
-      </div>
-      <div style={{marginLeft:"auto",display:"flex",gap:10,alignItems:"center"}}>
-        <button onClick={()=>notify("4 new notifications","info")} className="bs" style={{background:"none",border:"none",fontSize:19,cursor:"pointer",position:"relative"}}>
-          🔔<span style={{position:"absolute",top:-3,right:-3,width:16,height:16,background:C.coral,borderRadius:"50%",fontSize:9,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>4</span>
-        </button>
-        <button onClick={()=>setScreen("landing")} style={{background:"none",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 12px",fontSize:12,color:C.muted,cursor:"pointer"}} className="bs">Sign out</button>
-        <Av i="YO" size={36} grad online style={{cursor:"pointer"}}/>
-      </div>
-    </div>
-  );
   return(
     <div className="landing-nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:scrolled?"rgba(13,15,20,0.97)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?`1px solid rgba(255,255,255,0.07)`:"none",padding:"0 48px",display:"flex",alignItems:"center",height:68,transition:"all 0.3s"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:22,color:"#fff",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
@@ -402,132 +383,6 @@ function LandingPage({setScreen,notify}){
   );
 }
 
-function FeedView({notify}){
-  const [posts,setPosts]=useState(POSTS);
-  const [filter,setFilter]=useState("All");
-  const [text,setText]=useState("");
-  const [expandComments,setExpandComments]=useState({});
-  const [commentInputs,setCommentInputs]=useState({});
-  const toggleLike=id=>setPosts(ps=>ps.map(p=>p.id===id?{...p,likes:p.liked?p.likes-1:p.likes+1,liked:!p.liked}:p));
-  const toggleSave=id=>{setPosts(ps=>ps.map(p=>p.id===id?{...p,saved:!p.saved}:p));notify("Post saved!");};
-  const addComment=id=>{const txt=commentInputs[id];if(!txt?.trim())return;setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:"You",av:"YO",text:txt,time:"Just now"}]}:p));setCommentInputs(ci=>({...ci,[id]:""}));notify("Comment posted!");};
-  const submitPost=()=>{if(!text.trim())return;setPosts(ps=>[{id:Date.now(),user:"You",handle:"@yourhandle",av:"YO",tag:"Tech",stage:"Building",time:"Just now",content:text,likes:0,comments:[],saved:false,liked:false,isNew:true},...ps]);setText("");notify("Post published! 🚀");};
-  return(
-    <div style={{display:"grid",gridTemplateColumns:"260px 1fr 300px",gap:24,padding:"32px 40px",maxWidth:1280,margin:"0 auto",alignItems:"start"}}>
-      <div style={{position:"sticky",top:80,display:"flex",flexDirection:"column",gap:14}}>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18}}><Av i="YO" size={50} grad online/><div><div style={{fontWeight:700,color:C.text,fontSize:15}}>Your Name</div><div style={{fontSize:12,color:C.muted}}>@yourhandle · Denver, CO</div></div></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",borderTop:`1px solid ${C.border}`,paddingTop:14}}>
-            {[["0","Posts"],["0","Followers"],["0","Following"]].map(([v,l])=><div key={l} style={{textAlign:"center",cursor:"pointer",padding:"8px 4px",borderRadius:8}} className="uh" onClick={()=>notify(`${l}: ${v}`)}><div style={{fontWeight:700,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{l}</div></div>)}
-          </div>
-        </div>
-        <div style={{background:GR,borderRadius:16,padding:20}}>
-          <div style={{fontSize:10,fontWeight:700,letterSpacing:1.5,color:"rgba(255,255,255,0.55)",textTransform:"uppercase",marginBottom:6}}>FEAR Pro</div>
-          <div style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:6,lineHeight:1.4}}>Unlock mentors & more</div>
-          <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",marginBottom:16}}>Premium tools are planned and not billed yet.</div>
-          <button onClick={()=>notify("Premium waitlist noted","info")} className="bs" style={{background:"#fff",color:C.accent,border:"none",borderRadius:8,padding:"10px 16px",fontWeight:800,fontSize:13,width:"100%",cursor:"pointer"}}>Join waitlist →</button>
-        </div>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:C.text,marginBottom:12}}>🔥 Trending</div>
-          {["#BuildInPublic","#FounderLife","#FirstRevenue","#CoFounderSearch"].map((t,i)=>(
-            <div key={t} onClick={()=>notify(`Filtering by ${t}`)} style={{display:"flex",justifyContent:"space-between",marginBottom:10,cursor:"pointer",padding:"4px 6px",borderRadius:7}} className="uh">
-              <span style={{fontSize:13,fontWeight:600,color:C.accent}}>{t}</span>
-              <span style={{fontSize:11,color:C.dim}}>0</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:20,marginBottom:20}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:14}}>
-            <Av i="YO" size={42} grad/>
-            <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="What are you building today?" className="if" style={{flex:1,background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:"11px 14px",fontSize:14,color:C.text,resize:"none",minHeight:88,fontFamily:"inherit",transition:"all 0.2s",width:"100%"}}/>
-          </div>
-          <div style={{display:"flex",gap:8,alignItems:"center",paddingTop:12,borderTop:`1px solid ${C.border}`}}>
-            {[["📷","Photo"],["🎥","Video"],["📊","Poll"]].map(([icon,label])=>(
-              <button key={label} onClick={()=>notify(`${label} coming soon`,"info")} className="bs" style={{background:"none",border:"none",display:"flex",alignItems:"center",gap:5,color:C.muted,fontSize:12,padding:"5px 8px",borderRadius:7,cursor:"pointer"}}><span>{icon}</span>{label}</button>
-            ))}
-            <GBtn sm onClick={submitPost} style={{marginLeft:"auto",opacity:text.trim()?1:0.5}}>Publish</GBtn>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:7,marginBottom:18,overflowX:"auto"}}>
-          {["All","Tech","Finance","Fashion","Food","Health"].map(t=>(
-            <button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1.5px solid ${filter===t?C.accent:C.border}`,borderRadius:8,padding:"6px 16px",fontSize:13,fontWeight:600,whiteSpace:"nowrap",transition:"all 0.15s",cursor:"pointer",flexShrink:0}}>{t}</button>
-          ))}
-        </div>
-        {posts.filter(p=>filter==="All"||p.tag===filter).map(p=>(
-          <div key={p.id} className="ch" style={{background:C.card,border:`1px solid ${p.isNew?"rgba(22,199,78,0.4)":C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
-            <div style={{padding:"18px 20px 14px"}}>
-              <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12}}>
-                <Av i={p.av} size={44} grad={p.av==="YO"} online={["MK","SR"].includes(p.av)}/>
-                <div style={{flex:1}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                    <span style={{fontWeight:700,fontSize:15,color:C.text}}>{p.user}</span>
-                    <Tag label={p.stage} style={SS[p.stage]}/>
-                    {p.isNew&&<Tag label="New" style={{background:C.aLight,color:C.accent}}/>}
-                  </div>
-                  <div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago</div>
-                </div>
-                <IT label={p.tag}/>
-              </div>
-              <p style={{fontSize:15,color:C.tSoft,lineHeight:1.78}}>{p.content}</p>
-            </div>
-            {p.img&&<img src={p.img} alt="" style={{width:"100%",maxHeight:290,objectFit:"cover",display:"block"}}/>}
-            <div style={{padding:"11px 20px",display:"flex",alignItems:"center",gap:16,borderTop:`1px solid ${C.border}`}}>
-              <button onClick={()=>toggleLike(p.id)} className="bs" style={{background:"none",border:"none",display:"flex",alignItems:"center",gap:6,color:p.liked?C.coral:C.muted,fontSize:14,fontWeight:p.liked?700:400,cursor:"pointer"}}>
-                <span style={{fontSize:19,display:"inline-block",animation:p.liked?"heartbeat 0.4s ease":"none"}}>{p.liked?"♥":"♡"}</span>{p.likes}
-              </button>
-              <button onClick={()=>setExpandComments(ec=>({...ec,[p.id]:!ec[p.id]}))} className="bs" style={{background:"none",border:"none",color:expandComments[p.id]?C.accent:C.muted,fontSize:14,display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>💬 {p.comments.length}</button>
-              <button onClick={()=>notify("Link copied! 🔗")} className="bs" style={{background:"none",border:"none",color:C.muted,fontSize:14,marginLeft:"auto",cursor:"pointer"}}>Share ↗</button>
-              <button onClick={()=>toggleSave(p.id)} className="bs" style={{background:"none",border:"none",color:p.saved?C.accent:C.dim,fontSize:18,cursor:"pointer"}}>{p.saved?"⊙":"○"}</button>
-            </div>
-            {expandComments[p.id]&&(
-              <div style={{borderTop:`1px solid ${C.border}`,padding:"14px 20px",background:C.bg,animation:"slideDown 0.2s ease"}}>
-                {p.comments.map((cm,i)=>(
-                  <div key={i} style={{display:"flex",gap:10,marginBottom:12}}>
-                    <Av i={cm.av} size={30} style={{fontSize:10}}/>
-                    <div style={{flex:1,background:"#fff",borderRadius:12,padding:"9px 13px",border:`1px solid ${C.border}`}}>
-                      <div style={{fontSize:12,fontWeight:700,color:C.text,marginBottom:2}}>{cm.user} <span style={{color:C.dim,fontWeight:400}}>· {cm.time}</span></div>
-                      <div style={{fontSize:13,color:C.tSoft,lineHeight:1.6}}>{cm.text}</div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{display:"flex",gap:10,marginTop:8}}>
-                  <Av i="YO" size={30} style={{fontSize:10}}/>
-                  <div style={{flex:1,display:"flex",gap:8}}>
-                    <input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 13px",fontSize:13,color:C.text,transition:"all 0.2s"}}/>
-                    <button onClick={()=>addComment(p.id)} className="bs" style={{background:GR,color:"#fff",border:"none",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,cursor:"pointer"}}>↑</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div style={{position:"sticky",top:80,display:"flex",flexDirection:"column",gap:14}}>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:20}}>
-          <div style={{fontWeight:700,fontSize:14,color:C.text,marginBottom:16}}>Who to connect with</div>
-          {PEOPLE.slice(0,4).map((u,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"6px",borderRadius:10}} className="uh">
-              <Av i={u.av} size={36} online={u.online}/>
-              <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13,color:C.text}}>{u.name}</div><div style={{fontSize:11,color:C.dim}}>{u.loc}</div></div>
-              <button onClick={()=>notify(`Connected with ${u.name}! 🤝`)} className="bs" style={{background:C.aLight,color:C.accent,border:"none",borderRadius:7,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>Follow</button>
-            </div>
-          ))}
-        </div>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:20}}>
-          <div style={{fontWeight:700,fontSize:14,color:C.text,marginBottom:14}}>📅 Upcoming Events</div>
-          {EVENTS.slice(0,2).map(e=>(
-            <div key={e.id} style={{marginBottom:13,paddingBottom:13,borderBottom:`1px solid ${C.border}`,cursor:"pointer"}} className="uh" onClick={()=>notify(`RSVP to: ${e.title}`)}>
-              <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:3}}>{e.title}</div>
-              <div style={{fontSize:11,color:C.dim}}>{e.date} · {e.type} · {fmt(e.attending)} RSVPs</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function SignupPage({setScreen,notify,setProfile}){
   const [form,setForm]=useState({name:"",email:"",stage:""});
@@ -596,103 +451,6 @@ function SignupPage({setScreen,notify,setProfile}){
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function SecondaryView({view,notify}){
-  const content = {
-    discover: {
-      title: "Discover founders",
-      eyebrow: "People",
-      items: PEOPLE,
-      render: (u)=>(
-        <div key={u.id} className="ch" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
-          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
-            <Av i={u.av} size={48} online={u.online}/>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,color:C.text,fontSize:16}}>{u.name}</div>
-              <div style={{fontSize:12,color:C.dim}}>{u.handle} · {u.loc}</div>
-            </div>
-            <IT label={u.industry}/>
-          </div>
-          <p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginBottom:16}}>{u.bio}</p>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:12,color:C.muted}}>{fmt(u.followers)} verified connections</span>
-            <GBtn sm onClick={()=>notify(`Connected with ${u.name}!`)}>Connect</GBtn>
-          </div>
-        </div>
-      )
-    },
-    events: {
-      title: "Upcoming events",
-      eyebrow: "Events",
-      items: EVENTS,
-      render: (event)=>(
-        <div key={event.id} className="ch" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:24}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:16,marginBottom:12}}>
-            <div>
-              <div style={{fontWeight:800,color:C.text,fontSize:17,marginBottom:5}}>{event.title}</div>
-              <div style={{fontSize:12,color:C.dim}}>Hosted by {event.host}</div>
-            </div>
-            <IT label={event.tag}/>
-          </div>
-          <p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginBottom:18}}>{event.desc}</p>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,color:C.muted}}>{event.date} · {event.time} · {event.type}</span>
-            <GBtn sm onClick={()=>notify(`RSVP saved for ${event.title}`)}>RSVP</GBtn>
-          </div>
-        </div>
-      )
-    },
-    mentors: {
-      title: "Verified mentors",
-      eyebrow: "Mentors",
-      items: MENTORS,
-      render: (mentor)=>(
-        <div key={mentor.name} className="ch" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:24}}>
-          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
-            <Av i={mentor.av} size={50} grad/>
-            <div>
-              <div style={{fontWeight:800,color:C.text,fontSize:17}}>{mentor.name}</div>
-              <div style={{fontSize:12,color:C.dim}}>{mentor.role}</div>
-            </div>
-          </div>
-          <p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginBottom:16}}>{mentor.bio}</p>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:18}}>
-            {mentor.tags.map(tag=><Tag key={tag} label={tag} style={{background:C.aLight,color:C.accent}}/>)}
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:12,color:C.muted}}>{fmt(mentor.sessions)} requests</span>
-            <GBtn sm onClick={()=>notify(`Mentor request sent to ${mentor.name}`)}>Request</GBtn>
-          </div>
-        </div>
-      )
-    },
-    messages: {
-      title: "Founder messages",
-      eyebrow: "Inbox",
-      items: PEOPLE.slice(0,3),
-      render: (u,idx)=>(
-        <div key={u.id} className="ch" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",alignItems:"center",gap:14}}>
-          <Av i={u.av} size={44} online={u.online}/>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:800,color:C.text,fontSize:15}}>{u.name}</div>
-            <div style={{fontSize:13,color:C.muted,marginTop:4}}>{["Want to compare launch notes this week?","I saw your post about fundraising.","That mentor session was excellent."][idx]}</div>
-          </div>
-          <GBtn sm onClick={()=>notify(`Opening chat with ${u.name}`)}>Reply</GBtn>
-        </div>
-      )
-    }
-  }[view];
-
-  return(
-    <div style={{padding:"40px",maxWidth:1080,margin:"0 auto"}}>
-      <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{content.eyebrow}</div>
-      <h1 style={{fontFamily:"Georgia,serif",fontSize:42,lineHeight:1.05,letterSpacing:0,color:C.text,marginBottom:28}}>{content.title}</h1>
-      <div style={{display:"grid",gridTemplateColumns:view==="messages"?"1fr":"repeat(auto-fit,minmax(260px,1fr))",gap:16}}>
-        {content.items.map(content.render)}
       </div>
     </div>
   );
@@ -980,7 +738,7 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div style={{minHeight:"100vh",background:screen==="app"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="app"&&<Navbar view="feed" setView={()=>{}} screen={screen} setScreen={setScreen} notify={notify}/>}
+        {screen!=="signup"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify}/>}
         {screen==="signup"&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
