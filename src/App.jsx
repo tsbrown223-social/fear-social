@@ -156,6 +156,17 @@ function getSessionToken(){
   }
 }
 
+function hasSessionToken(){
+  try{return Boolean(localStorage.getItem("fear-session-token"));}catch{return false;}
+}
+
+function clearSessionToken(){
+  try{
+    localStorage.removeItem("fear-session-token");
+    localStorage.removeItem("fear-screen");
+  }catch{}
+}
+
 async function api(path,options={}){
   const headers={"content-type":"application/json","x-fear-token":getSessionToken(),...(options.headers||{})};
   const res=await fetch(`/api${path}`,{...options,headers});
@@ -244,7 +255,7 @@ function Navbar({view,setView,screen,setScreen,notify}){
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setScreen("signup")} className="bs" style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"8px 18px",color:"rgba(255,255,255,0.75)",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
+        <button onClick={()=>setScreen(hasSessionToken()?"app":"signup")} className="bs" style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"8px 18px",color:"rgba(255,255,255,0.75)",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <GBtn sm onClick={()=>setScreen("signup")} style={{padding:"8px 20px"}}>Join Free →</GBtn>
       </div>
     </div>
@@ -679,7 +690,7 @@ function SecondaryView({view,notify}){
   );
 }
 
-function PlatformApp({notify,setScreen,profile,setProfile}){
+function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
   const [view,setView]=useLocalState("fear-view","feed");
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
@@ -744,7 +755,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
     if(!composer.trim())return notify("Write something before publishing","error");
     const optimistic={
       id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:"YO",
-      tag:profile.industry||"Tech",stage:profile.stage?.includes("launched")?"Launched":"Building",
+      tag:profile.industry||"Tech",stage:profile.stage?.toLowerCase().includes("launched")?"Launched":"Building",
       time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,isNew:true
     };
     setPosts(ps=>[optimistic,...ps]);
@@ -795,7 +806,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
     setMessages(ms=>ms.map(m=>{
       if(m.id!==id||!m.draft.trim())return m;
       notify(`Message sent to ${m.name}`);
-      return {...m,thread:[...m.thread,m.draft.trim()],draft:""};
+      return {...m,thread:[...m.thread,{id:Date.now(),text:m.draft.trim(),author:"you",time:"Just now"}],draft:""};
     }));
     try{await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});}catch{}
   };
@@ -829,7 +840,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <button onClick={()=>notify(`${unread||4} notifications`,"info")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative"}}>🔔<span style={{position:"absolute",top:-6,right:-6,width:17,height:17,borderRadius:"50%",background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread||4}</span></button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none"}}><Av i={initials} size={38} grad online/></button>
-        <button onClick={()=>setScreen("landing")} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
+        <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
       <div className="app-shell" style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
         {view==="feed"&&(
@@ -922,7 +933,9 @@ function Directory({eyebrow,title,items,render}){
 function MessagesView({messages,setMessages,sendMessage}){
   const [active,setActive]=useState(messages[0]?.id);
   const thread=messages.find(m=>m.id===active)||messages[0];
-  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{m.thread[m.thread.length-1]}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=><div className="message-bubble" key={i} style={{alignSelf:i%2?"flex-start":"flex-end",maxWidth:"70%",background:i%2?C.bg:C.accent,color:i%2?C.text:"#fff",borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{msg}</div>)}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
+  const messageText=msg=>typeof msg==="string"?msg:msg.text;
+  const messageAuthor=msg=>typeof msg==="string"?"them":msg.author;
+  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{messageText(m.thread[m.thread.length-1])}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
 }
 function ProfilePanel({profile,setEditProfile,stats}){
   return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()} size={72} style={{background:"#fff",color:C.accent}}/><div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
@@ -930,7 +943,7 @@ function ProfilePanel({profile,setEditProfile,stats}){
 
 export default function App(){
   const {toasts,notify,remove}=useToast();
-  const [screen,setScreen]=useState(()=>window.location.hash==="#app"?"app":"landing");
+  const [screenState,setScreenState]=useLocalState("fear-screen",window.location.hash==="#app"||hasSessionToken()?"app":"landing");
   const [profile,setProfile]=useLocalState("fear-profile",{
     name:"Your Name",
     handle:"@yourhandle",
@@ -940,6 +953,18 @@ export default function App(){
     stage:"I'm actively building",
     bio:"Building in public, meeting ambitious founders, and turning fear into useful momentum.",
   });
+  const setScreen=useCallback((next)=>{
+    setScreenState(next);
+    if(next==="app"&&window.location.hash!=="#app") window.history.replaceState(null,"","#app");
+    if(next!=="app"&&window.location.hash==="#app") window.history.replaceState(null,"#",window.location.pathname);
+  },[setScreenState]);
+  const signOut=useCallback(()=>{
+    clearSessionToken();
+    setScreenState("landing");
+    if(window.location.hash==="#app") window.history.replaceState(null,"#",window.location.pathname);
+    notify("Signed out");
+  },[notify,setScreenState]);
+  const screen=screenState;
   return(
     <>
       <style>{css}</style>
@@ -948,7 +973,7 @@ export default function App(){
         {screen!=="signup"&&screen!=="app"&&<Navbar view="feed" setView={()=>{}} screen={screen} setScreen={setScreen} notify={notify}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify}/>}
         {screen==="signup"&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile}/>}
-        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} profile={profile} setProfile={setProfile}/>}
+        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
       </div>
     </>
   );

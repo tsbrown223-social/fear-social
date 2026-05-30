@@ -170,7 +170,12 @@ async function getBootstrap(db, userId) {
   const messageGroups = new Map();
   for (const message of messages.results || []) {
     const list = messageGroups.get(message.conversation_id) || [];
-    list.push(message.text);
+    list.push({
+      id: message.id,
+      text: message.text,
+      author: message.author,
+      time: timeAgo(message.created_at),
+    });
     messageGroups.set(message.conversation_id, list);
   }
 
