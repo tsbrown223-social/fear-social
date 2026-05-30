@@ -2,3 +2,8 @@ name = "fear-social"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fear-social-db"
+database_id = "e7bc6f80-e711-461f-a4cd-97daab9ed7d2"

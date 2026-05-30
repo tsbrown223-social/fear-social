@@ -89,6 +89,30 @@ function useLocalState(key, fallback){
   return [value,setValue];
 }
 
+function getSessionToken(){
+  try{
+    let token=localStorage.getItem("fear-session-token");
+    if(!token){
+      token=crypto.randomUUID();
+      localStorage.setItem("fear-session-token",token);
+    }
+    return token;
+  }catch{
+    return "browser-session";
+  }
+}
+
+async function api(path,options={}){
+  const headers={"content-type":"application/json","x-fear-token":getSessionToken(),...(options.headers||{})};
+  const res=await fetch(`/api${path}`,{...options,headers});
+  const data=await res.json().catch(()=>({}));
+  if(data.token){
+    try{localStorage.setItem("fear-session-token",data.token);}catch{}
+  }
+  if(!res.ok) throw new Error(data.error||"Request failed");
+  return data;
+}
+
 const ToastCtx=({toasts,remove})=>(
   <div style={{position:"fixed",top:20,right:20,zIndex:9999,display:"flex",flexDirection:"column",gap:10}}>
     {toasts.map(t=>(
@@ -178,6 +202,15 @@ function LandingPage({setScreen,notify}){
   const [joined,setJoined]=useState(false);
   const [count,setCount]=useState(2847);
   useEffect(()=>{const t=setInterval(()=>setCount(c=>c+Math.floor(Math.random()*2)),8000);return()=>clearInterval(t);},[]);
+  const joinWaitlist=async()=>{
+    if(!email)return notify("Enter your email first","error");
+    try{
+      await api("/waitlist",{method:"POST",body:JSON.stringify({email})});
+      setJoined(true);
+    }catch(err){
+      notify(err.message||"Could not save email","error");
+    }
+  };
   const ticker=["Maya raised $50K · ","Jordan found her co-founder · ","Raj hit $100K ARR · ","Priya launched her 2nd company · ","Cameron got into YC · ","Sofia closed her seed round · "];
   return(
     <div style={{background:C.dark,minHeight:"100vh",overflowX:"hidden"}}>
@@ -206,8 +239,8 @@ function LandingPage({setScreen,notify}){
           </div>
         ):(
           <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu">
-            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&email&&setJoined(true)} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
-            <GBtn lg onClick={()=>email?setJoined(true):notify("Enter your email first","error")} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
+            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
+            <GBtn lg onClick={joinWaitlist} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
           </div>
         )}
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)",marginTop:16}}>No credit card · Free forever · 30 second signup</div>
@@ -427,13 +460,23 @@ function SignupPage({setScreen,notify,setProfile}){
   const [form,setForm]=useState({name:"",email:"",stage:""});
   const [step,setStep]=useState(0);
   const valid=form.name&&form.email&&form.stage;
+  const enterApp=async()=>{
+    const nextProfile={name:form.name,email:form.email,stage:form.stage};
+    setProfile(p=>({...p,...nextProfile}));
+    try{
+      const saved=await api("/profile",{method:"PUT",body:JSON.stringify({profile:nextProfile})});
+      setProfile(p=>({...p,...saved.profile}));
+    }catch{}
+    setScreen("app");
+    notify("Welcome to fear.social! 🚀");
+  };
   if(step===1) return(
     <div style={{minHeight:"100vh",background:GR,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
       <div style={{textAlign:"center",maxWidth:440}}>
         <div style={{fontSize:72,marginBottom:30}}>🌱</div>
         <div style={{fontFamily:"Georgia,serif",fontSize:44,fontWeight:700,color:"#fff",marginBottom:12,letterSpacing:0}}>You're in, {form.name.split(" ")[0]}.</div>
         <div style={{fontSize:17,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:44}}>Welcome to a community that turns fear into fuel.</div>
-        <GBtn lg onClick={()=>{setProfile(p=>({...p,name:form.name,email:form.email,stage:form.stage}));setScreen("app");notify("Welcome to fear.social! 🚀");}} style={{background:"#fff",color:C.accent,boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>Enter fear.social →</GBtn>
+        <GBtn lg onClick={enterApp} style={{background:"#fff",color:C.accent,boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>Enter fear.social →</GBtn>
       </div>
     </div>
   );
@@ -597,6 +640,27 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
   const [query,setQuery]=useState("");
   const [editProfile,setEditProfile]=useState(false);
   const [profileDraft,setProfileDraft]=useState(profile);
+  const applyBackendState=useCallback((data)=>{
+    if(data.profile){
+      setProfile(p=>({...p,...data.profile}));
+      setProfileDraft(p=>({...p,...data.profile}));
+    }
+    if(data.posts)setPosts(data.posts);
+    if(data.people)setPeople(data.people);
+    if(data.events)setEvents(data.events);
+    if(data.mentors)setMentors(data.mentors);
+    if(data.messages)setMessages(data.messages);
+  },[setEvents,setMentors,setMessages,setPeople,setPosts,setProfile]);
+  const callBackend=useCallback(async(path,options={})=>{
+    const data=await api(path,options);
+    applyBackendState(data);
+    return data;
+  },[applyBackendState]);
+  useEffect(()=>{
+    let active=true;
+    api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>notify("Offline mode: changes are saved in this browser","info"));
+    return()=>{active=false;};
+  },[applyBackendState,notify]);
   const tabs=[
     ["feed","Feed"],
     ["discover","Discover"],
@@ -615,37 +679,75 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
     ["Saved",posts.filter(p=>p.saved).length],
     ["RSVPs",events.filter(e=>e.going).length],
   ];
-  const publish=()=>{
+  const publish=async()=>{
     if(!composer.trim())return notify("Write something before publishing","error");
-    setPosts(ps=>[{
+    const optimistic={
       id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:"YO",
       tag:profile.industry||"Tech",stage:profile.stage?.includes("launched")?"Launched":"Building",
       time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,isNew:true
-    },...ps]);
+    };
+    setPosts(ps=>[optimistic,...ps]);
     setComposer("");
-    notify(`${postType} published`);
+    try{
+      await callBackend("/posts",{method:"POST",body:JSON.stringify({content:optimistic.content,type:postType,tag:optimistic.tag,stage:optimistic.stage})});
+      notify(`${postType} published`);
+    }catch(err){
+      notify("Published locally. Cloud sync failed.","error");
+    }
   };
-  const connect=id=>setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
-  const rsvp=id=>setEvents(es=>es.map(e=>e.id===id?{...e,going:!e.going,attending:e.going?e.attending-1:e.attending+1}:e));
-  const requestMentor=name=>setMentors(ms=>ms.map(m=>m.name===name?{...m,requested:!m.requested,sessions:m.requested?m.sessions:m.sessions+1}:m));
-  const addComment=id=>{
+  const connect=async id=>{
+    setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
+    try{await callBackend(`/people/${id}/connect`,{method:"POST"});}catch{}
+  };
+  const rsvp=async id=>{
+    setEvents(es=>es.map(e=>e.id===id?{...e,going:!e.going,attending:e.going?e.attending-1:e.attending+1}:e));
+    try{await callBackend(`/events/${id}/rsvp`,{method:"POST"});}catch{}
+  };
+  const requestMentor=async id=>{
+    setMentors(ms=>ms.map(m=>(m.id||m.name)===id?{...m,requested:!m.requested,sessions:m.requested?m.sessions:m.sessions+1}:m));
+    try{await callBackend(`/mentors/${id}/request`,{method:"POST"});}catch{}
+  };
+  const togglePostAction=async(id,action)=>{
+    setPosts(ps=>ps.map(p=>{
+      if(p.id!==id)return p;
+      if(action==="like")return {...p,liked:!p.liked,likes:p.liked?p.likes-1:p.likes+1};
+      return {...p,saved:!p.saved};
+    }));
+    try{await callBackend(`/posts/${id}/${action}`,{method:"POST"});}catch{}
+  };
+  const addComment=async id=>{
     const text=commentInputs[id]?.trim();
     if(!text)return;
     setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",av:"YO",text,time:"Just now"}]}:p));
     setCommentInputs(ci=>({...ci,[id]:""}));
-    notify("Comment posted");
+    try{
+      await callBackend(`/posts/${id}/comments`,{method:"POST",body:JSON.stringify({text})});
+      notify("Comment posted");
+    }catch{
+      notify("Comment saved locally. Cloud sync failed.","error");
+    }
   };
-  const sendMessage=id=>{
+  const sendMessage=async id=>{
+    const thread=messages.find(m=>m.id===id);
+    const text=thread?.draft?.trim();
+    if(!text)return;
     setMessages(ms=>ms.map(m=>{
       if(m.id!==id||!m.draft.trim())return m;
       notify(`Message sent to ${m.name}`);
       return {...m,thread:[...m.thread,m.draft.trim()],draft:""};
     }));
+    try{await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});}catch{}
   };
-  const saveProfile=()=>{
+  const saveProfile=async()=>{
     setProfile(profileDraft);
     setEditProfile(false);
-    notify("Profile updated");
+    try{
+      const data=await callBackend("/profile",{method:"PUT",body:JSON.stringify({profile:profileDraft})});
+      setProfile(p=>({...p,...data.profile}));
+      notify("Profile updated");
+    }catch{
+      notify("Profile saved locally. Cloud sync failed.","error");
+    }
   };
   const SectionTitle=({eyebrow,title,action})=>(
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:20,marginBottom:20}}>
@@ -711,9 +813,9 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
                     <p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>
                   </div>
                   <div style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
-                    <button className="bs" onClick={()=>setPosts(ps=>ps.map(x=>x.id===p.id?{...x,liked:!x.liked,likes:x.liked?x.likes-1:x.likes+1}:x))} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted}}>{p.liked?"♥":"♡"} {p.likes}</button>
+                    <button className="bs" onClick={()=>togglePostAction(p.id,"like")} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted}}>{p.liked?"♥":"♡"} {p.likes}</button>
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted}}>💬 {p.comments.length}</button>
-                    <button className="bs" onClick={()=>{setPosts(ps=>ps.map(x=>x.id===p.id?{...x,saved:!x.saved}:x));notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto"}}>{p.saved?"Saved":"Save"}</button>
+                    <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto"}}>{p.saved?"Saved":"Save"}</button>
                   </div>
                   {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5}}>{c.text}</p></div></div>)}<div style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px"}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
@@ -727,7 +829,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
         )}
         {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={p.av} size={52} online={p.online}/><div style={{flex:1}}><b>{p.name}</b><div style={{fontSize:12,color:C.dim}}>{p.handle} · {p.loc}</div></div><IT label={p.industry}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:18}}><span style={{fontSize:12,color:C.muted}}>{p.followers.toLocaleString()} followers</span><GBtn sm onClick={()=>{connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {e.attending}/{e.spots} going</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
-        {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>★ {m.rating} · {m.sessions} sessions</span><GBtn sm onClick={()=>{requestMentor(m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
+        {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>★ {m.rating} · {m.sessions} sessions</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
         {view==="groups"&&<Directory title="Founder groups" eyebrow="Rooms" items={GROUPS} render={g=><div key={g.id} className="ch" style={cardStyle}><b>{g.name}</b><p style={bodyCopy}>{g.desc}</p><div style={{fontSize:13,color:C.muted,margin:"14px 0"}}>{g.members.toLocaleString()} members · {g.active}</div><GBtn sm onClick={()=>notify(`Joined ${g.name}`)}>Join room</GBtn></div>}/>}
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}

@@ -1,0 +1,321 @@
+const json = (body, init = {}) =>
+  new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      ...(init.headers || {}),
+    },
+  });
+
+const readJson = async (request) => {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+};
+
+const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
+
+const requireDb = (env) => {
+  if (!env.DB) {
+    throw new Response(JSON.stringify({ error: "D1 database binding DB is missing" }), {
+      status: 500,
+      headers: { "content-type": "application/json; charset=utf-8" },
+    });
+  }
+  return env.DB;
+};
+
+const normalizeProfile = (profile = {}) => {
+  const name = String(profile.name || "Your Name").trim().slice(0, 80) || "Your Name";
+  const handleInput = String(profile.handle || name.toLowerCase().replace(/[^a-z0-9]+/g, "-")).trim();
+  const handle = (handleInput.startsWith("@") ? handleInput : `@${handleInput}`).slice(0, 40);
+  return {
+    name,
+    handle,
+    email: String(profile.email || "").trim().slice(0, 120),
+    location: String(profile.location || "Denver, CO").trim().slice(0, 80),
+    industry: String(profile.industry || "Tech").trim().slice(0, 40),
+    stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
+    bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
+  };
+};
+
+async function getOrCreateUser(db, request, body = {}) {
+  const token = request.headers.get("x-fear-token") || body.token || crypto.randomUUID();
+  const existing = await db.prepare("SELECT * FROM users WHERE token = ?").bind(token).first();
+  if (existing) return { user: existing, token, created: false };
+
+  const profile = normalizeProfile(body.profile);
+  const id = createId("user");
+  await db
+    .prepare(
+      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(id, token, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio)
+    .run();
+
+  return {
+    user: { id, token, ...profile },
+    token,
+    created: true,
+  };
+}
+
+const timeAgo = (createdAt) => {
+  const diff = Math.max(0, Date.now() - new Date(createdAt).getTime());
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+};
+
+const initials = (name) =>
+  String(name || "YO")
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "YO";
+
+async function getPosts(db, userId) {
+  const posts = await db
+    .prepare(
+      `SELECT p.*, u.name AS user_name, u.handle,
+        (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
+        EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
+        EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved
+       FROM posts p
+       JOIN users u ON u.id = p.user_id
+       ORDER BY datetime(p.created_at) DESC`
+    )
+    .bind(userId, userId)
+    .all();
+
+  const comments = await db
+    .prepare(
+      `SELECT c.*, u.name AS user_name
+       FROM comments c
+       JOIN users u ON u.id = c.user_id
+       ORDER BY datetime(c.created_at) ASC`
+    )
+    .all();
+
+  const grouped = new Map();
+  for (const comment of comments.results || []) {
+    const list = grouped.get(comment.post_id) || [];
+    list.push({
+      id: comment.id,
+      user: comment.user_name,
+      av: initials(comment.user_name),
+      text: comment.text,
+      time: timeAgo(comment.created_at),
+    });
+    grouped.set(comment.post_id, list);
+  }
+
+  return (posts.results || []).map((post) => ({
+    id: post.id,
+    user: post.user_name,
+    handle: post.handle,
+    av: initials(post.user_name),
+    tag: post.tag,
+    stage: post.stage,
+    type: post.type,
+    time: timeAgo(post.created_at),
+    content: post.content,
+    likes: post.likes,
+    comments: grouped.get(post.id) || [],
+    saved: Boolean(post.saved),
+    liked: Boolean(post.liked),
+  }));
+}
+
+async function getBootstrap(db, userId) {
+  const [posts, people, events, mentors, conversations] = await Promise.all([
+    getPosts(db, userId),
+    db
+      .prepare(
+        `SELECT p.*, EXISTS(SELECT 1 FROM connections c WHERE c.person_id = p.id AND c.user_id = ?) AS connected
+         FROM people p
+         ORDER BY p.id`
+      )
+      .bind(userId)
+      .all(),
+    db
+      .prepare(
+        `SELECT e.*, EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ?) AS going
+         FROM events e
+         ORDER BY e.id`
+      )
+      .bind(userId)
+      .all(),
+    db
+      .prepare(
+        `SELECT m.*, EXISTS(SELECT 1 FROM mentor_requests r WHERE r.mentor_id = m.id AND r.user_id = ?) AS requested
+         FROM mentors m
+         ORDER BY m.name`
+      )
+      .bind(userId)
+      .all(),
+    db.prepare("SELECT * FROM conversations ORDER BY id").all(),
+  ]);
+
+  const messages = await db.prepare("SELECT * FROM messages ORDER BY datetime(created_at), id").all();
+  const messageGroups = new Map();
+  for (const message of messages.results || []) {
+    const list = messageGroups.get(message.conversation_id) || [];
+    list.push(message.text);
+    messageGroups.set(message.conversation_id, list);
+  }
+
+  return {
+    posts,
+    people: (people.results || []).map((person) => ({
+      ...person,
+      online: Boolean(person.online),
+      connected: Boolean(person.connected),
+    })),
+    events: (events.results || []).map((event) => ({
+      ...event,
+      going: Boolean(event.going),
+    })),
+    mentors: (mentors.results || []).map((mentor) => ({
+      ...mentor,
+      tags: mentor.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+      requested: Boolean(mentor.requested),
+    })),
+    messages: (conversations.results || []).map((conversation) => ({
+      id: conversation.id,
+      name: conversation.name,
+      av: conversation.av,
+      online: Boolean(conversation.online),
+      thread: messageGroups.get(conversation.id) || [],
+      draft: "",
+    })),
+  };
+}
+
+async function toggleRow(db, table, userId, column, value) {
+  const existing = await db.prepare(`SELECT 1 FROM ${table} WHERE user_id = ? AND ${column} = ?`).bind(userId, value).first();
+  if (existing) {
+    await db.prepare(`DELETE FROM ${table} WHERE user_id = ? AND ${column} = ?`).bind(userId, value).run();
+    return false;
+  }
+  await db.prepare(`INSERT INTO ${table} (user_id, ${column}) VALUES (?, ?)`).bind(userId, value).run();
+  return true;
+}
+
+async function handleRequest({ request, env, params }) {
+  const db = requireDb(env);
+  const method = request.method;
+  const rawPath = Array.isArray(params.path) ? params.path.join("/") : params.path || "";
+  const path = `/${rawPath}`;
+  const body = method === "GET" ? {} : await readJson(request);
+  const { user, token } = await getOrCreateUser(db, request, body);
+
+  if (method === "OPTIONS") return new Response(null, { status: 204 });
+
+  if (method === "GET" && path === "/bootstrap") {
+    return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+  }
+
+  if (method === "PUT" && path === "/profile") {
+    const profile = normalizeProfile(body.profile);
+    await db
+      .prepare(
+        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+      )
+      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, user.id)
+      .run();
+    return json({ token, profile });
+  }
+
+  if (method === "POST" && path === "/waitlist") {
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
+    await db.prepare("INSERT OR IGNORE INTO waitlist (email) VALUES (?)").bind(email).run();
+    return json({ ok: true });
+  }
+
+  if (method === "POST" && path === "/posts") {
+    const content = String(body.content || "").trim().slice(0, 1200);
+    if (!content) return json({ error: "Post content required" }, { status: 400 });
+    const id = createId("post");
+    const tag = String(body.tag || user.industry || "Tech").slice(0, 40);
+    const type = String(body.type || "Update").slice(0, 40);
+    const stage = String(body.stage || "Building").slice(0, 40);
+    await db
+      .prepare("INSERT INTO posts (id, user_id, type, tag, stage, content) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(id, user.id, type, tag, stage, content)
+      .run();
+    return json({ posts: await getPosts(db, user.id) }, { status: 201 });
+  }
+
+  const segments = path.split("/").filter(Boolean);
+  if (method === "POST" && segments[0] === "posts" && segments[2] === "comments") {
+    const text = String(body.text || "").trim().slice(0, 600);
+    if (!text) return json({ error: "Comment text required" }, { status: 400 });
+    await db
+      .prepare("INSERT INTO comments (id, post_id, user_id, text) VALUES (?, ?, ?, ?)")
+      .bind(createId("comment"), segments[1], user.id, text)
+      .run();
+    return json({ posts: await getPosts(db, user.id) });
+  }
+
+  if (method === "POST" && segments[0] === "posts" && (segments[2] === "like" || segments[2] === "save")) {
+    const kind = segments[2] === "like" ? "like" : "save";
+    const existing = await db
+      .prepare("SELECT 1 FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?")
+      .bind(segments[1], user.id, kind)
+      .first();
+    if (existing) {
+      await db.prepare("DELETE FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?").bind(segments[1], user.id, kind).run();
+    } else {
+      await db.prepare("INSERT INTO post_reactions (post_id, user_id, kind) VALUES (?, ?, ?)").bind(segments[1], user.id, kind).run();
+    }
+    return json({ posts: await getPosts(db, user.id) });
+  }
+
+  if (method === "POST" && segments[0] === "people" && segments[2] === "connect") {
+    await toggleRow(db, "connections", user.id, "person_id", Number(segments[1]));
+    return json(await getBootstrap(db, user.id));
+  }
+
+  if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
+    await toggleRow(db, "event_rsvps", user.id, "event_id", Number(segments[1]));
+    return json(await getBootstrap(db, user.id));
+  }
+
+  if (method === "POST" && segments[0] === "mentors" && segments[2] === "request") {
+    await toggleRow(db, "mentor_requests", user.id, "mentor_id", segments[1]);
+    return json(await getBootstrap(db, user.id));
+  }
+
+  if (method === "POST" && segments[0] === "messages" && segments[2] === "send") {
+    const text = String(body.text || "").trim().slice(0, 800);
+    if (!text) return json({ error: "Message text required" }, { status: 400 });
+    await db
+      .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
+      .bind(createId("message"), Number(segments[1]), user.id, text)
+      .run();
+    return json(await getBootstrap(db, user.id));
+  }
+
+  return json({ error: "Not found" }, { status: 404 });
+}
+
+export const onRequest = async (context) => {
+  try {
+    return await handleRequest(context);
+  } catch (error) {
+    if (error instanceof Response) return error;
+    return json({ error: "Server error", detail: error.message }, { status: 500 });
+  }
+};
