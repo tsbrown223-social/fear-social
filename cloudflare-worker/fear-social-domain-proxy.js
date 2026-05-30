@@ -7,15 +7,11 @@ export default {
     proxyRequest.headers.set("Host", pagesUrl.hostname);
 
     const response = await fetch(proxyRequest);
-    const headers = new Headers(response.headers);
-    headers.delete("x-vercel-id");
-    headers.delete("x-vercel-cache");
-    headers.delete("x-vercel-error");
 
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers,
+      headers: response.headers,
     });
   },
 };
