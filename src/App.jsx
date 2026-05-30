@@ -41,13 +41,67 @@ input,textarea,select{outline:none;font-family:inherit;}button{font-family:inher
 .if:focus{border-color:#16C74E!important;box-shadow:0 0 0 3px rgba(22,199,78,0.18)!important;}
 .rh:hover{background:rgba(22,199,78,0.04);}
 .uh:hover{background:rgba(22,199,78,0.06);border-radius:10px;}
+.mobile-bottom-nav{display:none;}
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
   [style*="position: sticky"]{position:static!important;}
 }
 @media(max-width:760px){
+  body{background:${C.bg};}
+  .ch:hover{transform:none;box-shadow:none;}
+  .desktop-app-tabs,.desktop-app-search,.desktop-signout,.desktop-feed-side{display:none!important;}
+  .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:12px;right:12px;bottom:12px;z-index:500;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border:1px solid ${C.border};border-radius:18px;padding:8px;box-shadow:0 18px 60px rgba(13,15,20,.18);}
+  .mobile-bottom-nav button{min-width:0;border:none;background:transparent;border-radius:12px;padding:8px 4px;color:${C.muted};font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .mobile-bottom-nav button.active{background:${C.aLight};color:${C.accent};}
+  .mobile-bottom-nav span{font-size:17px;line-height:1;}
+  .app-topbar{min-height:62px!important;padding:8px 14px!important;gap:10px!important;flex-wrap:nowrap!important;}
+  .app-topbar-logo{font-size:20px!important;flex:1;}
+  .app-shell{padding:14px 12px 96px!important;}
+  .feed-grid{display:block!important;}
+  .mobile-profile-summary{display:block!important;}
+  .composer-card{border-radius:18px!important;padding:14px!important;}
+  .composer-card textarea{min-height:92px!important;font-size:16px!important;}
+  .composer-actions{overflow-x:auto;padding-bottom:2px;}
+  .composer-actions button{flex-shrink:0;}
+  .post-card{border-radius:18px!important;margin-bottom:12px!important;}
+  .post-card>div:first-child{padding:16px!important;}
+  .post-actions{padding:10px 14px!important;gap:10px!important;}
+  .post-actions button{font-size:13px!important;}
+  .directory-grid{grid-template-columns:1fr!important;}
+  .directory-wrap{padding-bottom:86px!important;}
+  .directory-title{font-size:32px!important;}
+  .messages-grid{grid-template-columns:1fr!important;min-height:auto!important;}
+  .message-list{display:flex!important;overflow-x:auto!important;gap:10px!important;padding:10px!important;}
+  .message-list button{min-width:220px!important;}
+  .message-panel{min-height:55vh!important;}
+  .message-bubble{max-width:86%!important;}
+  .profile-hero{padding:22px!important;border-radius:20px!important;}
+  .profile-hero-row{align-items:flex-start!important;flex-wrap:wrap!important;}
+  .profile-hero h1{font-size:30px!important;}
+  .profile-stats{grid-template-columns:repeat(2,1fr)!important;}
+  .edit-modal{align-items:flex-end!important;padding:0!important;}
+  .edit-sheet{width:100%!important;border-radius:22px 22px 0 0!important;max-height:88vh!important;overflow:auto!important;}
+  .landing-nav{height:auto!important;padding:14px 18px!important;}
+  .landing-nav-links{display:none!important;}
+  .landing-hero{min-height:92vh!important;padding:104px 18px 58px!important;justify-content:flex-start!important;}
+  .landing-hero h1{font-size:46px!important;line-height:1.08!important;}
+  .landing-hero p{font-size:16px!important;margin-bottom:32px!important;}
+  .landing-email{flex-direction:column!important;gap:10px!important;}
+  .landing-email input,.landing-email button{width:100%!important;}
+  .landing-section{padding:64px 18px!important;}
+  .landing-section h2{font-size:40px!important;line-height:1.08!important;}
+  .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
+  .landing-stats{grid-template-columns:repeat(2,1fr)!important;}
+  .signup-root{display:block!important;background:${C.dark}!important;min-height:100vh!important;}
+  .signup-copy{display:none!important;}
+  .signup-form-panel{width:100%!important;min-height:100vh!important;padding:82px 22px 32px!important;}
+  .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
+  .toast-stack>div{min-width:0!important;width:100%!important;}
   [style*="grid-template-columns: 310px 1fr"]{grid-template-columns:1fr!important;}
   [style*="grid-template-columns: repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
+  [style*="grid-template-columns: repeat(5,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
+  [style*="grid-template-columns: repeat(3,1fr)"]{grid-template-columns:1fr!important;}
+  [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important;}
   input[placeholder="Search founders, posts, tags"]{width:100%!important;max-width:none!important;}
 }
 `;
@@ -114,7 +168,7 @@ async function api(path,options={}){
 }
 
 const ToastCtx=({toasts,remove})=>(
-  <div style={{position:"fixed",top:20,right:20,zIndex:9999,display:"flex",flexDirection:"column",gap:10}}>
+  <div className="toast-stack" style={{position:"fixed",top:20,right:20,zIndex:9999,display:"flex",flexDirection:"column",gap:10}}>
     {toasts.map(t=>(
       <div key={t.id} onClick={()=>remove(t.id)} style={{background:t.type==="success"?C.accent:t.type==="error"?"#EF4444":"#3B82F6",color:"#fff",borderRadius:12,padding:"13px 18px",fontSize:13,fontWeight:600,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",display:"flex",alignItems:"center",gap:10,cursor:"pointer",animation:"popIn 0.25s ease",minWidth:240}}>
         <span style={{fontSize:18}}>{t.type==="success"?"✓":t.type==="error"?"✕":"ℹ"}</span>{t.msg}
@@ -182,9 +236,9 @@ function Navbar({view,setView,screen,setScreen,notify}){
     </div>
   );
   return(
-    <div style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:scrolled?"rgba(13,15,20,0.97)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?`1px solid rgba(255,255,255,0.07)`:"none",padding:"0 48px",display:"flex",alignItems:"center",height:68,transition:"all 0.3s"}}>
+    <div className="landing-nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:scrolled?"rgba(13,15,20,0.97)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?`1px solid rgba(255,255,255,0.07)`:"none",padding:"0 48px",display:"flex",alignItems:"center",height:68,transition:"all 0.3s"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:22,color:"#fff",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
-      <div style={{display:"flex",gap:4,marginRight:32}}>
+      <div className="landing-nav-links" style={{display:"flex",gap:4,marginRight:32}}>
         {["Features","Mentors","Community","Pricing"].map(l=>(
           <button key={l} className="nl bs" style={{background:"none",border:"none",color:"rgba(255,255,255,0.6)",fontSize:14,fontWeight:500,padding:"7px 13px",cursor:"pointer",borderRadius:8}}>{l}</button>
         ))}
@@ -214,7 +268,7 @@ function LandingPage({setScreen,notify}){
   const ticker=["Maya raised $50K · ","Jordan found her co-founder · ","Raj hit $100K ARR · ","Priya launched her 2nd company · ","Cameron got into YC · ","Sofia closed her seed round · "];
   return(
     <div style={{background:C.dark,minHeight:"100vh",overflowX:"hidden"}}>
-      <div style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"130px 32px 90px",textAlign:"center",overflow:"hidden"}}>
+      <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"130px 32px 90px",textAlign:"center",overflow:"hidden"}}>
         <div style={{position:"absolute",top:"35%",left:"50%",transform:"translate(-50%,-50%)",width:800,height:800,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,0.09) 0%, transparent 68%)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:1,background:"linear-gradient(90deg, transparent, rgba(22,199,78,0.5), transparent)"}}/>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(22,199,78,0.07)",border:"1px solid rgba(22,199,78,0.2)",borderRadius:22,padding:"7px 18px",marginBottom:38,cursor:"pointer"}} className="bs fu" onClick={()=>setScreen("signup")}>
@@ -238,7 +292,7 @@ function LandingPage({setScreen,notify}){
             <GBtn sm onClick={()=>setScreen("signup")} style={{marginLeft:16}}>Enter App →</GBtn>
           </div>
         ):(
-          <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu">
+          <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu landing-email">
             <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
             <GBtn lg onClick={joinWaitlist} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
           </div>
@@ -257,12 +311,12 @@ function LandingPage({setScreen,notify}){
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:4}}><span style={{color:C.accent}}>✦</span> {t}</span>)}
         </div>
       </div>
-      <div style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,3.6rem,58px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:18}}>Built for the founders<br/>of tomorrow.</h2>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+        <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
           {[["🤝","Real Connections","Find co-founders and collaborators who get what you're going through."],["🧠","Mentor Access","1:1 sessions with verified founders who've raised, scaled, and exited."],["📣","Build in Public","Share wins and struggles. The community shows up every single time."],["💼","Opportunities","Co-founder matching, jobs, internships — curated for ambitious founders."],["📅","Events","IRL meetups and virtual firesides. We bring the community to life."],["⚡","FEAR Pro — $9/mo","Unlimited mentor sessions, verified badge, exclusive events.",true]].map(([icon,title,desc,pro],i)=>(
             <div key={i} className="ch" style={{background:C.dCard,border:`1px solid ${C.dBorder}`,borderRadius:20,padding:"30px 26px"}}>
               <div style={{width:52,height:52,borderRadius:15,background:pro?GR:"rgba(22,199,78,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginBottom:22}}>{icon}</div>
@@ -273,7 +327,7 @@ function LandingPage({setScreen,notify}){
         </div>
       </div>
       <div style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,borderBottom:`1px solid ${C.dBorder}`,padding:"64px 52px"}}>
-        <div style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
+        <div className="landing-stats" style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
           {[["2,847+","Active Founders"],["40+","Countries"],["$2.4M","Raised by Members"],["142","Mentor Sessions/mo"],["98%","Would Recommend"]].map(([n,l])=>(
             <div key={l} style={{textAlign:"center",padding:"28px 16px"}}>
               <div style={{fontFamily:"Georgia,serif",fontSize:42,fontWeight:700,letterSpacing:0,...GRT}}>{n}</div>
@@ -282,9 +336,9 @@ function LandingPage({setScreen,notify}){
           ))}
         </div>
       </div>
-      <div style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,textAlign:"center",marginBottom:64}}>"It changed everything."</h2>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+        <div className="landing-testimonial-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
           {[{q:"Found my co-founder in two weeks. We're now at $8K MRR and just closed our pre-seed.",name:"Sofia R.",stage:"Food · Launched",av:"SR"},{q:"The mentors actually reply and care. That's rare. This platform is rare.",name:"Raj K.",stage:"Health · Launched",av:"RK"},{q:"Three months on fear.social: a community, a co-founder, and paying customers.",name:"Cameron T.",stage:"Tech · Building",av:"CT"}].map((t,i)=>(
             <div key={i} className="ch" style={{background:"rgba(255,255,255,0.025)",borderRadius:20,padding:"30px",border:"1px solid rgba(255,255,255,0.05)"}}>
               <div style={{fontSize:40,color:C.accent,marginBottom:20,lineHeight:1}}>"</div>
@@ -294,10 +348,10 @@ function LandingPage({setScreen,notify}){
           ))}
         </div>
       </div>
-      <div style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,padding:"110px 52px"}}>
+      <div className="landing-section" style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,padding:"110px 52px"}}>
         <div style={{maxWidth:880,margin:"0 auto",textAlign:"center"}}>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:56}}>Start free. Upgrade when ready.</h2>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
+          <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
             {[{name:"Free",price:"$0",period:"forever",features:["Social feed & posts","Discover & connect","Events access","DMs","1 mentor intro/month"],grad:false},{name:"FEAR Pro",price:"$9",period:"per month",features:["Everything in Free","Unlimited mentor sessions","Verified founder badge","Full job board","Exclusive Pro events"],grad:true}].map((p,i)=>(
               <div key={i} className="ch" style={{background:p.grad?"transparent":C.dark,border:`1px solid ${p.grad?"rgba(22,199,78,0.4)":C.dBorder}`,borderRadius:24,padding:"38px 34px",position:"relative",overflow:"hidden"}}>
                 {p.grad&&<div style={{position:"absolute",inset:0,background:GR2,opacity:0.4,borderRadius:24}}/>}
@@ -481,8 +535,8 @@ function SignupPage({setScreen,notify,setProfile}){
     </div>
   );
   return(
-    <div style={{minHeight:"100vh",background:C.dark,display:"flex"}}>
-      <div style={{flex:1,background:GR2,display:"flex",alignItems:"center",justifyContent:"center",padding:72}}>
+    <div className="signup-root" style={{minHeight:"100vh",background:C.dark,display:"flex"}}>
+      <div className="signup-copy" style={{flex:1,background:GR2,display:"flex",alignItems:"center",justifyContent:"center",padding:72}}>
         <div style={{maxWidth:520}}>
           <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>The community<br/>you've been<br/>looking for.</div>
           <p style={{fontSize:16,color:"rgba(255,255,255,0.42)",lineHeight:1.85,marginBottom:44}}>2,847 founders. 40+ countries. One platform built for you.</p>
@@ -496,7 +550,7 @@ function SignupPage({setScreen,notify,setProfile}){
           </div>
         </div>
       </div>
-      <div style={{width:520,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:56}}>
+      <div className="signup-form-panel" style={{width:520,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:56}}>
         <div style={{width:"100%",maxWidth:400}}>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create your profile</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>30 seconds. No spam.</div>
@@ -670,6 +724,13 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
     ["groups","Groups"],
     ["opportunities","Deals"],
   ];
+  const mobileTabs=[
+    ["feed","Feed","⌂"],
+    ["discover","Find","◇"],
+    ["messages","DMs","✉"],
+    ["mentors","Mentors","★"],
+    ["profile","Me","●"],
+  ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
   const visiblePosts=posts.filter(p=>(filter==="All"||p.tag===filter)&&(query.trim()===""||`${p.user} ${p.content} ${p.tag}`.toLowerCase().includes(query.toLowerCase())));
   const unread=messages.reduce((n,m)=>n+(m.thread.length>2?1:0),0);
@@ -760,20 +821,20 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
   );
   return(
     <div style={{minHeight:"100vh",background:C.bg}}>
-      <div style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-        <div onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
-        <div style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
+      <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        <div className="app-topbar-logo" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
+        <div className="desktop-app-tabs" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
           {tabs.map(([id,label])=><button key={id} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
         </div>
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <button onClick={()=>notify(`${unread||4} notifications`,"info")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative"}}>🔔<span style={{position:"absolute",top:-6,right:-6,width:17,height:17,borderRadius:"50%",background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread||4}</span></button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none"}}><Av i={initials} size={38} grad online/></button>
-        <button onClick={()=>setScreen("landing")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
+        <button onClick={()=>setScreen("landing")} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
-      <div style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
+      <div className="app-shell" style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
         {view==="feed"&&(
-          <div style={{display:"grid",gridTemplateColumns:"270px minmax(0,1fr) 310px",gap:22,alignItems:"start"}}>
-            <aside style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
+          <div className="feed-grid" style={{display:"grid",gridTemplateColumns:"270px minmax(0,1fr) 310px",gap:22,alignItems:"start"}}>
+            <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
                 <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} size={54} grad online/><div><div style={{fontWeight:900,color:C.text}}>{profile.name||"Your Name"}</div><div style={{fontSize:12,color:C.dim}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"}</div></div></div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>{statCards.map(([k,v])=><div key={k} className="uh" style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontWeight:900,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{k}</div></div>)}</div>
@@ -790,12 +851,22 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
               </div>
             </aside>
             <main>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
+              <div className="mobile-profile-summary" style={{display:"none",background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:16,marginBottom:14}}>
+                <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                  <Av i={initials} size={46} grad online/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:900,color:C.text}}>{profile.name||"Your Name"}</div>
+                    <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.industry||"Tech"}</div>
+                  </div>
+                  <button onClick={()=>setEditProfile(true)} style={{background:C.aLight,color:C.accent,border:"none",borderRadius:9,padding:"8px 11px",fontSize:12,fontWeight:900}}>Edit</button>
+                </div>
+              </div>
+              <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                   <Av i={initials} size={44} grad/>
                   <div style={{flex:1}}>
                     <textarea value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
-                    <div style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
+                    <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
                       {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} onClick={()=>setPostType(t)} className="bs" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted}}>{t}</button>)}
                       <GBtn sm onClick={publish} style={{marginLeft:"auto",opacity:composer.trim()?1:.55}}>Publish</GBtn>
                     </div>
@@ -804,7 +875,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
               </div>
               <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Tech","Finance","Fashion","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
               {visiblePosts.map(p=>(
-                <article key={p.id} className="ch" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
+                <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
                     <div style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
                       <Av i={p.av} size={45} grad={p.av==="YO"} online={["MK","SR","YO"].includes(p.av)}/>
@@ -812,7 +883,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
                     </div>
                     <p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>
                   </div>
-                  <div style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
+                  <div className="post-actions" style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
                     <button className="bs" onClick={()=>togglePostAction(p.id,"like")} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted}}>{p.liked?"♥":"♡"} {p.likes}</button>
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted}}>💬 {p.comments.length}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto"}}>{p.saved?"Saved":"Save"}</button>
@@ -821,7 +892,7 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
                 </article>
               ))}
             </main>
-            <aside style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
+            <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} size={36} online={p.online}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{p.name}</div><div style={{fontSize:11,color:C.dim}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {e.attending} going</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
@@ -835,7 +906,10 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards}/>}
       </div>
-      {editProfile&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)}><div style={{background:"#fff",borderRadius:22,padding:28,width:"min(520px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}><SectionTitle eyebrow="Profile" title="Edit your founder card"/>{["name","handle","location","industry","bio"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}<div style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}><GhostBtn onClick={()=>setEditProfile(false)}>Cancel</GhostBtn><GBtn onClick={saveProfile}>Save profile</GBtn></div></div></div>}
+      <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
+        {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} onClick={()=>setView(id)}><span>{icon}</span>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
+      </nav>
+      {editProfile&&<div className="edit-modal" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)}><div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(520px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}><SectionTitle eyebrow="Profile" title="Edit your founder card"/>{["name","handle","location","industry","bio"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}<div style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}><GhostBtn onClick={()=>setEditProfile(false)}>Cancel</GhostBtn><GBtn onClick={saveProfile}>Save profile</GBtn></div></div></div>}
     </div>
   );
 }
@@ -843,20 +917,20 @@ function PlatformApp({notify,setScreen,profile,setProfile}){
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
 function Directory({eyebrow,title,items,render}){
-  return <div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div></div>;
+  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1><div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div></div>;
 }
 function MessagesView({messages,setMessages,sendMessage}){
   const [active,setActive]=useState(messages[0]?.id);
   const thread=messages.find(m=>m.id===active)||messages[0];
-  return <div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{m.thread[m.thread.length-1]}</div></div></button>)}</div>{thread&&<div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=><div key={i} style={{alignSelf:i%2?"flex-start":"flex-end",maxWidth:"70%",background:i%2?C.bg:C.accent,color:i%2?C.text:"#fff",borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{msg}</div>)}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px"}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
+  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{m.thread[m.thread.length-1]}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=><div className="message-bubble" key={i} style={{alignSelf:i%2?"flex-start":"flex-end",maxWidth:"70%",background:i%2?C.bg:C.accent,color:i%2?C.text:"#fff",borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{msg}</div>)}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
 }
 function ProfilePanel({profile,setEditProfile,stats}){
-  return <div style={{maxWidth:840}}><div style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div style={{display:"flex",alignItems:"center",gap:18}}><Av i={(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()} size={72} style={{background:"#fff",color:C.accent}}/><div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
+  return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()} size={72} style={{background:"#fff",color:C.accent}}/><div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
 
 export default function App(){
   const {toasts,notify,remove}=useToast();
-  const [screen,setScreen]=useState("landing");
+  const [screen,setScreen]=useState(()=>window.location.hash==="#app"?"app":"landing");
   const [profile,setProfile]=useLocalState("fear-profile",{
     name:"Your Name",
     handle:"@yourhandle",
