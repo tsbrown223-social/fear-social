@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS mentors (
   role TEXT NOT NULL,
   av TEXT NOT NULL,
   sessions INTEGER NOT NULL DEFAULT 0,
-  rating REAL NOT NULL DEFAULT 5,
+  rating REAL NOT NULL DEFAULT 0,
   tags TEXT NOT NULL,
   bio TEXT NOT NULL
 );
@@ -135,20 +135,20 @@ INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry,
 VALUES ('demo-user', 'demo-token', 'Your Name', '@yourhandle', '', 'Denver, CO', 'Tech', 'I''m actively building', 'Building in public, meeting ambitious founders, and turning fear into useful momentum.');
 
 INSERT OR IGNORE INTO people (id, name, handle, av, stage, industry, mutual, loc, bio, followers, online) VALUES
-  (1, 'Sofia R.', '@sofiabuilds', 'SR', 'Building', 'Food', 3, 'Austin, TX', 'Building the future of artisan food delivery.', 892, 1),
-  (2, 'Ethan M.', '@ethanmakes', 'EM', 'Launched', 'Tech', 7, 'San Francisco, CA', 'Shipped 4 apps. Obsessed with AI tooling.', 2104, 0),
-  (3, 'Aisha P.', '@aishapriya', 'AP', 'Idea', 'Health', 2, 'New York, NY', 'Ex-nurse building tech to fix mental health.', 445, 1),
-  (4, 'Leo C.', '@leocreates', 'LC', 'Building', 'Fashion', 5, 'Los Angeles, CA', 'Sustainable fashion marketplace.', 1230, 0);
+  (1, 'Sofia R.', '@sofiabuilds', 'SR', 'Building', 'Food', 0, 'Austin, TX', 'Founder profile placeholder for the live directory.', 0, 1),
+  (2, 'Ethan M.', '@ethanmakes', 'EM', 'Launched', 'Tech', 0, 'San Francisco, CA', 'Founder profile placeholder for the live directory.', 0, 0),
+  (3, 'Aisha P.', '@aishapriya', 'AP', 'Idea', 'Health', 0, 'New York, NY', 'Founder profile placeholder for the live directory.', 0, 1),
+  (4, 'Leo C.', '@leocreates', 'LC', 'Building', 'Fashion', 0, 'Los Angeles, CA', 'Founder profile placeholder for the live directory.', 0, 0);
 
 INSERT OR IGNORE INTO events (id, title, host, date, time, type, tag, spots, attending, desc) VALUES
-  (1, 'Founder Fireside: From Idea to First $10K', 'Alexis Chen', 'Apr 26', '7:00 PM EST', 'Virtual', 'Finance', 48, 12, 'A candid conversation about the messy first steps.'),
-  (2, 'fear.social Meetup - Denver, CO', 'fear.social Team', 'May 3', '6:30 PM MT', 'In-Person', 'Networking', 30, 24, 'IRL founder night. Good people, no pitch decks.'),
-  (3, 'Build in Public: Live Product Teardown', 'Marcus Webb', 'May 10', '5:00 PM EST', 'Virtual', 'Tech', 200, 89, 'We will dissect 3 live products on stream.');
+  (1, 'Founder Fireside', 'fear.social Team', 'Apr 26', '7:00 PM EST', 'Virtual', 'Finance', 0, 0, 'Event placeholder. RSVP totals update from the live database.'),
+  (2, 'fear.social Meetup - Denver, CO', 'fear.social Team', 'May 3', '6:30 PM MT', 'In-Person', 'Networking', 0, 0, 'Event placeholder. RSVP totals update from the live database.'),
+  (3, 'Build in Public: Product Teardown', 'fear.social Team', 'May 10', '5:00 PM EST', 'Virtual', 'Tech', 0, 0, 'Event placeholder. RSVP totals update from the live database.');
 
 INSERT OR IGNORE INTO mentors (id, name, role, av, sessions, rating, tags, bio) VALUES
-  ('alexis-chen', 'Alexis Chen', '3x Founder - VC Partner', 'AC', 142, 4.9, 'SaaS,Fundraising', 'Exited two companies. Now backing the next generation.'),
-  ('marcus-webb', 'Marcus Webb', 'E-commerce Operator', 'MW', 89, 4.8, 'DTC,Shopify', 'Scaled 4 brands past $1M.'),
-  ('destiny-okafor', 'Destiny Okafor', 'Head of Growth, Google', 'DO', 203, 5.0, 'Growth,Brand', 'Obsessed with sustainable distribution.');
+  ('alexis-chen', 'Alexis Chen', 'Mentor profile', 'AC', 0, 0, 'SaaS,Fundraising', 'Mentor listing. Request counts update from the live database.'),
+  ('marcus-webb', 'Marcus Webb', 'Mentor profile', 'MW', 0, 0, 'DTC,Shopify', 'Mentor listing. Request counts update from the live database.'),
+  ('destiny-okafor', 'Destiny Okafor', 'Mentor profile', 'DO', 0, 0, 'Growth,Brand', 'Mentor listing. Request counts update from the live database.');
 
 INSERT OR IGNORE INTO conversations (id, name, av, online) VALUES
   (1, 'Sofia R.', 'SR', 1),
@@ -164,12 +164,7 @@ INSERT OR IGNORE INTO messages (id, conversation_id, text, author, created_at) V
   ('seed-msg-6', 3, 'I booked Alexis next week too.', 'them', '2026-05-29T12:02:00Z');
 
 INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, created_at) VALUES
-  ('seed-post-1', 'demo-user', 'Update', 'Tech', 'Launched', 'Hit 1,000 users in 30 days with zero ad spend. Here is the exact playbook - drop a comment if you want it.', '2026-05-29T09:00:00Z'),
-  ('seed-post-2', 'demo-user', 'Update', 'Finance', 'Building', 'Raised my first $10K from people I knew without making things awkward. One conversation changed everything.', '2026-05-29T06:00:00Z'),
-  ('seed-post-3', 'demo-user', 'Milestone', 'Fashion', 'Launched', 'My first business failed. I am posting this because no one talks about what comes after: the grief, the clarity, and how I rebuilt.', '2026-05-29T03:00:00Z'),
-  ('seed-post-4', 'demo-user', 'Milestone', 'Health', 'Launched', 'We just crossed $50K ARR. 18 months ago I had nothing but a Notion doc and a lot of fear.', '2026-05-27T09:00:00Z');
-
-INSERT OR IGNORE INTO comments (id, post_id, user_id, text, created_at) VALUES
-  ('seed-comment-1', 'seed-post-1', 'demo-user', 'Need this!', '2026-05-29T10:00:00Z'),
-  ('seed-comment-2', 'seed-post-1', 'demo-user', 'How did you handle retention?', '2026-05-29T10:15:00Z'),
-  ('seed-comment-3', 'seed-post-2', 'demo-user', 'This is the post I needed today.', '2026-05-29T08:00:00Z');
+  ('seed-post-1', 'demo-user', 'Update', 'Tech', 'Launched', 'Sharing a build note from the demo feed. Replace this with a real post once you publish from your profile.', '2026-05-29T09:00:00Z'),
+  ('seed-post-2', 'demo-user', 'Update', 'Finance', 'Building', 'Looking for feedback on founder onboarding flows and the first profile setup experience.', '2026-05-29T06:00:00Z'),
+  ('seed-post-3', 'demo-user', 'Milestone', 'Fashion', 'Launched', 'Posting a founder reflection without claiming revenue, traction, or outcomes that have not been verified.', '2026-05-29T03:00:00Z'),
+  ('seed-post-4', 'demo-user', 'Milestone', 'Health', 'Launched', 'Use this space for real launches, asks, and lessons once community members start posting.', '2026-05-27T09:00:00Z');

@@ -136,12 +136,37 @@ async function getPosts(db, userId) {
   }));
 }
 
+async function getStats(db) {
+  const count = async (sql) => {
+    const row = await db.prepare(sql).first();
+    return Number(row?.value || 0);
+  };
+
+  return {
+    profiles: await count("SELECT COUNT(*) AS value FROM users WHERE id <> 'demo-user' AND email <> ''"),
+    waitlist: await count("SELECT COUNT(*) AS value FROM waitlist"),
+    posts: await count("SELECT COUNT(*) AS value FROM posts WHERE user_id <> 'demo-user'"),
+    comments: await count("SELECT COUNT(*) AS value FROM comments WHERE user_id <> 'demo-user'"),
+    likes: await count("SELECT COUNT(*) AS value FROM post_reactions WHERE kind = 'like' AND user_id <> 'demo-user'"),
+    saves: await count("SELECT COUNT(*) AS value FROM post_reactions WHERE kind = 'save' AND user_id <> 'demo-user'"),
+    connections: await count("SELECT COUNT(*) AS value FROM connections WHERE user_id <> 'demo-user'"),
+    rsvps: await count("SELECT COUNT(*) AS value FROM event_rsvps WHERE user_id <> 'demo-user'"),
+    mentorRequests: await count("SELECT COUNT(*) AS value FROM mentor_requests WHERE user_id <> 'demo-user'"),
+    messages: await count("SELECT COUNT(*) AS value FROM messages WHERE author = 'you' AND user_id <> 'demo-user'"),
+    events: await count("SELECT COUNT(*) AS value FROM events"),
+    mentors: await count("SELECT COUNT(*) AS value FROM mentors"),
+  };
+}
+
 async function getBootstrap(db, userId) {
-  const [posts, people, events, mentors, conversations] = await Promise.all([
+  const [posts, people, events, mentors, conversations, stats] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT p.*, EXISTS(SELECT 1 FROM connections c WHERE c.person_id = p.id AND c.user_id = ?) AS connected
+        `SELECT p.*,
+          0 AS mutual,
+          (SELECT COUNT(*) FROM connections c2 WHERE c2.person_id = p.id) AS followers,
+          EXISTS(SELECT 1 FROM connections c WHERE c.person_id = p.id AND c.user_id = ?) AS connected
          FROM people p
          ORDER BY p.id`
       )
@@ -149,7 +174,9 @@ async function getBootstrap(db, userId) {
       .all(),
     db
       .prepare(
-        `SELECT e.*, EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ?) AS going
+        `SELECT e.*,
+          (SELECT COUNT(*) FROM event_rsvps r2 WHERE r2.event_id = e.id) AS attending,
+          EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ?) AS going
          FROM events e
          ORDER BY e.id`
       )
@@ -157,7 +184,10 @@ async function getBootstrap(db, userId) {
       .all(),
     db
       .prepare(
-        `SELECT m.*, EXISTS(SELECT 1 FROM mentor_requests r WHERE r.mentor_id = m.id AND r.user_id = ?) AS requested
+        `SELECT m.*,
+          0 AS rating,
+          (SELECT COUNT(*) FROM mentor_requests r2 WHERE r2.mentor_id = m.id) AS sessions,
+          EXISTS(SELECT 1 FROM mentor_requests r WHERE r.mentor_id = m.id AND r.user_id = ?) AS requested
          FROM mentors m
          ORDER BY m.name`
       )
@@ -203,6 +233,7 @@ async function getBootstrap(db, userId) {
       thread: messageGroups.get(conversation.id) || [],
       draft: "",
     })),
+    stats,
   };
 }
 
@@ -221,10 +252,15 @@ async function handleRequest({ request, env, params }) {
   const method = request.method;
   const rawPath = Array.isArray(params.path) ? params.path.join("/") : params.path || "";
   const path = `/${rawPath}`;
-  const body = method === "GET" ? {} : await readJson(request);
-  const { user, token } = await getOrCreateUser(db, request, body);
 
   if (method === "OPTIONS") return new Response(null, { status: 204 });
+
+  if (method === "GET" && path === "/stats") {
+    return json({ stats: await getStats(db) });
+  }
+
+  const body = method === "GET" ? {} : await readJson(request);
+  const { user, token } = await getOrCreateUser(db, request, body);
 
   if (method === "GET" && path === "/bootstrap") {
     return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
