@@ -63,6 +63,34 @@ const formatProfileSummary = (profile = {}) =>
     `Bio: ${profile.bio || ""}`,
   ].join("\n");
 
+async function recordRegistrationEmail(db, source, email, details = {}) {
+  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+
+  const id = createId("registration_email");
+  try {
+    await db
+      .prepare(
+        `INSERT INTO registration_emails (id, email, source, user_id, name, handle, metadata)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        id,
+        normalizedEmail,
+        source,
+        details.userId || "",
+        details.name || "",
+        details.handle || "",
+        JSON.stringify(details.metadata || {})
+      )
+      .run();
+  } catch (err) {
+    console.warn("registration email log failed", err);
+  }
+
+  return id;
+}
+
 async function recordNotification(db, type, recipient, subject, payload, status = "queued", providerId = "", error = "") {
   const id = createId("email");
   try {
@@ -144,6 +172,16 @@ async function getOrCreateUser(db, env, request, body = {}) {
       .run();
 
   if (profile.email) {
+    await recordRegistrationEmail(db, "account_created", profile.email, {
+      userId: id,
+      name: profile.name,
+      handle: profile.handle,
+      metadata: {
+        location: profile.location,
+        industry: profile.industry,
+        stage: profile.stage,
+      },
+    });
     await sendOwnerNotification(db, env, "account_created", "New fear.social account created", {
       event: "Account creation",
       ...profile,
@@ -238,6 +276,7 @@ async function getStats(db) {
   return {
     profiles: await count("SELECT COUNT(*) AS value FROM users WHERE id <> 'demo-user' AND email <> ''"),
     waitlist: await count("SELECT COUNT(*) AS value FROM waitlist"),
+    emails: await count("SELECT COUNT(*) AS value FROM registration_emails"),
     posts: await count("SELECT COUNT(*) AS value FROM posts WHERE user_id <> 'demo-user'"),
     comments: await count("SELECT COUNT(*) AS value FROM comments WHERE user_id <> 'demo-user'"),
     likes: await count("SELECT COUNT(*) AS value FROM post_reactions WHERE kind = 'like' AND user_id <> 'demo-user'"),
@@ -353,6 +392,21 @@ async function handleRequest({ request, env, params }) {
     return json({ stats: await getStats(db) });
   }
 
+  if (method === "GET" && path === "/admin/emails") {
+    const adminKey = env.ADMIN_API_KEY;
+    const suppliedKey = request.headers.get("x-admin-key") || request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    if (!adminKey || suppliedKey !== adminKey) return json({ error: "Unauthorized" }, { status: 401 });
+    const rows = await db
+      .prepare(
+        `SELECT id, email, source, user_id, name, handle, metadata, created_at
+         FROM registration_emails
+         ORDER BY datetime(created_at) DESC, id DESC
+         LIMIT 500`
+      )
+      .all();
+    return json({ emails: rows.results || [] });
+  }
+
   const body = method === "GET" ? {} : await readJson(request);
 
   if (method === "POST" && path === "/waitlist") {
@@ -360,6 +414,7 @@ async function handleRequest({ request, env, params }) {
     if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
     const result = await db.prepare("INSERT OR IGNORE INTO waitlist (email) VALUES (?)").bind(email).run();
     if (result.meta?.changes) {
+      await recordRegistrationEmail(db, "early_access", email);
       await sendOwnerNotification(db, env, "early_access", "New fear.social early access signup", {
         event: "Early access signup",
         email,
@@ -385,6 +440,16 @@ async function handleRequest({ request, env, params }) {
       .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, user.id)
       .run();
     if (shouldNotify) {
+      await recordRegistrationEmail(db, "account_email_added", profile.email, {
+        userId: user.id,
+        name: profile.name,
+        handle: profile.handle,
+        metadata: {
+          location: profile.location,
+          industry: profile.industry,
+          stage: profile.stage,
+        },
+      });
       await sendOwnerNotification(db, env, "account_email_added", "New fear.social account email", {
         event: "Account email added",
         ...profile,
