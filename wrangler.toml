@@ -3,6 +3,10 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
+[vars]
+NOTIFICATION_EMAIL = "tsbrown223@gmail.com"
+EMAIL_FROM = "fear.social <notifications@fear.social>"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "fear-social-db"

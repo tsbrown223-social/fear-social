@@ -17,6 +17,7 @@ const readJson = async (request) => {
 };
 
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
+const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
 
 const requireDb = (env) => {
   if (!env.DB) {
@@ -43,7 +44,91 @@ const normalizeProfile = (profile = {}) => {
   };
 };
 
-async function getOrCreateUser(db, request, body = {}) {
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const formatProfileSummary = (profile = {}) =>
+  [
+    `Name: ${profile.name || "Unknown"}`,
+    `Handle: ${profile.handle || ""}`,
+    `Email: ${profile.email || ""}`,
+    `Location: ${profile.location || ""}`,
+    `Industry: ${profile.industry || ""}`,
+    `Stage: ${profile.stage || ""}`,
+    `Bio: ${profile.bio || ""}`,
+  ].join("\n");
+
+async function recordNotification(db, type, recipient, subject, payload, status = "queued", providerId = "", error = "") {
+  const id = createId("email");
+  try {
+    await db
+      .prepare(
+        `INSERT INTO email_notifications (id, type, recipient, subject, payload, status, provider_id, error)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(id, type, recipient, subject, JSON.stringify(payload), status, providerId, error)
+      .run();
+  } catch (err) {
+    console.warn("email notification log failed", err);
+  }
+  return id;
+}
+
+async function updateNotification(db, id, status, providerId = "", error = "") {
+  if (!id) return;
+  try {
+    await db
+      .prepare(
+        "UPDATE email_notifications SET status = ?, provider_id = ?, error = ?, sent_at = CASE WHEN ? = 'sent' THEN CURRENT_TIMESTAMP ELSE sent_at END WHERE id = ?"
+      )
+      .bind(status, providerId, error, status, id)
+      .run();
+  } catch (err) {
+    console.warn("email notification update failed", err);
+  }
+}
+
+async function sendOwnerNotification(db, env, type, subject, payload) {
+  const recipient = env.NOTIFICATION_EMAIL || NOTIFICATION_EMAIL;
+  const logId = await recordNotification(db, type, recipient, subject, payload);
+
+  if (!env.RESEND_API_KEY) {
+    await updateNotification(db, logId, "queued", "", "RESEND_API_KEY is not configured in Cloudflare Pages secrets.");
+    return { sent: false, queued: true };
+  }
+
+  const lines = Object.entries(payload).map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</p>`).join("");
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM || "fear.social <notifications@fear.social>",
+      to: recipient,
+      subject,
+      html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#111318"><h2>${escapeHtml(subject)}</h2>${lines}</div>`,
+      text: `${subject}\n\n${Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join("\n")}`,
+    }),
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    await updateNotification(db, logId, "failed", "", JSON.stringify(result).slice(0, 800));
+    return { sent: false, queued: false, error: result };
+  }
+
+  await updateNotification(db, logId, "sent", result.id || "");
+  return { sent: true, providerId: result.id || "" };
+}
+
+async function getOrCreateUser(db, env, request, body = {}) {
   const token = request.headers.get("x-fear-token") || body.token || crypto.randomUUID();
   const existing = await db.prepare("SELECT * FROM users WHERE token = ?").bind(token).first();
   if (existing) return { user: existing, token, created: false };
@@ -56,7 +141,15 @@ async function getOrCreateUser(db, request, body = {}) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(id, token, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio)
-    .run();
+      .run();
+
+  if (profile.email) {
+    await sendOwnerNotification(db, env, "account_created", "New fear.social account created", {
+      event: "Account creation",
+      ...profile,
+      summary: formatProfileSummary(profile),
+    });
+  }
 
   return {
     user: { id, token, ...profile },
@@ -194,6 +287,7 @@ async function getBootstrap(db, userId) {
       .bind(userId)
       .all(),
     db.prepare("SELECT * FROM conversations ORDER BY id").all(),
+    getStats(db),
   ]);
 
   const messages = await db.prepare("SELECT * FROM messages ORDER BY datetime(created_at), id").all();
@@ -260,7 +354,21 @@ async function handleRequest({ request, env, params }) {
   }
 
   const body = method === "GET" ? {} : await readJson(request);
-  const { user, token } = await getOrCreateUser(db, request, body);
+
+  if (method === "POST" && path === "/waitlist") {
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
+    const result = await db.prepare("INSERT OR IGNORE INTO waitlist (email) VALUES (?)").bind(email).run();
+    if (result.meta?.changes) {
+      await sendOwnerNotification(db, env, "early_access", "New fear.social early access signup", {
+        event: "Early access signup",
+        email,
+      });
+    }
+    return json({ ok: true });
+  }
+
+  const { user, token } = await getOrCreateUser(db, env, request, body);
 
   if (method === "GET" && path === "/bootstrap") {
     return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
@@ -268,6 +376,7 @@ async function handleRequest({ request, env, params }) {
 
   if (method === "PUT" && path === "/profile") {
     const profile = normalizeProfile(body.profile);
+    const shouldNotify = profile.email && profile.email !== user.email;
     await db
       .prepare(
         `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
@@ -275,14 +384,15 @@ async function handleRequest({ request, env, params }) {
       )
       .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, user.id)
       .run();
+    if (shouldNotify) {
+      await sendOwnerNotification(db, env, "account_email_added", "New fear.social account email", {
+        event: "Account email added",
+        ...profile,
+        userId: user.id,
+        summary: formatProfileSummary(profile),
+      });
+    }
     return json({ token, profile });
-  }
-
-  if (method === "POST" && path === "/waitlist") {
-    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
-    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
-    await db.prepare("INSERT OR IGNORE INTO waitlist (email) VALUES (?)").bind(email).run();
-    return json({ ok: true });
   }
 
   if (method === "POST" && path === "/posts") {
