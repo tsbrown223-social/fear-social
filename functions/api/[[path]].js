@@ -18,11 +18,25 @@ const readJson = async (request) => {
 
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
+const SESSION_TTL_DAYS = 30;
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   return String(100000 + (values[0] % 900000));
+};
+
+const sha256 = async (value) => {
+  const bytes = new TextEncoder().encode(value);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+const addDays = (days) => new Date(Date.now() + days * 86400000).toISOString();
+
+const getClientKey = (request) => {
+  const forwarded = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
+  return forwarded.split(",")[0].trim() || "local";
 };
 
 const normalizeUsername = (value, fallback = "founder") => {
@@ -60,6 +74,8 @@ const normalizeProfile = (profile = {}) => {
     industry: String(profile.industry || "Tech").trim().slice(0, 40),
     stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
     bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
+    privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
+    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 500),
   };
 };
 
@@ -82,6 +98,37 @@ const formatProfileSummary = (profile = {}) =>
     `Stage: ${profile.stage || ""}`,
     `Bio: ${profile.bio || ""}`,
   ].join("\n");
+
+async function safeRun(db, sql, bindings = []) {
+  try {
+    return await db.prepare(sql).bind(...bindings).run();
+  } catch (err) {
+    console.warn("database write failed", err);
+    return null;
+  }
+}
+
+async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 300) {
+  const bucket = Math.floor(Date.now() / (windowSeconds * 1000));
+  const id = `${key}:${getClientKey(request)}:${bucket}`;
+  try {
+    const existing = await db.prepare("SELECT count FROM api_rate_limits WHERE id = ?").bind(id).first();
+    if (existing && Number(existing.count) >= limit) {
+      return json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+    }
+    if (existing) {
+      await db.prepare("UPDATE api_rate_limits SET count = count + 1 WHERE id = ?").bind(id).run();
+    } else {
+      await db
+        .prepare("INSERT INTO api_rate_limits (id, route, client_key, bucket, count, expires_at) VALUES (?, ?, ?, ?, 1, ?)")
+        .bind(id, key, getClientKey(request), String(bucket), new Date(Date.now() + windowSeconds * 1000).toISOString())
+        .run();
+    }
+  } catch (err) {
+    console.warn("rate limit failed", err);
+  }
+  return null;
+}
 
 async function recordRegistrationEmail(db, source, email, details = {}) {
   const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
@@ -141,8 +188,7 @@ async function updateNotification(db, id, status, providerId = "", error = "") {
   }
 }
 
-async function sendOwnerNotification(db, env, type, subject, payload) {
-  const recipient = env.NOTIFICATION_EMAIL || NOTIFICATION_EMAIL;
+async function sendEmailNotification(db, env, type, recipient, subject, payload) {
   const logId = await recordNotification(db, type, recipient, subject, payload);
 
   if (!env.RESEND_API_KEY) {
@@ -176,6 +222,10 @@ async function sendOwnerNotification(db, env, type, subject, payload) {
   return { sent: true, queued: false, logId, providerId: result.id || "" };
 }
 
+async function sendOwnerNotification(db, env, type, subject, payload) {
+  return sendEmailNotification(db, env, type, env.NOTIFICATION_EMAIL || NOTIFICATION_EMAIL, subject, payload);
+}
+
 async function createEmailVerification(db, env, purpose, email, details = {}) {
   const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
   if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
@@ -198,7 +248,15 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
     console.warn("email verification log failed", err);
   }
 
-  const notification = await sendOwnerNotification(db, env, "email_verification", "fear.social email verification code", {
+  const userNotification = await sendEmailNotification(db, env, "email_verification", normalizedEmail, "Your fear.social verification code", {
+    event: "Email verification requested",
+    purpose,
+    email: normalizedEmail,
+    username: handle,
+    verificationCode: code,
+    expiresAt,
+  });
+  const ownerNotification = await sendOwnerNotification(db, env, "owner_email_verification", "fear.social email verification requested", {
     event: "Email verification requested",
     purpose,
     email: normalizedEmail,
@@ -207,24 +265,42 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
     expiresAt,
   });
 
-  if (notification?.logId) {
+  if (userNotification?.logId) {
     try {
       await db
         .prepare("UPDATE email_verifications SET notification_id = ? WHERE id = ?")
-        .bind(notification.logId, id)
+        .bind(userNotification.logId, id)
         .run();
     } catch (err) {
       console.warn("email verification notification link failed", err);
     }
   }
 
-  return { id, code, expiresAt, notification };
+  return { id, code, expiresAt, notification: userNotification, ownerNotification };
 }
 
 async function getOrCreateUser(db, env, request, body = {}) {
-  const token = request.headers.get("x-fear-token") || body.token || crypto.randomUUID();
+  const token = request.headers.get("x-fear-token") || body.token || "";
+  if (!token && !body.profile) {
+    return { error: "Authentication required", status: 401 };
+  }
   const existing = await db.prepare("SELECT * FROM users WHERE token = ?").bind(token).first();
   if (existing) return { user: existing, token, created: false };
+  const session = token
+    ? await db
+        .prepare(
+          `SELECT u.*
+           FROM user_sessions s
+           JOIN users u ON u.id = s.user_id
+           WHERE s.token_hash = ? AND s.revoked_at IS NULL AND datetime(s.expires_at) > datetime('now')`
+        )
+        .bind(await sha256(token))
+        .first()
+    : null;
+  if (session) {
+    await safeRun(db, "UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [session.id]);
+    return { user: session, token, created: false };
+  }
 
   const profile = normalizeProfile(body.profile);
   if (profile.email) {
@@ -241,13 +317,15 @@ async function getOrCreateUser(db, env, request, body = {}) {
   if (handleOwner) return { error: "Username is already taken", token, created: false };
 
   const id = createId("user");
+  const sessionToken = token || crypto.randomUUID();
   await db
     .prepare(
-      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(id, token, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio)
+    .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl)
       .run();
+  await createSession(db, id, sessionToken, request);
 
   if (profile.email) {
     await recordRegistrationEmail(db, "account_created", profile.email, {
@@ -271,9 +349,28 @@ async function getOrCreateUser(db, env, request, body = {}) {
 
   return {
     user: { id, token, ...profile },
-    token,
+    token: sessionToken,
     created: true,
   };
+}
+
+async function createSession(db, userId, token, request) {
+  const sessionToken = token || crypto.randomUUID();
+  await safeRun(
+    db,
+    `INSERT INTO user_sessions (id, user_id, token_hash, user_agent, ip_hash, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      createId("session"),
+      userId,
+      await sha256(sessionToken),
+      String(request.headers.get("user-agent") || "").slice(0, 300),
+      await sha256(getClientKey(request)),
+      addDays(SESSION_TTL_DAYS),
+    ]
+  );
+  await safeRun(db, "UPDATE users SET token = ?, last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [sessionToken, userId]);
+  return sessionToken;
 }
 
 const timeAgo = (createdAt) => {
@@ -355,6 +452,7 @@ async function getStats(db) {
 
   return {
     profiles: await count("SELECT COUNT(*) AS value FROM users WHERE id <> 'demo-user' AND email <> ''"),
+    verifiedProfiles: await count("SELECT COUNT(*) AS value FROM users WHERE id <> 'demo-user' AND email <> '' AND email_verified_at IS NOT NULL"),
     waitlist: await count("SELECT COUNT(*) AS value FROM waitlist"),
     emails: await count("SELECT COUNT(*) AS value FROM registration_emails"),
     posts: await count("SELECT COUNT(*) AS value FROM posts WHERE user_id <> 'demo-user'"),
@@ -381,9 +479,11 @@ async function getBootstrap(db, userId) {
           EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
          FROM users u
          WHERE u.id <> 'demo-user' AND u.id <> ? AND u.email IS NOT NULL AND u.email <> ''
+           AND COALESCE(u.privacy, 'public') = 'public'
+           AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = u.id)
          ORDER BY datetime(u.created_at) DESC`
       )
-      .bind(userId, userId)
+      .bind(userId, userId, userId)
       .all(),
     db
       .prepare(
@@ -452,6 +552,28 @@ async function getBootstrap(db, userId) {
   };
 }
 
+async function completeVerification(db, email, code, purpose = "") {
+  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  const normalizedCode = String(code || "").trim();
+  if (!normalizedEmail || !normalizedEmail.includes("@") || !/^\d{6}$/.test(normalizedCode)) return null;
+  const verification = await db
+    .prepare(
+      `SELECT * FROM email_verifications
+       WHERE lower(email) = lower(?) AND code = ? AND status = 'pending'
+         AND datetime(expires_at) > datetime('now')
+         ${purpose ? "AND purpose = ?" : ""}
+       ORDER BY datetime(created_at) DESC
+       LIMIT 1`
+    )
+    .bind(...(purpose ? [normalizedEmail, normalizedCode, purpose] : [normalizedEmail, normalizedCode]))
+    .first();
+  if (!verification) return null;
+  await db.prepare("UPDATE email_verifications SET status = 'verified', verified_at = CURRENT_TIMESTAMP WHERE id = ?").bind(verification.id).run();
+  await safeRun(db, "UPDATE users SET email_verified_at = CURRENT_TIMESTAMP WHERE lower(email) = lower(?)", [normalizedEmail]);
+  await safeRun(db, "UPDATE waitlist SET verified_at = CURRENT_TIMESTAMP WHERE lower(email) = lower(?)", [normalizedEmail]);
+  return verification;
+}
+
 async function toggleRow(db, table, userId, column, value) {
   const existing = await db.prepare(`SELECT 1 FROM ${table} WHERE user_id = ? AND ${column} = ?`).bind(userId, value).first();
   if (existing) {
@@ -489,9 +611,91 @@ async function handleRequest({ request, env, params }) {
     return json({ emails: rows.results || [] });
   }
 
+  if (method === "GET" && path === "/admin/summary") {
+    const adminKey = env.ADMIN_API_KEY;
+    const suppliedKey = request.headers.get("x-admin-key") || request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    if (!adminKey || suppliedKey !== adminKey) return json({ error: "Unauthorized" }, { status: 401 });
+    const [stats, verifications, notifications, reports, sessions] = await Promise.all([
+      getStats(db),
+      db.prepare("SELECT status, COUNT(*) AS count FROM email_verifications GROUP BY status").all(),
+      db.prepare("SELECT status, COUNT(*) AS count FROM email_notifications GROUP BY status").all(),
+      db.prepare("SELECT status, COUNT(*) AS count FROM content_reports GROUP BY status").all(),
+      db.prepare("SELECT COUNT(*) AS count FROM user_sessions WHERE revoked_at IS NULL AND datetime(expires_at) > datetime('now')").first(),
+    ]);
+    return json({
+      stats,
+      verifications: verifications.results || [],
+      notifications: notifications.results || [],
+      reports: reports.results || [],
+      activeSessions: Number(sessions?.count || 0),
+    });
+  }
+
   const body = method === "GET" ? {} : await readJson(request);
 
+  if (method === "POST" && path === "/auth/request-code") {
+    const limited = await enforceRateLimit(db, request, "auth-request-code", 5, 600);
+    if (limited) return limited;
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const username = normalizeUsername(body.username || email.split("@")[0], "founder");
+    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
+    const existing = await db.prepare("SELECT handle FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    const verification = await createEmailVerification(db, env, "login", email, {
+      username: existing?.handle || username,
+      handle: existing?.handle || `@${username}`,
+    });
+    return json({
+      ok: true,
+      verificationSent: Boolean(verification?.notification?.sent),
+      verificationQueued: Boolean(verification?.notification?.queued),
+    });
+  }
+
+  if (method === "POST" && path === "/auth/verify") {
+    const limited = await enforceRateLimit(db, request, "auth-verify", 10, 600);
+    if (limited) return limited;
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const verification = await completeVerification(db, email, body.code, body.purpose || "");
+    if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
+    let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    const profile = normalizeProfile({
+      ...(body.profile || {}),
+      email,
+      username: verification.username || body.username || email.split("@")[0],
+    });
+    if (!user) {
+      const id = createId("user");
+      const sessionToken = crypto.randomUUID();
+      await db
+        .prepare(
+          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, email_verified_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+        )
+        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl)
+        .run();
+      await recordRegistrationEmail(db, "verified_account_created", email, {
+        userId: id,
+        name: profile.name,
+        handle: profile.handle,
+        username: profile.username,
+      });
+      user = { id, token: sessionToken, ...profile, email_verified_at: new Date().toISOString() };
+    }
+    const token = await createSession(db, user.id, crypto.randomUUID(), request);
+    return json({ ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+  }
+
+  if (method === "POST" && path === "/verify-email") {
+    const limited = await enforceRateLimit(db, request, "verify-email", 10, 600);
+    if (limited) return limited;
+    const verification = await completeVerification(db, body.email, body.code, body.purpose || "");
+    if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
+    return json({ ok: true, email: verification.email, purpose: verification.purpose });
+  }
+
   if (method === "POST" && path === "/waitlist") {
+    const limited = await enforceRateLimit(db, request, "waitlist", 8, 600);
+    if (limited) return limited;
     const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
     const username = normalizeUsername(body.username || email.split("@")[0], "founder");
     const handle = `@${username}`;
@@ -545,11 +749,30 @@ async function handleRequest({ request, env, params }) {
   }
 
   const auth = await getOrCreateUser(db, env, request, body);
-  if (auth.error) return json({ error: auth.error }, { status: 409 });
+  if (auth.error) return json({ error: auth.error }, { status: auth.status || 409 });
   const { user, token } = auth;
 
   if (method === "GET" && path === "/bootstrap") {
     return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+  }
+
+  if (method === "GET" && path === "/notifications") {
+    const rows = await db
+      .prepare(
+        `SELECT id, actor_user_id, type, body, target_type, target_id, read_at, created_at
+         FROM user_notifications
+         WHERE user_id = ?
+         ORDER BY datetime(created_at) DESC
+         LIMIT 100`
+      )
+      .bind(user.id)
+      .all();
+    return json({ notifications: rows.results || [] });
+  }
+
+  if (method === "POST" && path === "/notifications/read") {
+    await db.prepare("UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL").bind(user.id).run();
+    return json({ ok: true });
   }
 
   if (method === "PUT" && path === "/profile") {
@@ -569,7 +792,7 @@ async function handleRequest({ request, env, params }) {
       const mergedProfile = normalizeProfile({ ...duplicate, ...profile });
       await db
         .prepare(
-          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
+          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP
            WHERE id = ?`
         )
         .bind(
@@ -580,6 +803,8 @@ async function handleRequest({ request, env, params }) {
           mergedProfile.industry,
           mergedProfile.stage,
           mergedProfile.bio,
+          mergedProfile.privacy,
+          mergedProfile.avatarUrl,
           duplicate.id
         )
         .run();
@@ -591,10 +816,10 @@ async function handleRequest({ request, env, params }) {
 
     await db
       .prepare(
-        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
+        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`
       )
-      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, user.id)
+      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, user.id)
       .run();
     if (shouldNotify) {
       await recordRegistrationEmail(db, "account_email_added", profile.email, {
@@ -620,6 +845,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && path === "/posts") {
+    const limited = await enforceRateLimit(db, request, "posts", 20, 600);
+    if (limited) return limited;
     const content = String(body.content || "").trim().slice(0, 1200);
     if (!content) return json({ error: "Post content required" }, { status: 400 });
     const id = createId("post");
@@ -635,12 +862,22 @@ async function handleRequest({ request, env, params }) {
 
   const segments = path.split("/").filter(Boolean);
   if (method === "POST" && segments[0] === "posts" && segments[2] === "comments") {
+    const limited = await enforceRateLimit(db, request, "comments", 30, 600);
+    if (limited) return limited;
     const text = String(body.text || "").trim().slice(0, 600);
     if (!text) return json({ error: "Comment text required" }, { status: 400 });
     await db
       .prepare("INSERT INTO comments (id, post_id, user_id, text) VALUES (?, ?, ?, ?)")
       .bind(createId("comment"), segments[1], user.id, text)
       .run();
+    const postOwner = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(segments[1]).first();
+    if (postOwner?.user_id && postOwner.user_id !== user.id) {
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), postOwner.user_id, user.id, "comment", `${user.name} commented on your post.`, "post", segments[1]]
+      );
+    }
     return json({ posts: await getPosts(db, user.id) });
   }
 
@@ -661,8 +898,56 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "people" && segments[2] === "connect") {
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
-    await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
+    const connected = await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
+    if (connected) {
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), targetUserId, user.id, "follow", `${user.name} followed you.`, "user", user.id]
+      );
+    }
     return json(await getBootstrap(db, user.id));
+  }
+
+  if (method === "POST" && segments[0] === "people" && segments[2] === "block") {
+    const targetUserId = segments[1];
+    if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    await db.prepare("INSERT OR IGNORE INTO user_blocks (user_id, blocked_user_id) VALUES (?, ?)").bind(user.id, targetUserId).run();
+    await safeRun(db, "DELETE FROM user_connections WHERE (user_id = ? AND target_user_id = ?) OR (user_id = ? AND target_user_id = ?)", [
+      user.id,
+      targetUserId,
+      targetUserId,
+      user.id,
+    ]);
+    return json(await getBootstrap(db, user.id));
+  }
+
+  if (method === "POST" && path === "/reports") {
+    const targetType = String(body.targetType || "").trim().slice(0, 40);
+    const targetId = String(body.targetId || "").trim().slice(0, 120);
+    const reason = String(body.reason || "").trim().slice(0, 600);
+    if (!targetType || !targetId || !reason) return json({ error: "Report target and reason required" }, { status: 400 });
+    await db
+      .prepare("INSERT INTO content_reports (id, reporter_user_id, target_type, target_id, reason) VALUES (?, ?, ?, ?, ?)")
+      .bind(createId("report"), user.id, targetType, targetId, reason)
+      .run();
+    await sendOwnerNotification(db, env, "content_report", "fear.social content report", {
+      reporter: user.handle,
+      targetType,
+      targetId,
+      reason,
+    });
+    return json({ ok: true });
+  }
+
+  if (method === "POST" && path === "/media") {
+    const url = String(body.url || "").trim().slice(0, 500);
+    const kind = String(body.kind || "image").trim().slice(0, 40);
+    const alt = String(body.alt || "").trim().slice(0, 240);
+    if (!/^https:\/\//.test(url)) return json({ error: "A secure media URL is required" }, { status: 400 });
+    const id = createId("media");
+    await db.prepare("INSERT INTO media_assets (id, user_id, kind, url, alt) VALUES (?, ?, ?, ?, ?)").bind(id, user.id, kind, url, alt).run();
+    return json({ ok: true, media: { id, kind, url, alt } }, { status: 201 });
   }
 
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {

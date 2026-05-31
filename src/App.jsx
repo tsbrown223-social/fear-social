@@ -268,7 +268,7 @@ function LandingPage({setScreen,notify}){
             <span style={{fontSize:36}}>🌱</span>
             <div style={{textAlign:"left"}}>
               <div style={{fontWeight:700,color:"#fff",fontSize:19}}>You're on the list.</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox — we'll be in touch soon.</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox for a verification code.</div>
             </div>
             <GBtn sm onClick={()=>setScreen("signup")} style={{marginLeft:16}}>Enter App →</GBtn>
           </div>
@@ -368,19 +368,43 @@ function LandingPage({setScreen,notify}){
 
 function SignupPage({setScreen,notify,setProfile}){
   const [form,setForm]=useState({name:"",username:"",email:"",stage:""});
+  const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const valid=form.name&&form.username&&form.email&&form.stage;
+  const requestCode=async()=>{
+    if(!valid)return;
+    try{
+      await api("/auth/request-code",{method:"POST",body:JSON.stringify({email:form.email,username:form.username})});
+      setStep(1);
+      notify("Verification code sent");
+    }catch(err){
+      notify(err.message||"Could not send verification code","error");
+    }
+  };
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email,stage:form.stage};
-    setProfile(p=>({...p,...nextProfile}));
     try{
-      const saved=await api("/profile",{method:"PUT",body:JSON.stringify({profile:nextProfile})});
+      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile})});
       setProfile(p=>({...p,...saved.profile}));
-    }catch{}
+    }catch(err){
+      notify(err.message||"Could not verify email","error");
+      return;
+    }
     setScreen("app");
-    notify("Welcome to fear.social! 🚀");
+    notify("Welcome to fear.social!");
   };
   if(step===1) return(
+    <div style={{minHeight:"100vh",background:C.dark,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{background:"#fff",borderRadius:24,padding:36,width:"min(440px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.28)"}}>
+        <div style={{fontFamily:"Georgia,serif",fontSize:34,fontWeight:700,color:C.text,marginBottom:8,letterSpacing:0}}>Verify your email</div>
+        <div style={{fontSize:14,color:C.muted,lineHeight:1.7,marginBottom:24}}>Enter the 6-digit code sent to {form.email}.</div>
+        <input value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&code.length===6&&enterApp()} placeholder="000000" inputMode="numeric" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${code.length===6?C.accent:C.border}`,borderRadius:12,padding:"16px",fontSize:24,fontWeight:900,letterSpacing:4,textAlign:"center",color:C.text,marginBottom:16}}/>
+        <GBtn full onClick={enterApp} style={{opacity:code.length===6?1:.45,pointerEvents:code.length===6?"auto":"none"}}>Verify and enter →</GBtn>
+        <button onClick={requestCode} className="bs" style={{marginTop:14,width:"100%",background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Send a new code</button>
+      </div>
+    </div>
+  );
+  if(step===2) return(
     <div style={{minHeight:"100vh",background:GR,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
       <div style={{textAlign:"center",maxWidth:440}}>
         <div style={{fontSize:72,marginBottom:30}}>🌱</div>
@@ -430,7 +454,7 @@ function SignupPage({setScreen,notify,setProfile}){
                 ))}
               </div>
             </div>
-            <GBtn full onClick={()=>valid&&setStep(1)} style={{opacity:valid?1:0.45,pointerEvents:valid?"auto":"none"}}>Join the Community →</GBtn>
+            <GBtn full onClick={requestCode} style={{opacity:valid?1:0.45,pointerEvents:valid?"auto":"none"}}>Send verification code →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
         </div>
