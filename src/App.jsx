@@ -166,6 +166,14 @@ function clearSessionToken(){
   }catch{}
 }
 
+try{
+  const version="real-users-v1";
+  if(localStorage.getItem("fear-data-version")!==version){
+    ["fear-posts","fear-people","fear-events","fear-mentors","fear-messages","fear-stats"].forEach(key=>localStorage.removeItem(key));
+    localStorage.setItem("fear-data-version",version);
+  }
+}catch{}
+
 async function api(path,options={}){
   const headers={"content-type":"application/json","x-fear-token":getSessionToken(),...(options.headers||{})};
   const res=await fetch(`/api${path}`,{...options,headers});
@@ -189,43 +197,13 @@ const ToastCtx=({toasts,remove})=>(
 
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
 
-const POSTS=[
-  {id:1,user:"Maya Kim",handle:"@mayabuilds",av:"MK",tag:"Tech",stage:"Launched",time:"2h",content:"Sharing a build note from the demo feed. Replace this with a real post once you publish from your profile.",likes:0,comments:[],saved:false,liked:false},
-  {id:2,user:"Jordan Lee",handle:"@jordanlaunch",av:"JL",tag:"Finance",stage:"Building",time:"5h",content:"Looking for feedback on founder onboarding flows and the first profile setup experience.",likes:0,comments:[],saved:false,liked:false},
-  {id:3,user:"Priya Shah",handle:"@priyastartup",av:"PS",tag:"Fashion",stage:"Launched",time:"8h",content:"Posting a founder reflection without claiming revenue, traction, or outcomes that have not been verified.",likes:0,comments:[],saved:false,liked:false},
-  {id:4,user:"Raj K.",handle:"@rajbuilds",av:"RK",tag:"Health",stage:"Launched",time:"2d",content:"Use this space for real launches, asks, and lessons once community members start posting.",likes:0,comments:[],saved:false,liked:false},
-];
-const PEOPLE=[
-  {id:1,name:"Sofia R.",handle:"@sofiabuilds",av:"SR",stage:"Building",industry:"Food",mutual:0,loc:"Austin, TX",bio:"Founder profile placeholder for the live directory.",followers:0,connected:false,online:true},
-  {id:2,name:"Ethan M.",handle:"@ethanmakes",av:"EM",stage:"Launched",industry:"Tech",mutual:0,loc:"San Francisco, CA",bio:"Founder profile placeholder for the live directory.",followers:0,connected:false,online:false},
-  {id:3,name:"Aisha P.",handle:"@aishapriya",av:"AP",stage:"Idea",industry:"Health",mutual:0,loc:"New York, NY",bio:"Founder profile placeholder for the live directory.",followers:0,connected:false,online:true},
-  {id:4,name:"Leo C.",handle:"@leocreates",av:"LC",stage:"Building",industry:"Fashion",mutual:0,loc:"Los Angeles, CA",bio:"Founder profile placeholder for the live directory.",followers:0,connected:false,online:false},
-];
-const MENTORS=[
-  {name:"Alexis Chen",role:"Mentor profile",av:"AC",sessions:0,rating:null,tags:["SaaS","Fundraising"],bio:"Mentor listing. Request counts update from the live database.",requested:false},
-  {name:"Marcus Webb",role:"Mentor profile",av:"MW",sessions:0,rating:null,tags:["DTC","Shopify"],bio:"Mentor listing. Request counts update from the live database.",requested:false},
-  {name:"Destiny Okafor",role:"Mentor profile",av:"DO",sessions:0,rating:null,tags:["Growth","Brand"],bio:"Mentor listing. Request counts update from the live database.",requested:false},
-];
-const EVENTS=[
-  {id:1,title:"Founder Fireside",host:"fear.social Team",date:"Apr 26",time:"7:00 PM EST",type:"Virtual",tag:"Finance",spots:0,attending:0,going:false,desc:"Event placeholder. RSVP totals update from the live database."},
-  {id:2,title:"fear.social Meetup - Denver, CO",host:"fear.social Team",date:"May 3",time:"6:30 PM MT",type:"In-Person",tag:"Networking",spots:0,attending:0,going:false,desc:"Event placeholder. RSVP totals update from the live database."},
-  {id:3,title:"Build in Public: Product Teardown",host:"fear.social Team",date:"May 10",time:"5:00 PM EST",type:"Virtual",tag:"Tech",spots:0,attending:0,going:false,desc:"Event placeholder. RSVP totals update from the live database."},
-];
-const DEALS=[
-  {id:1,title:"Fractional growth lead",company:"Northstar AI",budget:"Details pending",tag:"Growth",desc:"Opportunity listing. Compensation details should be added only when verified."},
-  {id:2,title:"Founding designer",company:"LoopCart",budget:"Details pending",tag:"Tech",desc:"Opportunity listing. Compensation details should be added only when verified."},
-  {id:3,title:"Beta customers wanted",company:"Atlas Health",budget:"Details pending",tag:"Health",desc:"Opportunity listing. Terms should be added only when verified."},
-];
-const GROUPS=[
-  {id:1,name:"Customer Discovery",members:0,active:"No live activity yet",desc:"Tactics, teardowns, and distribution experiments."},
-  {id:2,name:"Solo Founders",members:0,active:"No live activity yet",desc:"Build rhythm, accountability, and emotional support."},
-  {id:3,name:"Fundraising Room",members:0,active:"No live activity yet",desc:"Warm intros, deck critique, and investor updates."},
-];
-const INITIAL_MESSAGES=[
-  {id:1,name:"Sofia R.",av:"SR",online:true,thread:["Loved your build-in-public post.", "Want to compare launch notes this week?"],draft:""},
-  {id:2,name:"Ethan M.",av:"EM",online:false,thread:["I saw your post about fundraising.", "Happy to send over our angel update template."],draft:""},
-  {id:3,name:"Aisha P.",av:"AP",online:true,thread:["That mentor session was excellent.", "I booked Alexis next week too."],draft:""},
-];
+const POSTS=[];
+const PEOPLE=[];
+const MENTORS=[];
+const EVENTS=[];
+const DEALS=[];
+const GROUPS=[];
+const INITIAL_MESSAGES=[];
 
 function Navbar({setScreen,notify}){
   const [scrolled,setScrolled]=useState(false);
@@ -653,6 +631,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
                 </div>
               </div>
               <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Tech","Finance","Fashion","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
+              {visiblePosts.length===0&&<EmptyState title="No real posts yet" text="The feed is intentionally empty until a real account publishes a post."/>}
               {visiblePosts.map(p=>(
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
@@ -672,8 +651,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
               ))}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} size={36} online={p.online}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{p.name}</div><div style={{fontSize:11,color:C.dim}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} size={36} online={p.online}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{p.name}</div><div style={{fontSize:11,color:C.dim}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
           </div>
         )}
@@ -695,14 +674,21 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
+function EmptyState({title,text}){
+  return <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:28,textAlign:"center",color:C.muted}}><div style={{fontWeight:900,fontSize:18,color:C.text,marginBottom:8}}>{title}</div><div style={{fontSize:14,lineHeight:1.65}}>{text}</div></div>;
+}
+function MiniEmpty({text}){
+  return <div style={{fontSize:12,color:C.dim,lineHeight:1.55,marginTop:10,padding:"10px 0"}}>{text}</div>;
+}
 function Directory({eyebrow,title,items,render}){
-  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1><div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div></div>;
+  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
 }
 function MessagesView({messages,setMessages,sendMessage}){
   const [active,setActive]=useState(messages[0]?.id);
   const thread=messages.find(m=>m.id===active)||messages[0];
   const messageText=msg=>typeof msg==="string"?msg:msg.text;
   const messageAuthor=msg=>typeof msg==="string"?"them":msg.author;
+  if(messages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{messageText(m.thread[m.thread.length-1])}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
 }
 function ProfilePanel({profile,setEditProfile,stats}){

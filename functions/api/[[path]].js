@@ -162,6 +162,14 @@ async function getOrCreateUser(db, env, request, body = {}) {
   if (existing) return { user: existing, token, created: false };
 
   const profile = normalizeProfile(body.profile);
+  if (profile.email) {
+    const existingEmailUser = await db
+      .prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)")
+      .bind(profile.email)
+      .first();
+    if (existingEmailUser) return { user: existingEmailUser, token: existingEmailUser.token, created: false };
+  }
+
   const id = createId("user");
   await db
     .prepare(
@@ -281,7 +289,7 @@ async function getStats(db) {
     comments: await count("SELECT COUNT(*) AS value FROM comments WHERE user_id <> 'demo-user'"),
     likes: await count("SELECT COUNT(*) AS value FROM post_reactions WHERE kind = 'like' AND user_id <> 'demo-user'"),
     saves: await count("SELECT COUNT(*) AS value FROM post_reactions WHERE kind = 'save' AND user_id <> 'demo-user'"),
-    connections: await count("SELECT COUNT(*) AS value FROM connections WHERE user_id <> 'demo-user'"),
+    connections: await count("SELECT COUNT(*) AS value FROM user_connections WHERE user_id <> 'demo-user'"),
     rsvps: await count("SELECT COUNT(*) AS value FROM event_rsvps WHERE user_id <> 'demo-user'"),
     mentorRequests: await count("SELECT COUNT(*) AS value FROM mentor_requests WHERE user_id <> 'demo-user'"),
     messages: await count("SELECT COUNT(*) AS value FROM messages WHERE author = 'you' AND user_id <> 'demo-user'"),
@@ -295,14 +303,15 @@ async function getBootstrap(db, userId) {
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT p.*,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio,
           0 AS mutual,
-          (SELECT COUNT(*) FROM connections c2 WHERE c2.person_id = p.id) AS followers,
-          EXISTS(SELECT 1 FROM connections c WHERE c.person_id = p.id AND c.user_id = ?) AS connected
-         FROM people p
-         ORDER BY p.id`
+          (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
+          EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
+         FROM users u
+         WHERE u.id <> 'demo-user' AND u.id <> ? AND u.email IS NOT NULL AND u.email <> ''
+         ORDER BY datetime(u.created_at) DESC`
       )
-      .bind(userId)
+      .bind(userId, userId)
       .all(),
     db
       .prepare(
@@ -346,6 +355,7 @@ async function getBootstrap(db, userId) {
     posts,
     people: (people.results || []).map((person) => ({
       ...person,
+      av: initials(person.name),
       online: Boolean(person.online),
       connected: Boolean(person.connected),
     })),
@@ -432,6 +442,33 @@ async function handleRequest({ request, env, params }) {
   if (method === "PUT" && path === "/profile") {
     const profile = normalizeProfile(body.profile);
     const shouldNotify = profile.email && profile.email !== user.email;
+    const duplicate = profile.email
+      ? await db.prepare("SELECT * FROM users WHERE id <> ? AND id <> 'demo-user' AND lower(email) = lower(?)").bind(user.id, profile.email).first()
+      : null;
+    if (duplicate) {
+      const mergedProfile = normalizeProfile({ ...duplicate, ...profile });
+      await db
+        .prepare(
+          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?`
+        )
+        .bind(
+          mergedProfile.name,
+          mergedProfile.handle,
+          mergedProfile.email,
+          mergedProfile.location,
+          mergedProfile.industry,
+          mergedProfile.stage,
+          mergedProfile.bio,
+          duplicate.id
+        )
+        .run();
+      if (!user.email && user.id !== duplicate.id) {
+        await db.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
+      }
+      return json({ token: duplicate.token, profile: mergedProfile });
+    }
+
     await db
       .prepare(
         `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
@@ -500,7 +537,9 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "connect") {
-    await toggleRow(db, "connections", user.id, "person_id", Number(segments[1]));
+    const targetUserId = segments[1];
+    if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
     return json(await getBootstrap(db, user.id));
   }
 
