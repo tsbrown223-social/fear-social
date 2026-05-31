@@ -164,8 +164,23 @@ CREATE TABLE IF NOT EXISTS registration_emails (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS email_verifications (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  username TEXT,
+  code TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  notification_id TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TEXT NOT NULL,
+  verified_at TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_registration_emails_email ON registration_emails(email);
 CREATE INDEX IF NOT EXISTS idx_registration_emails_created_at ON registration_emails(created_at);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_status ON email_verifications(status, expires_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle_unique ON users(handle) WHERE id <> 'demo-user';
 
 INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio)

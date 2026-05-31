@@ -19,6 +19,12 @@ const readJson = async (request) => {
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
 
+const createVerificationCode = () => {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return String(100000 + (values[0] % 900000));
+};
+
 const normalizeUsername = (value, fallback = "founder") => {
   const base = String(value || fallback)
     .trim()
@@ -141,7 +147,7 @@ async function sendOwnerNotification(db, env, type, subject, payload) {
 
   if (!env.RESEND_API_KEY) {
     await updateNotification(db, logId, "queued", "", "RESEND_API_KEY is not configured in Cloudflare Pages secrets.");
-    return { sent: false, queued: true };
+    return { sent: false, queued: true, logId };
   }
 
   const lines = Object.entries(payload).map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</p>`).join("");
@@ -163,11 +169,56 @@ async function sendOwnerNotification(db, env, type, subject, payload) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     await updateNotification(db, logId, "failed", "", JSON.stringify(result).slice(0, 800));
-    return { sent: false, queued: false, error: result };
+    return { sent: false, queued: false, logId, error: result };
   }
 
   await updateNotification(db, logId, "sent", result.id || "");
-  return { sent: true, providerId: result.id || "" };
+  return { sent: true, queued: false, logId, providerId: result.id || "" };
+}
+
+async function createEmailVerification(db, env, purpose, email, details = {}) {
+  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+
+  const username = normalizeUsername(details.username || details.handle || normalizedEmail.split("@")[0], "founder");
+  const handle = details.handle || `@${username}`;
+  const code = createVerificationCode();
+  const id = createId("verification");
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+  try {
+    await db
+      .prepare(
+        `INSERT INTO email_verifications (id, email, username, code, purpose, status, expires_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?)`
+      )
+      .bind(id, normalizedEmail, username, code, purpose, expiresAt)
+      .run();
+  } catch (err) {
+    console.warn("email verification log failed", err);
+  }
+
+  const notification = await sendOwnerNotification(db, env, "email_verification", "fear.social email verification code", {
+    event: "Email verification requested",
+    purpose,
+    email: normalizedEmail,
+    username: handle,
+    verificationCode: code,
+    expiresAt,
+  });
+
+  if (notification?.logId) {
+    try {
+      await db
+        .prepare("UPDATE email_verifications SET notification_id = ? WHERE id = ?")
+        .bind(notification.logId, id)
+        .run();
+    } catch (err) {
+      console.warn("email verification notification link failed", err);
+    }
+  }
+
+  return { id, code, expiresAt, notification };
 }
 
 async function getOrCreateUser(db, env, request, body = {}) {
@@ -215,6 +266,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
       ...profile,
       summary: formatProfileSummary(profile),
     });
+    await createEmailVerification(db, env, "account_created", profile.email, profile);
   }
 
   return {
@@ -445,7 +497,19 @@ async function handleRequest({ request, env, params }) {
     const handle = `@${username}`;
     if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
     const existingWaitlist = await db.prepare("SELECT username FROM waitlist WHERE email = ?").bind(email).first();
-    if (existingWaitlist) return json({ ok: true, username: existingWaitlist.username ? `@${existingWaitlist.username}` : handle });
+    if (existingWaitlist) {
+      const existingUsername = existingWaitlist.username || username;
+      const verification = await createEmailVerification(db, env, "early_access", email, {
+        username: existingUsername,
+        handle: `@${existingUsername}`,
+      });
+      return json({
+        ok: true,
+        username: `@${existingUsername}`,
+        verificationSent: Boolean(verification?.notification?.sent),
+        verificationQueued: Boolean(verification?.notification?.queued),
+      });
+    }
     const taken = await db
       .prepare(
         `SELECT 1 FROM waitlist WHERE lower(username) = lower(?)
@@ -463,8 +527,21 @@ async function handleRequest({ request, env, params }) {
         email,
         username: handle,
       });
+      const verification = await createEmailVerification(db, env, "early_access", email, { username, handle });
+      return json({
+        ok: true,
+        username: handle,
+        verificationSent: Boolean(verification?.notification?.sent),
+        verificationQueued: Boolean(verification?.notification?.queued),
+      });
     }
-    return json({ ok: true, username: handle });
+    const verification = await createEmailVerification(db, env, "early_access", email, { username, handle });
+    return json({
+      ok: true,
+      username: handle,
+      verificationSent: Boolean(verification?.notification?.sent),
+      verificationQueued: Boolean(verification?.notification?.queued),
+    });
   }
 
   const auth = await getOrCreateUser(db, env, request, body);
@@ -537,6 +614,7 @@ async function handleRequest({ request, env, params }) {
         userId: user.id,
         summary: formatProfileSummary(profile),
       });
+      await createEmailVerification(db, env, "account_email_added", profile.email, profile);
     }
     return json({ token, profile });
   }
