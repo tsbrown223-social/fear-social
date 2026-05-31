@@ -197,6 +197,7 @@ const ToastCtx=({toasts,remove})=>(
 
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
 const cleanUsername=value=>String(value||"").toLowerCase().replace(/^@+/,"").replace(/[^a-z0-9._]+/g,"_").replace(/[._]{2,}/g,"_").replace(/^[._]+|[._]+$/g,"").slice(0,30);
+const scrollToSection=id=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});
 
 const POSTS=[];
 const PEOPLE=[];
@@ -209,12 +210,13 @@ const INITIAL_MESSAGES=[];
 function Navbar({setScreen,notify}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
+  const links=[["Features","platform"],["Mentors","activity"],["Community","cta"],["Pricing","pricing"]];
   return(
     <div className="landing-nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:scrolled?"rgba(13,15,20,0.97)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?`1px solid rgba(255,255,255,0.07)`:"none",padding:"0 48px",display:"flex",alignItems:"center",height:68,transition:"all 0.3s"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:22,color:"#fff",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
       <div className="landing-nav-links" style={{display:"flex",gap:4,marginRight:32}}>
-        {["Features","Mentors","Community","Pricing"].map(l=>(
-          <button key={l} className="nl bs" style={{background:"none",border:"none",color:"rgba(255,255,255,0.6)",fontSize:14,fontWeight:500,padding:"7px 13px",cursor:"pointer",borderRadius:8}}>{l}</button>
+        {links.map(([label,id])=>(
+          <button key={label} onClick={()=>scrollToSection(id)} className="nl bs" style={{background:"none",border:"none",color:"rgba(255,255,255,0.6)",fontSize:14,fontWeight:500,padding:"7px 13px",cursor:"pointer",borderRadius:8}}>{label}</button>
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
@@ -293,7 +295,7 @@ function LandingPage({setScreen,notify}){
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:4}}><span style={{color:C.accent}}>✦</span> {t}</span>)}
         </div>
       </div>
-      <div className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div id="platform" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,3.6rem,58px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:18}}>Built for the founders<br/>of tomorrow.</h2>
@@ -318,7 +320,7 @@ function LandingPage({setScreen,notify}){
           ))}
         </div>
       </div>
-      <div className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div id="activity" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,textAlign:"center",marginBottom:64}}>Live platform activity</h2>
         <div className="landing-testimonial-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
           {[{q:`${fmt(stats.posts)} posts are stored in the live database from real platform activity.`,name:"Posts",stage:"Cloudflare D1",av:"PO"},{q:`${fmt(stats.mentorRequests)} mentor requests have been submitted by users.`,name:"Mentors",stage:"Cloudflare D1",av:"ME"},{q:`${fmt(stats.messages)} messages have been sent through the platform.`,name:"Messages",stage:"Cloudflare D1",av:"DM"}].map((t,i)=>(
@@ -330,7 +332,7 @@ function LandingPage({setScreen,notify}){
           ))}
         </div>
       </div>
-      <div className="landing-section" style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,padding:"110px 52px"}}>
+      <div id="pricing" className="landing-section" style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,padding:"110px 52px"}}>
         <div style={{maxWidth:880,margin:"0 auto",textAlign:"center"}}>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:56}}>Start free. Upgrade when ready.</h2>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
@@ -350,7 +352,7 @@ function LandingPage({setScreen,notify}){
           </div>
         </div>
       </div>
-      <div style={{padding:"110px 52px",textAlign:"center",position:"relative",overflow:"hidden"}}>
+      <div id="cta" style={{padding:"110px 52px",textAlign:"center",position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:700,height:700,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,0.06) 0%, transparent 68%)",pointerEvents:"none"}}/>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(40px,4.75rem,76px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:20,position:"relative"}}>Stop building<br/><span style={GRT}>alone.</span></h2>
         <p style={{fontSize:17,color:"rgba(255,255,255,0.38)",marginBottom:48,position:"relative"}}>Your community is already here. Join them.</p>
@@ -359,7 +361,7 @@ function LandingPage({setScreen,notify}){
       <div style={{borderTop:`1px solid ${C.dBorder}`,padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · Empowering tomorrow's founders today.</div>
-        <div style={{display:"flex",gap:20}}>{["Privacy","Terms","Contact"].map(l=><span key={l} style={{fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl">{l}</span>)}</div>
+        <div style={{display:"flex",gap:20}}>{["Privacy","Terms","Contact"].map(l=><button key={l} onClick={()=>notify(`${l} page is being prepared`,"info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">{l}</button>)}</div>
       </div>
     </div>
   );
