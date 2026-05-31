@@ -776,7 +776,11 @@ function ProfilePanel({profile,setEditProfile,stats}){
 
 export default function App(){
   const {toasts,notify,remove}=useToast();
-  const [screenState,setScreenState]=useLocalState("fear-screen",consumeOAuthToken()||window.location.hash.startsWith("#app")||hasSessionToken()?"app":"landing");
+  const initialScreen=consumeOAuthToken()||window.location.hash.startsWith("#app")?"app":"landing";
+  const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
+  useEffect(()=>{
+    if(initialScreen==="landing"&&screenState!=="landing") setScreenState("landing");
+  },[]);
   const [profile,setProfile]=useLocalState("fear-profile",{
     name:"Your Name",
     handle:"@yourhandle",
