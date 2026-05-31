@@ -19,6 +19,18 @@ const readJson = async (request) => {
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
 
+const normalizeUsername = (value, fallback = "founder") => {
+  const base = String(value || fallback)
+    .trim()
+    .toLowerCase()
+    .replace(/^@+/, "")
+    .replace(/[^a-z0-9._]+/g, "_")
+    .replace(/[._]{2,}/g, "_")
+    .replace(/^[._]+|[._]+$/g, "")
+    .slice(0, 30);
+  return base || "founder";
+};
+
 const requireDb = (env) => {
   if (!env.DB) {
     throw new Response(JSON.stringify({ error: "D1 database binding DB is missing" }), {
@@ -31,10 +43,11 @@ const requireDb = (env) => {
 
 const normalizeProfile = (profile = {}) => {
   const name = String(profile.name || "Your Name").trim().slice(0, 80) || "Your Name";
-  const handleInput = String(profile.handle || name.toLowerCase().replace(/[^a-z0-9]+/g, "-")).trim();
-  const handle = (handleInput.startsWith("@") ? handleInput : `@${handleInput}`).slice(0, 40);
+  const username = normalizeUsername(profile.username || profile.handle, name);
+  const handle = `@${username}`;
   return {
     name,
+    username,
     handle,
     email: String(profile.email || "").trim().slice(0, 120),
     location: String(profile.location || "Denver, CO").trim().slice(0, 80),
@@ -55,6 +68,7 @@ const escapeHtml = (value) =>
 const formatProfileSummary = (profile = {}) =>
   [
     `Name: ${profile.name || "Unknown"}`,
+    `Username: ${profile.username ? `@${profile.username}` : profile.handle || ""}`,
     `Handle: ${profile.handle || ""}`,
     `Email: ${profile.email || ""}`,
     `Location: ${profile.location || ""}`,
@@ -80,7 +94,7 @@ async function recordRegistrationEmail(db, source, email, details = {}) {
         source,
         details.userId || "",
         details.name || "",
-        details.handle || "",
+        details.handle || (details.username ? `@${details.username}` : ""),
         JSON.stringify(details.metadata || {})
       )
       .run();
@@ -169,6 +183,11 @@ async function getOrCreateUser(db, env, request, body = {}) {
       .first();
     if (existingEmailUser) return { user: existingEmailUser, token: existingEmailUser.token, created: false };
   }
+  const handleOwner = await db
+    .prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)")
+    .bind(profile.handle)
+    .first();
+  if (handleOwner) return { error: "Username is already taken", token, created: false };
 
   const id = createId("user");
   await db
@@ -184,6 +203,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
       userId: id,
       name: profile.name,
       handle: profile.handle,
+      username: profile.username,
       metadata: {
         location: profile.location,
         industry: profile.industry,
@@ -421,19 +441,35 @@ async function handleRequest({ request, env, params }) {
 
   if (method === "POST" && path === "/waitlist") {
     const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const username = normalizeUsername(body.username || email.split("@")[0], "founder");
+    const handle = `@${username}`;
     if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
-    const result = await db.prepare("INSERT OR IGNORE INTO waitlist (email) VALUES (?)").bind(email).run();
+    const existingWaitlist = await db.prepare("SELECT username FROM waitlist WHERE email = ?").bind(email).first();
+    if (existingWaitlist) return json({ ok: true, username: existingWaitlist.username ? `@${existingWaitlist.username}` : handle });
+    const taken = await db
+      .prepare(
+        `SELECT 1 FROM waitlist WHERE lower(username) = lower(?)
+         UNION ALL
+         SELECT 1 FROM users WHERE lower(handle) = lower(?)`
+      )
+      .bind(username, handle)
+      .first();
+    if (taken) return json({ error: "Username is already taken" }, { status: 409 });
+    const result = await db.prepare("INSERT OR IGNORE INTO waitlist (email, username) VALUES (?, ?)").bind(email, username).run();
     if (result.meta?.changes) {
-      await recordRegistrationEmail(db, "early_access", email);
+      await recordRegistrationEmail(db, "early_access", email, { username, handle });
       await sendOwnerNotification(db, env, "early_access", "New fear.social early access signup", {
         event: "Early access signup",
         email,
+        username: handle,
       });
     }
-    return json({ ok: true });
+    return json({ ok: true, username: handle });
   }
 
-  const { user, token } = await getOrCreateUser(db, env, request, body);
+  const auth = await getOrCreateUser(db, env, request, body);
+  if (auth.error) return json({ error: auth.error }, { status: 409 });
+  const { user, token } = auth;
 
   if (method === "GET" && path === "/bootstrap") {
     return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
@@ -445,6 +481,13 @@ async function handleRequest({ request, env, params }) {
     const duplicate = profile.email
       ? await db.prepare("SELECT * FROM users WHERE id <> ? AND id <> 'demo-user' AND lower(email) = lower(?)").bind(user.id, profile.email).first()
       : null;
+    const handleOwner = await db
+      .prepare("SELECT id FROM users WHERE id <> ? AND id <> 'demo-user' AND lower(handle) = lower(?)")
+      .bind(user.id, profile.handle)
+      .first();
+    if (handleOwner && (!duplicate || handleOwner.id !== duplicate.id)) {
+      return json({ error: "Username is already taken" }, { status: 409 });
+    }
     if (duplicate) {
       const mergedProfile = normalizeProfile({ ...duplicate, ...profile });
       await db
@@ -481,6 +524,7 @@ async function handleRequest({ request, env, params }) {
         userId: user.id,
         name: profile.name,
         handle: profile.handle,
+        username: profile.username,
         metadata: {
           location: profile.location,
           industry: profile.industry,

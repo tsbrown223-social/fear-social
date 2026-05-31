@@ -18,6 +18,7 @@ DELETE FROM event_rsvps;
 DELETE FROM events;
 DELETE FROM mentor_requests;
 DELETE FROM mentors;
+DELETE FROM users WHERE id <> 'demo-user' AND (email IS NULL OR email = '');
 DELETE FROM users
 WHERE id <> 'demo-user'
   AND email IS NOT NULL

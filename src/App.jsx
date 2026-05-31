@@ -196,6 +196,7 @@ const ToastCtx=({toasts,remove})=>(
 );
 
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
+const cleanUsername=value=>String(value||"").toLowerCase().replace(/^@+/,"").replace(/[^a-z0-9._]+/g,"_").replace(/[._]{2,}/g,"_").replace(/^[._]+|[._]+$/g,"").slice(0,30);
 
 const POSTS=[];
 const PEOPLE=[];
@@ -226,6 +227,7 @@ function Navbar({setScreen,notify}){
 
 function LandingPage({setScreen,notify}){
   const [email,setEmail]=useState("");
+  const [username,setUsername]=useState("");
   const [joined,setJoined]=useState(false);
   const [stats,setStats]=useState(REAL_STATS);
   useEffect(()=>{
@@ -235,8 +237,9 @@ function LandingPage({setScreen,notify}){
   },[]);
   const joinWaitlist=async()=>{
     if(!email)return notify("Enter your email first","error");
+    if(!username)return notify("Choose a username","error");
     try{
-      await api("/waitlist",{method:"POST",body:JSON.stringify({email})});
+      await api("/waitlist",{method:"POST",body:JSON.stringify({email,username})});
       setJoined(true);
     }catch(err){
       notify(err.message||"Could not save email","error");
@@ -270,7 +273,8 @@ function LandingPage({setScreen,notify}){
             <GBtn sm onClick={()=>setScreen("signup")} style={{marginLeft:16}}>Enter App →</GBtn>
           </div>
         ):(
-          <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu landing-email">
+          <div style={{display:"flex",gap:10,maxWidth:740,width:"100%"}} className="fu landing-email">
+            <input value={username} onChange={e=>setUsername(cleanUsername(e.target.value))} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="username" className="if" style={{width:180,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
             <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
             <GBtn lg onClick={joinWaitlist} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
           </div>
@@ -363,11 +367,11 @@ function LandingPage({setScreen,notify}){
 
 
 function SignupPage({setScreen,notify,setProfile}){
-  const [form,setForm]=useState({name:"",email:"",stage:""});
+  const [form,setForm]=useState({name:"",username:"",email:"",stage:""});
   const [step,setStep]=useState(0);
-  const valid=form.name&&form.email&&form.stage;
+  const valid=form.name&&form.username&&form.email&&form.stage;
   const enterApp=async()=>{
-    const nextProfile={name:form.name,email:form.email,stage:form.stage};
+    const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email,stage:form.stage};
     setProfile(p=>({...p,...nextProfile}));
     try{
       const saved=await api("/profile",{method:"PUT",body:JSON.stringify({profile:nextProfile})});
@@ -407,10 +411,11 @@ function SignupPage({setScreen,notify,setProfile}){
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create your profile</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>30 seconds. No spam.</div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            {[["Full Name","text","Your name","name"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
+            {[["Full Name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
                 <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>{label}</label>
-                <input type={type} value={form[key]} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))} placeholder={ph} className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form[key]?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+                <input type={type} value={form[key]} onChange={e=>setForm(f=>({...f,[key]:key==="username"?cleanUsername(e.target.value):e.target.value}))} placeholder={ph} className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form[key]?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+                {key==="username"&&form.username&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Your profile will be @{form.username}</div>}
               </div>
             ))}
             <div>

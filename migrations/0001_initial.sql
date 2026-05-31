@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS registration_emails (
 
 CREATE INDEX IF NOT EXISTS idx_registration_emails_email ON registration_emails(email);
 CREATE INDEX IF NOT EXISTS idx_registration_emails_created_at ON registration_emails(created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle_unique ON users(handle) WHERE id <> 'demo-user';
 
 INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio)
 VALUES ('demo-user', 'demo-token', 'Your Name', '@yourhandle', '', 'Denver, CO', 'Tech', 'I''m actively building', 'Building in public, meeting ambitious founders, and turning fear into useful momentum.');
