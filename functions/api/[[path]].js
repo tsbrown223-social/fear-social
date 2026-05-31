@@ -32,6 +32,24 @@ const sha256 = async (value) => {
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
+const randomHex = (bytes = 16) => {
+  const values = new Uint8Array(bytes);
+  crypto.getRandomValues(values);
+  return [...values].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+async function hashPassword(password) {
+  const salt = randomHex(16);
+  const digest = await sha256(`${salt}:${password}`);
+  return `sha256:${salt}:${digest}`;
+}
+
+async function verifyPassword(password, stored = "") {
+  const [scheme, salt, digest] = String(stored || "").split(":");
+  if (scheme !== "sha256" || !salt || !digest) return false;
+  return (await sha256(`${salt}:${password}`)) === digest;
+}
+
 const addDays = (days) => new Date(Date.now() + days * 86400000).toISOString();
 
 const getClientKey = (request) => {
@@ -373,6 +391,53 @@ async function createSession(db, userId, token, request) {
   return sessionToken;
 }
 
+async function createOrLinkOAuthUser(db, request, profile) {
+  const email = String(profile.email || "").trim().toLowerCase().slice(0, 120);
+  if (!email || !email.includes("@")) return { error: "Google account did not provide a valid email", status: 400 };
+  let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+  if (!user) {
+    const username = normalizeUsername(profile.username || email.split("@")[0], "founder");
+    const handle = `@${username}`;
+    const handleOwner = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)").bind(handle).first();
+    const finalHandle = handleOwner ? `@${username}_${randomHex(3)}` : handle;
+    const id = createId("user");
+    const sessionToken = crypto.randomUUID();
+    await db
+      .prepare(
+        `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, oauth_provider, oauth_subject, avatar_url)
+         VALUES (?, ?, ?, ?, ?, 'Denver, CO', 'Tech', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
+      )
+      .bind(
+        id,
+        sessionToken,
+        String(profile.name || email.split("@")[0]).slice(0, 80),
+        finalHandle,
+        email,
+        "Signed in with Google.",
+        profile.provider || "google",
+        profile.subject || "",
+        String(profile.picture || "").slice(0, 500)
+      )
+      .run();
+    await recordRegistrationEmail(db, "google_account_created", email, {
+      userId: id,
+      name: profile.name || "",
+      handle: finalHandle,
+      username: finalHandle.replace(/^@/, ""),
+    });
+    user = { id, token: sessionToken, name: profile.name || email.split("@")[0], handle: finalHandle, email };
+  } else {
+    await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
+      profile.provider || "google",
+      profile.subject || "",
+      String(profile.picture || "").slice(0, 500),
+      user.id,
+    ]);
+  }
+  const token = await createSession(db, user.id, crypto.randomUUID(), request);
+  return { user, token };
+}
+
 const timeAgo = (createdAt) => {
   const diff = Math.max(0, Date.now() - new Date(createdAt).getTime());
   const mins = Math.floor(diff / 60000);
@@ -651,6 +716,28 @@ async function handleRequest({ request, env, params }) {
     });
   }
 
+  if (method === "POST" && path === "/auth/login") {
+    const limited = await enforceRateLimit(db, request, "auth-login", 8, 600);
+    if (limited) return limited;
+    const identifier = String(body.identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+    const password = String(body.password || "");
+    if (!identifier || !password) return json({ error: "Username or email and password required" }, { status: 400 });
+    const user = await db
+      .prepare(
+        `SELECT * FROM users
+         WHERE id <> 'demo-user'
+           AND (lower(email) = lower(?) OR lower(replace(handle, '@', '')) = lower(?))
+         LIMIT 1`
+      )
+      .bind(identifier, identifier)
+      .first();
+    if (!user?.password_hash || !(await verifyPassword(password, user.password_hash))) {
+      return json({ error: "Invalid username/email or password" }, { status: 401 });
+    }
+    const token = await createSession(db, user.id, crypto.randomUUID(), request);
+    return json({ ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+  }
+
   if (method === "POST" && path === "/auth/verify") {
     const limited = await enforceRateLimit(db, request, "auth-verify", 10, 600);
     if (limited) return limited;
@@ -683,6 +770,86 @@ async function handleRequest({ request, env, params }) {
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json({ ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+  }
+
+  if (method === "POST" && path === "/auth/password") {
+    const limited = await enforceRateLimit(db, request, "auth-password", 5, 600);
+    if (limited) return limited;
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const code = String(body.code || "").trim();
+    const password = String(body.password || "");
+    if (password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    const verification = await completeVerification(db, email, code, body.purpose || "");
+    if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
+    const user = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    if (!user) return json({ error: "Create the account before setting a password" }, { status: 404 });
+    await db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(await hashPassword(password), user.id).run();
+    return json({ ok: true });
+  }
+
+  if (method === "GET" && path === "/auth/google/start") {
+    if (!env.GOOGLE_CLIENT_ID) {
+      return json({ error: "Google sign-in is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloudflare Pages." }, { status: 501 });
+    }
+    const url = new URL(request.url);
+    const redirectUri = env.GOOGLE_REDIRECT_URI || `${url.origin}/api/auth/google/callback`;
+    const state = randomHex(16);
+    const params = new URLSearchParams({
+      client_id: env.GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      prompt: "select_account",
+      state,
+    });
+    await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at) VALUES (?, 'google', ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString()]);
+    return json({ ok: true, redirectUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}` });
+  }
+
+  if (method === "GET" && path === "/auth/google/callback") {
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "Google sign-in is not configured" }, { status: 501 });
+    const url = new URL(request.url);
+    const code = url.searchParams.get("code") || "";
+    const state = url.searchParams.get("state") || "";
+    const oauthState = await db
+      .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'google' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
+      .bind(state)
+      .first();
+    if (!code || !oauthState) return json({ error: "Invalid Google sign-in state" }, { status: 400 });
+    await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: env.GOOGLE_CLIENT_ID,
+        client_secret: env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: oauthState.redirect_uri,
+        grant_type: "authorization_code",
+      }),
+    });
+    const tokenData = await tokenResponse.json().catch(() => ({}));
+    if (!tokenResponse.ok || !tokenData.access_token) return json({ error: "Google token exchange failed" }, { status: 400 });
+    const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const googleProfile = await profileResponse.json().catch(() => ({}));
+    if (!profileResponse.ok) return json({ error: "Google profile lookup failed" }, { status: 400 });
+    const linked = await createOrLinkOAuthUser(db, request, {
+      provider: "google",
+      subject: googleProfile.sub,
+      email: googleProfile.email,
+      name: googleProfile.name,
+      picture: googleProfile.picture,
+    });
+    if (linked.error) return json({ error: linked.error }, { status: linked.status || 400 });
+    return new Response(null, {
+      status: 302,
+      headers: {
+        location: `/#app?token=${encodeURIComponent(linked.token)}`,
+        "set-cookie": `fear-session-token=${encodeURIComponent(linked.token)}; Path=/; Max-Age=${SESSION_TTL_DAYS * 86400}; Secure; SameSite=Lax`,
+      },
+    });
   }
 
   if (method === "POST" && path === "/verify-email") {

@@ -166,6 +166,19 @@ function clearSessionToken(){
   }catch{}
 }
 
+function consumeOAuthToken(){
+  try{
+    const hash=window.location.hash||"";
+    const token=new URLSearchParams(hash.includes("?")?hash.split("?")[1]:"").get("token");
+    if(token){
+      localStorage.setItem("fear-session-token",token);
+      window.history.replaceState(null,"","#app");
+      return true;
+    }
+  }catch{}
+  return false;
+}
+
 try{
   const version="real-users-v1";
   if(localStorage.getItem("fear-data-version")!==version){
@@ -220,7 +233,7 @@ function Navbar({setScreen,notify}){
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setScreen(hasSessionToken()?"app":"signup")} className="bs" style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"8px 18px",color:"rgba(255,255,255,0.75)",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
+        <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"8px 18px",color:"rgba(255,255,255,0.75)",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <GBtn sm onClick={()=>setScreen("signup")} style={{padding:"8px 20px"}}>Join Free →</GBtn>
       </div>
     </div>
@@ -368,11 +381,14 @@ function LandingPage({setScreen,notify}){
 }
 
 
-function SignupPage({setScreen,notify,setProfile}){
-  const [form,setForm]=useState({name:"",username:"",email:"",stage:""});
+function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
+  const [mode,setMode]=useState(initialMode);
+  const [form,setForm]=useState({name:"",username:"",email:""});
+  const [login,setLogin]=useState({identifier:"",password:""});
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
-  const valid=form.name&&form.username&&form.email&&form.stage;
+  const valid=form.name&&form.username&&form.email;
+  const loginValid=login.identifier&&login.password;
   const requestCode=async()=>{
     if(!valid)return;
     try{
@@ -383,8 +399,27 @@ function SignupPage({setScreen,notify,setProfile}){
       notify(err.message||"Could not send verification code","error");
     }
   };
+  const loginWithPassword=async()=>{
+    if(!loginValid)return;
+    try{
+      const saved=await api("/auth/login",{method:"POST",body:JSON.stringify(login)});
+      setProfile(p=>({...p,...saved.profile}));
+      setScreen("app");
+      notify("Signed in");
+    }catch(err){
+      notify(err.message||"Could not sign in","error");
+    }
+  };
+  const signInWithGoogle=async()=>{
+    try{
+      const data=await api("/auth/google/start",{method:"GET"});
+      if(data.redirectUrl) window.location.href=data.redirectUrl;
+    }catch(err){
+      notify(err.message||"Google sign-in is not configured yet","error");
+    }
+  };
   const enterApp=async()=>{
-    const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email,stage:form.stage};
+    const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
       const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile})});
       setProfile(p=>({...p,...saved.profile}));
@@ -434,31 +469,42 @@ function SignupPage({setScreen,notify,setProfile}){
       </div>
       <div className="signup-form-panel" style={{width:520,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:56}}>
         <div style={{width:"100%",maxWidth:400}}>
-          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create your profile</div>
-          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>30 seconds. No spam.</div>
+          <div style={{display:"flex",gap:8,background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:4,marginBottom:28}}>
+            <button onClick={()=>setMode("signup")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="signup"?"#fff":C.muted,background:mode==="signup"?C.accent:"transparent"}}>Sign up</button>
+            <button onClick={()=>setMode("login")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"?"#fff":C.muted,background:mode==="login"?C.accent:"transparent"}}>Log in</button>
+          </div>
+          {mode==="signup"?<>
+          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Sign up</div>
+          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Create your fear.social account.</div>
+          <button onClick={signInWithGoogle} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,marginBottom:18}}>Sign up with Google</button>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            {[["Full Name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
+            {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
                 <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>{label}</label>
                 <input type={type} value={form[key]} onChange={e=>setForm(f=>({...f,[key]:key==="username"?cleanUsername(e.target.value):e.target.value}))} placeholder={ph} className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form[key]?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
                 {key==="username"&&form.username&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Your profile will be @{form.username}</div>}
               </div>
             ))}
-            <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Where are you?</label>
-              <div style={{display:"flex",flexDirection:"column",gap:9}}>
-                {["I have an idea","I'm actively building","I've already launched"].map(s=>(
-                  <button key={s} onClick={()=>setForm(f=>({...f,stage:s}))} className="bs" style={{background:form.stage===s?C.accent:C.bg,border:`1.5px solid ${form.stage===s?C.accent:C.border}`,borderRadius:11,padding:"13px 16px",textAlign:"left",color:form.stage===s?"#fff":C.tSoft,fontSize:14,fontWeight:form.stage===s?600:400,transition:"all 0.15s",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-                    <span style={{width:19,height:19,borderRadius:"50%",border:`2px solid ${form.stage===s?"rgba(255,255,255,0.5)":C.dim}`,background:form.stage===s?"rgba(255,255,255,0.2)":"transparent",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {form.stage===s&&<span style={{width:7,height:7,borderRadius:"50%",background:"#fff",display:"block"}}/>}
-                    </span>{s}
-                  </button>
-                ))}
-              </div>
-            </div>
             <GBtn full onClick={requestCode} style={{opacity:valid?1:0.45,pointerEvents:valid?"auto":"none"}}>Send verification code →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
+          </>:<>
+          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Log in</div>
+          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Access your existing fear.social account.</div>
+          <button onClick={signInWithGoogle} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,marginBottom:18}}>Continue with Google</button>
+          <div style={{display:"flex",flexDirection:"column",gap:18}}>
+            <div>
+              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
+              <input value={login.identifier} onChange={e=>setLogin(l=>({...l,identifier:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&loginWithPassword()} placeholder="username or email" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${login.identifier?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+            </div>
+            <div>
+              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Password</label>
+              <input type="password" value={login.password} onChange={e=>setLogin(l=>({...l,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&loginWithPassword()} placeholder="Password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${login.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+            </div>
+            <GBtn full onClick={loginWithPassword} style={{opacity:loginValid?1:0.45,pointerEvents:loginValid?"auto":"none"}}>Log in →</GBtn>
+            <button onClick={()=>setMode("signup")} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Need an account? Sign up</button>
+          </div>
+          </>}
         </div>
       </div>
     </div>
@@ -730,7 +776,7 @@ function ProfilePanel({profile,setEditProfile,stats}){
 
 export default function App(){
   const {toasts,notify,remove}=useToast();
-  const [screenState,setScreenState]=useLocalState("fear-screen",window.location.hash==="#app"||hasSessionToken()?"app":"landing");
+  const [screenState,setScreenState]=useLocalState("fear-screen",consumeOAuthToken()||window.location.hash.startsWith("#app")||hasSessionToken()?"app":"landing");
   const [profile,setProfile]=useLocalState("fear-profile",{
     name:"Your Name",
     handle:"@yourhandle",
@@ -757,9 +803,9 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div style={{minHeight:"100vh",background:screen==="app"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify}/>}
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify}/>}
-        {screen==="signup"&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile}/>}
+        {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
       </div>
     </>
