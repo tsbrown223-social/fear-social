@@ -242,7 +242,6 @@ function Navbar({setScreen,notify}){
 
 function LandingPage({setScreen,notify}){
   const [email,setEmail]=useState("");
-  const [username,setUsername]=useState("");
   const [joined,setJoined]=useState(false);
   const [stats,setStats]=useState(REAL_STATS);
   useEffect(()=>{
@@ -252,9 +251,8 @@ function LandingPage({setScreen,notify}){
   },[]);
   const joinWaitlist=async()=>{
     if(!email)return notify("Enter your email first","error");
-    if(!username)return notify("Choose a username","error");
     try{
-      await api("/waitlist",{method:"POST",body:JSON.stringify({email,username})});
+      await api("/waitlist",{method:"POST",body:JSON.stringify({email})});
       setJoined(true);
     }catch(err){
       notify(err.message||"Could not save email","error");
@@ -283,13 +281,12 @@ function LandingPage({setScreen,notify}){
             <span style={{fontSize:36}}>🌱</span>
             <div style={{textAlign:"left"}}>
               <div style={{fontWeight:700,color:"#fff",fontSize:19}}>You're on the list.</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox for a verification code.</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox — we'll be in touch soon.</div>
             </div>
             <GBtn sm onClick={()=>setScreen("signup")} style={{marginLeft:16}}>Enter App →</GBtn>
           </div>
         ):(
-          <div style={{display:"flex",gap:10,maxWidth:740,width:"100%"}} className="fu landing-email">
-            <input value={username} onChange={e=>setUsername(cleanUsername(e.target.value))} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="username" className="if" style={{width:180,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
+          <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu landing-email">
             <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
             <GBtn lg onClick={joinWaitlist} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
           </div>
