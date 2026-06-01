@@ -85,8 +85,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-hero{min-height:92vh!important;padding:104px 18px 58px!important;justify-content:flex-start!important;}
   .landing-hero h1{font-size:46px!important;line-height:1.08!important;}
   .landing-hero p{font-size:16px!important;margin-bottom:32px!important;}
-  .landing-email{flex-direction:column!important;gap:10px!important;}
+  .landing-email{flex-direction:column!important;gap:8px!important;border-radius:30px!important;padding:8px!important;}
   .landing-email input,.landing-email button{width:100%!important;}
+  .landing-email input{padding:13px 16px!important;}
+  .landing-email button{padding:14px 18px!important;}
   .landing-section{padding:64px 18px!important;}
   .landing-section h2{font-size:40px!important;line-height:1.08!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
@@ -223,18 +225,20 @@ const INITIAL_MESSAGES=[];
 function Navbar({setScreen,notify}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
-  const links=[["Features","platform"],["Mentors","activity"],["Community","cta"],["Pricing","pricing"]];
+  const links=[["Features","platform"],["Network","activity"],["Community","cta"],["Pricing","pricing"]];
   return(
-    <div className="landing-nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:100,background:scrolled?"rgba(13,15,20,0.97)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?`1px solid rgba(255,255,255,0.07)`:"none",padding:"0 48px",display:"flex",alignItems:"center",height:68,transition:"all 0.3s"}}>
-      <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:22,color:"#fff",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
-      <div className="landing-nav-links" style={{display:"flex",gap:4,marginRight:32}}>
+    <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none"}}>
+      <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:scrolled?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:"auto"}}>
+      <div style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:21,color:"#050506",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span>social</div>
+      <div className="landing-nav-links" style={{display:"flex",gap:2,marginRight:14}}>
         {links.map(([label,id])=>(
-          <button key={label} onClick={()=>scrollToSection(id)} className="nl bs" style={{background:"none",border:"none",color:"rgba(255,255,255,0.6)",fontSize:14,fontWeight:500,padding:"7px 13px",cursor:"pointer",borderRadius:8}}>{label}</button>
+          <button key={label} onClick={()=>scrollToSection(id)} className="nl bs" style={{background:"none",border:"none",color:"#555B66",fontSize:13,fontWeight:700,padding:"9px 13px",cursor:"pointer",borderRadius:999}}>{label}</button>
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"8px 18px",color:"rgba(255,255,255,0.75)",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
-        <GBtn sm onClick={()=>setScreen("signup")} style={{padding:"8px 20px"}}>Join Free →</GBtn>
+        <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
+        <button onClick={()=>setScreen("signup")} className="bs" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
+      </div>
       </div>
     </div>
   );
@@ -261,80 +265,77 @@ function LandingPage({setScreen,notify}){
   const ticker=[`${fmt(stats.profiles)} verified profiles · `,`${fmt(stats.waitlist)} waitlist emails · `,`${fmt(stats.posts)} member posts · `,`${fmt(stats.comments)} comments · `,`${fmt(stats.connections)} connections · `,`${fmt(stats.rsvps)} event RSVPs · `];
   const statRows=[["Profiles",stats.profiles],["Waitlist Emails",stats.waitlist],["Posts",stats.posts],["Comments",stats.comments],["Connections",stats.connections]];
   return(
-    <div style={{background:C.dark,minHeight:"100vh",overflowX:"hidden"}}>
-      <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"130px 32px 90px",textAlign:"center",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:"35%",left:"50%",transform:"translate(-50%,-50%)",width:800,height:800,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,0.09) 0%, transparent 68%)",pointerEvents:"none"}}/>
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:1,background:"linear-gradient(90deg, transparent, rgba(22,199,78,0.5), transparent)"}}/>
-        <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(22,199,78,0.07)",border:"1px solid rgba(22,199,78,0.2)",borderRadius:22,padding:"7px 18px",marginBottom:38,cursor:"pointer"}} className="bs fu" onClick={()=>setScreen("signup")}>
+    <div style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
+      <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
+        <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-          <span style={{fontSize:13,fontWeight:600,color:C.accent}}>Live platform counts from Cloudflare D1</span>
-          <span style={{fontSize:11,color:"rgba(22,199,78,0.5)"}}>→</span>
+          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Multiplayer for founders</span>
         </div>
-        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(44px,4.75rem,76px)",fontWeight:700,color:"#fff",lineHeight:1.12,letterSpacing:0,marginBottom:30,maxWidth:1000}} className="fu">
-          Empowering<br/><span style={GRT}>tomorrow's founders</span><br/>today.
+        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
+          One network for<br/><span style={{color:C.accent}}>tomorrow's founders.</span>
         </h1>
-        <p style={{fontSize:19,color:"rgba(255,255,255,0.48)",lineHeight:1.8,maxWidth:540,marginBottom:56}} className="fu">
-          Connect with driven founders. Get real mentorship. Build in public. Fear is just the beginning.
+        <p style={{fontSize:19,color:"rgba(255,255,255,0.62)",lineHeight:1.75,maxWidth:650,marginBottom:38,position:"relative"}} className="fu">
+          Meet serious builders, post progress, find collaborators, and keep your founder network moving in one focused social platform.
         </p>
         {joined?(
-          <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(22,199,78,0.07)",border:"1px solid rgba(22,199,78,0.2)",borderRadius:18,padding:"22px 36px",animation:"popIn 0.3s ease"}}>
-            <span style={{fontSize:36}}>🌱</span>
+          <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
             <div style={{textAlign:"left"}}>
               <div style={{fontWeight:700,color:"#fff",fontSize:19}}>You're on the list.</div>
               <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox — we'll be in touch soon.</div>
             </div>
-            <GBtn sm onClick={()=>setScreen("signup")} style={{marginLeft:16}}>Enter App →</GBtn>
+            <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Enter app</button>
           </div>
         ):(
-          <div style={{display:"flex",gap:10,maxWidth:560,width:"100%"}} className="fu landing-email">
-            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"15px 20px",color:"#fff",fontSize:16,transition:"all 0.2s"}}/>
-            <GBtn lg onClick={joinWaitlist} style={{whiteSpace:"nowrap"}}>Get Early Access →</GBtn>
+          <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
+            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
+            <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Get early access</button>
           </div>
         )}
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.22)",marginTop:16}}>No credit card · Free forever · 30 second signup</div>
-        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:60}} className="fu">
-          <div style={{display:"flex"}}>{["MK","JL","PS","CT","SR","EM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:GR,border:"2.5px solid #0C0D10",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.32)",marginTop:16}}>Real profiles · Live database counts · No fake activity</div>
+        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="fu">
+          <div style={{display:"flex"}}>{["TB","EP","BP","AR"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
             <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>{fmt(stats.profiles)} verified profiles</div>
             <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} waitlist emails captured</div>
           </div>
         </div>
       </div>
-      <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",borderBottom:"1px solid rgba(255,255,255,0.05)",background:"rgba(22,199,78,0.02)",padding:"14px 0",overflow:"hidden"}}>
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
         <div style={{display:"flex",width:"max-content"}} className="ticker">
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:4}}><span style={{color:C.accent}}>✦</span> {t}</span>)}
         </div>
       </div>
-      <div id="platform" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div id="platform" className="landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,3.6rem,58px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:18}}>Built for the founders<br/>of tomorrow.</h2>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything a founder network should remember.</h2>
         </div>
-        <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+        <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
           {[["🤝","Real Connections","Find co-founders and collaborators who get what you're going through."],["🧠","Mentor Access","Mentor requests are tracked by the backend as users request intros."],["📣","Build in Public","Share wins and struggles. Posts, comments, likes, and saves are counted live."],["💼","Opportunities","Co-founder matching, jobs, and gigs can be listed once details are verified."],["📅","Events","RSVP totals come directly from the platform database."],["⚡","FEAR Pro","Premium tools are planned and will show real pricing only when active.",true]].map(([icon,title,desc,pro],i)=>(
-            <div key={i} className="ch" style={{background:C.dCard,border:`1px solid ${C.dBorder}`,borderRadius:20,padding:"30px 26px"}}>
-              <div style={{width:52,height:52,borderRadius:15,background:pro?GR:"rgba(22,199,78,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginBottom:22}}>{icon}</div>
+            <div key={i} className="ch" style={{background:i%2===0?"#101114":"#0B0C0E",border:"1px solid rgba(255,255,255,0.09)",borderRadius:18,padding:"30px 26px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+              <div style={{width:48,height:48,borderRadius:14,background:pro?"#18271E":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:22,border:"1px solid rgba(255,255,255,0.08)"}}>{icon}</div>
               <div style={{fontWeight:700,fontSize:18,color:"#fff",marginBottom:10}}>{title}</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.42)",lineHeight:1.72}}>{desc}</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.52)",lineHeight:1.72}}>{desc}</div>
             </div>
           ))}
         </div>
       </div>
-      <div style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,borderBottom:`1px solid ${C.dBorder}`,padding:"64px 52px"}}>
-        <div className="landing-stats" style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
+      <div style={{background:"#F7F8FA",borderTop:"1px solid #ECEFF3",borderBottom:"1px solid #ECEFF3",padding:"64px 52px"}}>
+        <div className="landing-stats" style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
           {statRows.map(([l,n])=>(
-            <div key={l} style={{textAlign:"center",padding:"28px 16px"}}>
-              <div style={{fontFamily:"Georgia,serif",fontSize:42,fontWeight:700,letterSpacing:0,...GRT}}>{fmt(n)}</div>
-              <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:7,fontWeight:500}}>{l}</div>
+            <div key={l} style={{textAlign:"center",padding:"28px 16px",background:"#fff",border:"1px solid #EAECF0",borderRadius:18}}>
+              <div style={{fontFamily:"Georgia,serif",fontSize:42,fontWeight:800,letterSpacing:0,color:"#111318"}}>{fmt(n)}</div>
+              <div style={{fontSize:12,color:"#687080",marginTop:7,fontWeight:700}}>{l}</div>
             </div>
           ))}
         </div>
       </div>
       <div id="activity" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
-        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,textAlign:"center",marginBottom:64}}>Live platform activity</h2>
+        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0,textAlign:"center",marginBottom:64}}>Live platform activity</h2>
         <div className="landing-testimonial-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
           {[{q:`${fmt(stats.posts)} posts are stored in the live database from real platform activity.`,name:"Posts",stage:"Cloudflare D1",av:"PO"},{q:`${fmt(stats.mentorRequests)} mentor requests have been submitted by users.`,name:"Mentors",stage:"Cloudflare D1",av:"ME"},{q:`${fmt(stats.messages)} messages have been sent through the platform.`,name:"Messages",stage:"Cloudflare D1",av:"DM"}].map((t,i)=>(
-            <div key={i} className="ch" style={{background:"rgba(255,255,255,0.025)",borderRadius:20,padding:"30px",border:"1px solid rgba(255,255,255,0.05)"}}>
+            <div key={i} className="ch" style={{background:"#101114",borderRadius:18,padding:"30px",border:"1px solid rgba(255,255,255,0.09)"}}>
               <div style={{fontSize:40,color:C.accent,marginBottom:20,lineHeight:1}}>"</div>
               <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.8,marginBottom:24,fontStyle:"italic"}}>{t.q}</p>
               <div style={{display:"flex",alignItems:"center",gap:12}}><Av i={t.av} size={40} grad/><div><div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{t.name}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.3)"}}>{t.stage}</div></div></div>
@@ -342,33 +343,33 @@ function LandingPage({setScreen,notify}){
           ))}
         </div>
       </div>
-      <div id="pricing" className="landing-section" style={{background:C.dCard,borderTop:`1px solid ${C.dBorder}`,padding:"110px 52px"}}>
+      <div id="pricing" className="landing-section" style={{background:"#fff",borderTop:"1px solid #ECEFF3",padding:"110px 52px"}}>
         <div style={{maxWidth:880,margin:"0 auto",textAlign:"center"}}>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(30px,3rem,48px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:56}}>Start free. Upgrade when ready.</h2>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:56}}>Start free. Upgrade only when it is real.</h2>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
             {[{name:"Free",price:"Available",period:"now",features:["Social feed & posts","Discover & connect","Events access","DMs","Waitlist capture"],grad:false},{name:"FEAR Pro",price:"Planned",period:"not active",features:["Premium tools planned","AI assistant planned","Checkout required before launch","No active paid plan yet"],grad:true}].map((p,i)=>(
-              <div key={i} className="ch" style={{background:p.grad?"transparent":C.dark,border:`1px solid ${p.grad?"rgba(22,199,78,0.4)":C.dBorder}`,borderRadius:24,padding:"38px 34px",position:"relative",overflow:"hidden"}}>
-                {p.grad&&<div style={{position:"absolute",inset:0,background:GR2,opacity:0.4,borderRadius:24}}/>}
+              <div key={i} className="ch" style={{background:p.grad?"#111318":"#F7F8FA",border:`1px solid ${p.grad?"#111318":"#EAECF0"}`,borderRadius:22,padding:"38px 34px",position:"relative",overflow:"hidden",boxShadow:p.grad?"0 28px 80px rgba(0,0,0,0.18)":"none"}}>
                 <div style={{position:"relative"}}>
-                  <div style={{fontSize:11,fontWeight:700,letterSpacing:2,color:p.grad?C.accent:"rgba(255,255,255,0.3)",textTransform:"uppercase",marginBottom:10}}>{p.name}</div>
-                  <div style={{display:"flex",alignItems:"baseline",gap:5,marginBottom:30}}><span style={{fontFamily:"Georgia,serif",fontSize:54,fontWeight:700,color:"#fff"}}>{p.price}</span><span style={{fontSize:14,color:"rgba(255,255,255,0.3)"}}>/{p.period}</span></div>
+                  <div style={{fontSize:11,fontWeight:800,letterSpacing:2,color:p.grad?C.accent:"#687080",textTransform:"uppercase",marginBottom:10}}>{p.name}</div>
+                  <div style={{display:"flex",alignItems:"baseline",gap:5,marginBottom:30}}><span style={{fontFamily:"Georgia,serif",fontSize:54,fontWeight:800,color:p.grad?"#fff":"#111318"}}>{p.price}</span><span style={{fontSize:14,color:p.grad?"rgba(255,255,255,0.34)":"#687080"}}>/{p.period}</span></div>
                   <div style={{display:"flex",flexDirection:"column",gap:13,marginBottom:34}}>
-                    {p.features.map(f=><div key={f} style={{display:"flex",alignItems:"center",gap:11}}><span style={{width:20,height:20,borderRadius:"50%",background:p.grad?"rgba(22,199,78,0.18)":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.accent,fontWeight:700,flexShrink:0}}>✓</span><span style={{fontSize:14,color:"rgba(255,255,255,0.62)"}}>{f}</span></div>)}
+                    {p.features.map(f=><div key={f} style={{display:"flex",alignItems:"center",gap:11}}><span style={{width:20,height:20,borderRadius:"50%",background:p.grad?"rgba(22,199,78,0.18)":"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.accent,fontWeight:700,flexShrink:0,border:p.grad?"none":"1px solid #EAECF0"}}>✓</span><span style={{fontSize:14,color:p.grad?"rgba(255,255,255,0.62)":"#555B66"}}>{f}</span></div>)}
                   </div>
-                  {p.grad?<GBtn onClick={()=>setScreen("signup")} full>Upgrade to Pro →</GBtn>:<GhostBtn onClick={()=>setScreen("signup")} style={{width:"100%",justifyContent:"center"}}>Get Started →</GhostBtn>}
+                  {p.grad?<button onClick={()=>setScreen("signup")} className="bs" style={{width:"100%",background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:900}}>Join Pro waitlist →</button>:<button onClick={()=>setScreen("signup")} className="bs" style={{width:"100%",background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:900}}>Get started →</button>}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div id="cta" style={{padding:"110px 52px",textAlign:"center",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:700,height:700,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,0.06) 0%, transparent 68%)",pointerEvents:"none"}}/>
-        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(40px,4.75rem,76px)",fontWeight:700,color:"#fff",letterSpacing:0,marginBottom:20,position:"relative"}}>Stop building<br/><span style={GRT}>alone.</span></h2>
-        <p style={{fontSize:17,color:"rgba(255,255,255,0.38)",marginBottom:48,position:"relative"}}>Your community is already here. Join them.</p>
-        <GBtn lg onClick={()=>setScreen("signup")} style={{position:"relative"}} className="glow">Join fear.social — Free →</GBtn>
+      <div id="cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
+        <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
+        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Build with people<br/>who are also building.</h2>
+        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:560,position:"relative"}}>A social layer for serious founders: profiles, posts, messages, events, and numbers pulled from your real backend.</p>
+        <button onClick={()=>setScreen("signup")} className="bs" style={{position:"relative",background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900,boxShadow:"0 18px 50px rgba(22,199,78,0.28)"}}>Join fear.social free →</button>
       </div>
-      <div style={{borderTop:`1px solid ${C.dBorder}`,padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",background:"#050506",padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · Empowering tomorrow's founders today.</div>
         <div style={{display:"flex",gap:20}}>{["Privacy","Terms","Contact"].map(l=><button key={l} onClick={()=>notify(`${l} page is being prepared`,"info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">{l}</button>)}</div>
