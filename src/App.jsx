@@ -21,6 +21,10 @@ const css = `
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;overflow-x:hidden;}
+.a11y-large-text{font-size:112%;}
+.a11y-large-text input,.a11y-large-text textarea,.a11y-large-text button{font-size:1rem!important;}
+.a11y-high-contrast{filter:contrast(1.12);}
+.a11y-reduce-motion *{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;}
 input,textarea,select{outline:none;font-family:inherit;}button{font-family:inherit;cursor:pointer;}::placeholder{color:${C.dim};}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
@@ -222,7 +226,7 @@ const DEALS=[];
 const GROUPS=[];
 const INITIAL_MESSAGES=[];
 
-function Navbar({setScreen,notify}){
+function Navbar({setScreen,notify,onOpenPanel}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
   const links=[["Features","platform"],["Network","activity"],["Community","cta"],["Pricing","pricing"]];
@@ -236,6 +240,7 @@ function Navbar({setScreen,notify}){
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>onOpenPanel("accessibility")} className="bs" aria-label="Accessibility settings" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,width:38,height:38,color:"#111318",fontSize:15,fontWeight:900,cursor:"pointer",whiteSpace:"nowrap"}}>Aa</button>
         <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <button onClick={()=>setScreen("signup")} className="bs" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
       </div>
@@ -244,7 +249,7 @@ function Navbar({setScreen,notify}){
   );
 }
 
-function LandingPage({setScreen,notify}){
+function LandingPage({setScreen,notify,onOpenPanel}){
   const [email,setEmail]=useState("");
   const [joined,setJoined]=useState(false);
   const [stats,setStats]=useState(REAL_STATS);
@@ -372,7 +377,11 @@ function LandingPage({setScreen,notify}){
       <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",background:"#050506",padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · Empowering tomorrow's founders today.</div>
-        <div style={{display:"flex",gap:20}}>{["Privacy","Terms","Contact"].map(l=><button key={l} onClick={()=>notify(`${l} page is being prepared`,"info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">{l}</button>)}</div>
+        <div style={{display:"flex",gap:20}}>
+          <button onClick={()=>onOpenPanel("privacy")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Privacy</button>
+          <button onClick={()=>onOpenPanel("accessibility")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Accessibility</button>
+          <button onClick={()=>notify("Contact: tsbrown223@gmail.com","info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Contact</button>
+        </div>
       </div>
     </div>
   );
@@ -772,8 +781,111 @@ function ProfilePanel({profile,setEditProfile,stats}){
   return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()} size={72} style={{background:"#fff",color:C.accent}}/><div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
 
+function ModalShell({title,eyebrow,onClose,children}){
+  return (
+    <div role="dialog" aria-modal="true" aria-label={title} style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(0,0,0,.62)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={onClose}>
+      <div style={{width:"min(760px,100%)",maxHeight:"88vh",overflow:"auto",background:"#fff",borderRadius:22,padding:28,boxShadow:"0 30px 100px rgba(0,0,0,.35)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",gap:18,alignItems:"start",marginBottom:20}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:34,lineHeight:1.05,color:C.text,letterSpacing:0}}>{title}</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="bs" style={{width:38,height:38,borderRadius:"50%",border:`1px solid ${C.border}`,background:"#fff",fontSize:18,fontWeight:900,color:C.text}}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
+  const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
+  return (
+    <ModalShell title="Privacy Policy" eyebrow="Legal" onClose={onClose}>
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated June 1, 2026. This policy describes how fear.social collects, uses, stores, and protects information. It is a practical baseline and should be reviewed by legal counsel before broad public launch.</p>
+      {section("Information We Collect","When someone signs up, joins the waitlist, posts, comments, messages, RSVPs, requests mentors, or edits a profile, fear.social may collect the information they provide, including name, username, email, profile details, messages, posts, comments, and account activity. We also store session and security data needed to keep accounts working.")}
+      {section("How We Use Information","We use information to create accounts, verify email addresses, operate the social platform, send requested registration and waitlist notices, prevent abuse, improve reliability, and respond to user requests. We do not sell personal information.")}
+      {section("Cookies and Local Storage","fear.social uses essential local storage for sign-in state, cookie preference storage, accessibility preferences, and basic app functionality. Optional analytics or marketing cookies should remain off unless you add those services and receive consent where required.")}
+      {section("Sharing and Processors","Information may be processed by infrastructure providers used to run the site, including Cloudflare services for hosting, database, and serverless functions. Information may also be disclosed if required by law or needed to protect users, the service, or the public.")}
+      {section("Security","The site uses HTTPS through Cloudflare, security headers, database-backed records, email verification, and restricted browser permissions. No internet service can guarantee that it is impossible to compromise, so security is maintained as an ongoing process.")}
+      {section("User Choices","Users can request access, correction, or deletion of account data by contacting tsbrown223@gmail.com. Accessibility controls are available in the site settings.")}
+      {section("Children","fear.social is not intended for children under 13. If a child has submitted personal information, contact tsbrown223@gmail.com so it can be removed.")}
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:24}}>
+        <GBtn onClick={onClose}>Done</GBtn>
+        <GhostBtn onClick={onOpenAccessibility}>Accessibility settings</GhostBtn>
+      </div>
+    </ModalShell>
+  );
+}
+
+function AccessibilityPanel({settings,setSettings,onClose}){
+  const toggle=(key)=>setSettings(s=>({...s,[key]:!s[key]}));
+  const row=(key,title,text)=>(
+    <button onClick={()=>toggle(key)} className="bs" style={{width:"100%",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:settings[key]?C.aLight:"#fff",border:`1.5px solid ${settings[key]?C.aSoft:C.border}`,borderRadius:14,padding:16,marginBottom:12}}>
+      <span aria-hidden="true" style={{width:44,height:24,borderRadius:999,background:settings[key]?C.accent:"#D7DCE5",position:"relative",flexShrink:0}}><span style={{position:"absolute",top:3,left:settings[key]?23:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .15s"}}/></span>
+      <span><b style={{display:"block",color:C.text,fontSize:15,marginBottom:3}}>{title}</b><span style={{display:"block",color:C.muted,fontSize:13,lineHeight:1.5}}>{text}</span></span>
+    </button>
+  );
+  return (
+    <ModalShell title="Accessibility Settings" eyebrow="Display" onClose={onClose}>
+      <p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginBottom:18}}>These settings are saved in this browser and can be changed any time.</p>
+      {row("largeText","Larger text","Increases readable text and form control sizing across the app.")}
+      {row("highContrast","Higher contrast","Boosts visual contrast for users who need stronger separation.")}
+      {row("reduceMotion","Reduce motion","Turns off animated transitions, ticker movement, and hover motion where possible.")}
+      <div style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}>
+        <GhostBtn onClick={()=>setSettings({largeText:false,highContrast:false,reduceMotion:false})}>Reset</GhostBtn>
+        <GBtn onClick={onClose}>Save settings</GBtn>
+      </div>
+    </ModalShell>
+  );
+}
+
+function CookieConsent({consent,setConsent,onManage}){
+  if(consent.choice)return null;
+  return (
+    <div role="region" aria-label="Cookie notice" style={{position:"fixed",left:18,right:18,bottom:18,zIndex:8500,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
+      <div style={{maxWidth:920,width:"100%",background:"#fff",border:`1px solid ${C.border}`,borderRadius:20,padding:18,boxShadow:"0 24px 90px rgba(0,0,0,.22)",display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",pointerEvents:"auto"}}>
+        <div style={{flex:"1 1 320px"}}>
+          <b style={{display:"block",fontSize:15,color:C.text,marginBottom:4}}>Cookie and privacy choices</b>
+          <p style={{fontSize:13,color:C.muted,lineHeight:1.55}}>We use essential storage for sign-in, accessibility preferences, and security. Optional cookies stay off unless you allow them.</p>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button onClick={()=>setConsent({choice:"essential",analytics:false,marketing:false})} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.text}}>Essential only</button>
+          <button onClick={onManage} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent}}>Manage</button>
+          <button onClick={()=>setConsent({choice:"all",analytics:true,marketing:true})} className="bs" style={{background:"#111318",border:"none",borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:"#fff"}}>Accept all</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CookieSettingsPanel({consent,setConsent,onClose}){
+  const [draft,setDraft]=useState({analytics:Boolean(consent.analytics),marketing:Boolean(consent.marketing)});
+  const save=()=>{setConsent({choice:"custom",analytics:draft.analytics,marketing:draft.marketing});onClose();};
+  return (
+    <ModalShell title="Cookie Settings" eyebrow="Privacy" onClose={onClose}>
+      <div style={{display:"grid",gap:12}}>
+        <div style={{border:`1px solid ${C.border}`,borderRadius:14,padding:16}}><b>Essential storage</b><p style={{fontSize:13,color:C.muted,lineHeight:1.55,marginTop:5}}>Required for login sessions, security, cookie preferences, and accessibility settings. Always on.</p></div>
+        {["analytics","marketing"].map(key=>(
+          <button key={key} onClick={()=>setDraft(d=>({...d,[key]:!d[key]}))} className="bs" style={{border:`1px solid ${draft[key]?C.aSoft:C.border}`,background:draft[key]?C.aLight:"#fff",borderRadius:14,padding:16,textAlign:"left",display:"flex",justifyContent:"space-between",gap:18}}>
+            <span><b style={{textTransform:"capitalize"}}>{key}</b><span style={{display:"block",fontSize:13,color:C.muted,lineHeight:1.55,marginTop:5}}>{key==="analytics"?"Optional product analytics if added later.":"Optional marketing or retargeting cookies if added later."}</span></span>
+            <span style={{fontWeight:900,color:draft[key]?C.accent:C.dim}}>{draft[key]?"On":"Off"}</span>
+          </button>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}>
+        <GhostBtn onClick={()=>{setConsent({choice:"essential",analytics:false,marketing:false});onClose();}}>Essential only</GhostBtn>
+        <GBtn onClick={save}>Save choices</GBtn>
+      </div>
+    </ModalShell>
+  );
+}
+
 export default function App(){
   const {toasts,notify,remove}=useToast();
+  const [openPanel,setOpenPanel]=useState(null);
+  const [accessibility,setAccessibility]=useLocalState("fear-accessibility",{largeText:false,highContrast:false,reduceMotion:false});
+  const [cookieConsent,setCookieConsent]=useLocalState("fear-cookie-consent",{choice:null,analytics:false,marketing:false});
   const initialScreen=consumeOAuthToken()||window.location.hash.startsWith("#app")?"app":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
@@ -800,15 +912,21 @@ export default function App(){
     notify("Signed out");
   },[notify,setScreenState]);
   const screen=screenState;
+  const a11yClass=[accessibility.largeText&&"a11y-large-text",accessibility.highContrast&&"a11y-high-contrast",accessibility.reduceMotion&&"a11y-reduce-motion"].filter(Boolean).join(" ");
   return(
     <>
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
-      <div style={{minHeight:"100vh",background:screen==="app"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify}/>}
-        {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify}/>}
+      <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"?C.bg:C.dark}}>
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
+        {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
+        <button onClick={()=>setOpenPanel("accessibility")} aria-label="Open accessibility settings" className="bs" style={{position:"fixed",left:18,bottom:cookieConsent.choice?18:128,zIndex:8400,width:48,height:48,borderRadius:"50%",border:`1px solid ${C.border}`,background:"#fff",boxShadow:"0 12px 40px rgba(0,0,0,.18)",color:C.text,fontWeight:900}}>Aa</button>
+        <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
+        {openPanel==="privacy"&&<PrivacyPolicyPanel onClose={()=>setOpenPanel(null)} onOpenAccessibility={()=>setOpenPanel("accessibility")}/>}
+        {openPanel==="accessibility"&&<AccessibilityPanel settings={accessibility} setSettings={setAccessibility} onClose={()=>setOpenPanel(null)}/>}
+        {openPanel==="cookies"&&<CookieSettingsPanel consent={cookieConsent} setConsent={setCookieConsent} onClose={()=>setOpenPanel(null)}/>}
       </div>
     </>
   );
