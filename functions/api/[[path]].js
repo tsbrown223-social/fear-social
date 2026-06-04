@@ -38,19 +38,57 @@ const randomHex = (bytes = 16) => {
   return [...values].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
+const fromHex = (hex) => {
+  const clean = String(hex || "").replace(/[^a-f0-9]/gi, "");
+  const bytes = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < bytes.length; i += 1) bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+  return bytes;
+};
+
+const toHex = (bytes) => [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
 async function hashPassword(password) {
   const salt = randomHex(16);
-  const digest = await sha256(`${salt}:${password}`);
-  return `sha256:${salt}:${digest}`;
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: fromHex(salt), iterations: 210000 },
+    key,
+    256
+  );
+  return `pbkdf2-sha256:210000:${salt}:${toHex(bits)}`;
 }
 
 async function verifyPassword(password, stored = "") {
-  const [scheme, salt, digest] = String(stored || "").split(":");
-  if (scheme !== "sha256" || !salt || !digest) return false;
-  return (await sha256(`${salt}:${password}`)) === digest;
+  const parts = String(stored || "").split(":");
+  if (parts[0] === "pbkdf2-sha256") {
+    const [, iterations, salt, digest] = parts;
+    if (!salt || !digest || !Number(iterations)) return false;
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", hash: "SHA-256", salt: fromHex(salt), iterations: Number(iterations) },
+      key,
+      256
+    );
+    return toHex(bits) === digest;
+  }
+  const [scheme, salt, digest] = parts;
+  if (scheme === "sha256" && salt && digest) return (await sha256(`${salt}:${password}`)) === digest;
+  return false;
 }
 
 const addDays = (days) => new Date(Date.now() + days * 86400000).toISOString();
+
+const getCookie = (request, name) => {
+  const cookie = request.headers.get("cookie") || "";
+  const pair = cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
+  return pair ? decodeURIComponent(pair.slice(name.length + 1)) : "";
+};
+
+const getAuthToken = (request, body = {}) =>
+  request.headers.get("x-fear-token") || getCookie(request, "fear-session-token") || body.token || "";
+
+const sessionCookie = (token, maxAge = SESSION_TTL_DAYS * 86400) =>
+  `fear-session-token=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}; Secure; HttpOnly; SameSite=Lax`;
 
 const getClientKey = (request) => {
   const forwarded = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
@@ -298,7 +336,7 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
 }
 
 async function getOrCreateUser(db, env, request, body = {}) {
-  const token = request.headers.get("x-fear-token") || body.token || "";
+  const token = getAuthToken(request, body);
   if (!token && !body.profile) {
     return { error: "Authentication required", status: 401 };
   }
@@ -318,6 +356,10 @@ async function getOrCreateUser(db, env, request, body = {}) {
   if (session) {
     await safeRun(db, "UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [session.id]);
     return { user: session, token, created: false };
+  }
+
+  if (!body.profile) {
+    return { error: "Authentication required", status: 401 };
   }
 
   const profile = normalizeProfile(body.profile);
@@ -734,8 +776,14 @@ async function handleRequest({ request, env, params }) {
     if (!user?.password_hash || !(await verifyPassword(password, user.password_hash))) {
       return json({ error: "Invalid username/email or password" }, { status: 401 });
     }
+    if (String(user.password_hash).startsWith("sha256:")) {
+      await safeRun(db, "UPDATE users SET password_hash = ? WHERE id = ?", [await hashPassword(password), user.id]);
+    }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
-    return json({ ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+    return json(
+      { ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { headers: { "set-cookie": sessionCookie(token) } }
+    );
   }
 
   if (method === "POST" && path === "/auth/verify") {
@@ -769,7 +817,10 @@ async function handleRequest({ request, env, params }) {
       user = { id, token: sessionToken, ...profile, email_verified_at: new Date().toISOString() };
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
-    return json({ ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+    return json(
+      { ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { headers: { "set-cookie": sessionCookie(token) } }
+    );
   }
 
   if (method === "POST" && path === "/auth/password") {
@@ -846,8 +897,8 @@ async function handleRequest({ request, env, params }) {
     return new Response(null, {
       status: 302,
       headers: {
-        location: `/#app?token=${encodeURIComponent(linked.token)}`,
-        "set-cookie": `fear-session-token=${encodeURIComponent(linked.token)}; Path=/; Max-Age=${SESSION_TTL_DAYS * 86400}; Secure; SameSite=Lax`,
+        location: "/#app",
+        "set-cookie": sessionCookie(linked.token),
       },
     });
   }
@@ -920,7 +971,10 @@ async function handleRequest({ request, env, params }) {
   const { user, token } = auth;
 
   if (method === "GET" && path === "/bootstrap") {
-    return json({ token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) });
+    return json(
+      { token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { headers: { "set-cookie": sessionCookie(token) } }
+    );
   }
 
   if (method === "GET" && path === "/notifications") {
@@ -1145,6 +1199,7 @@ export const onRequest = async (context) => {
     return await handleRequest(context);
   } catch (error) {
     if (error instanceof Response) return error;
-    return json({ error: "Server error", detail: error.message }, { status: 500 });
+    console.error("Unhandled API error", error);
+    return json({ error: "Server error" }, { status: 500 });
   }
 };

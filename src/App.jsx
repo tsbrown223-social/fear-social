@@ -149,16 +149,7 @@ function useLocalState(key, fallback){
 }
 
 function getSessionToken(){
-  try{
-    let token=localStorage.getItem("fear-session-token");
-    if(!token){
-      token=crypto.randomUUID();
-      localStorage.setItem("fear-session-token",token);
-    }
-    return token;
-  }catch{
-    return "browser-session";
-  }
+  try{return localStorage.getItem("fear-session-token")||"";}catch{return "";}
 }
 
 function hasSessionToken(){
@@ -194,7 +185,8 @@ try{
 }catch{}
 
 async function api(path,options={}){
-  const headers={"content-type":"application/json","x-fear-token":getSessionToken(),...(options.headers||{})};
+  const token=getSessionToken();
+  const headers={"content-type":"application/json",...(token?{"x-fear-token":token}:{}),...(options.headers||{})};
   const res=await fetch(`/api${path}`,{...options,headers});
   const data=await res.json().catch(()=>({}));
   if(data.token){
