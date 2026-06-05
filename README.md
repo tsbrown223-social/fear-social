@@ -23,7 +23,7 @@ npm run dev:vite
 2. Apply database migrations: `npm run db:migrate`
 3. Build and deploy: `npm run deploy`
 
-The D1 binding is configured in `wrangler.toml` as `DB`. Pages Functions in `functions/api/` use it for posts, profiles, waitlist, messages, and live stats.
+The D1 binding is configured in `wrangler.local.toml` as `DB`. Pages Functions in `functions/api/` use it for posts, profiles, waitlist, messages, and live stats.
 
 ## Build
 
@@ -32,5 +32,3 @@ npm run build
 ```
 
 Static output is written to `dist/` for Cloudflare Pages.
-
-Deployment trigger: 2026-06-05.
