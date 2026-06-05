@@ -32,3 +32,5 @@ npm run build
 ```
 
 Static output is written to `dist/` for Cloudflare Pages.
+
+Deployment trigger: 2026-06-05.
