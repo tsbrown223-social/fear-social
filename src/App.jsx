@@ -270,7 +270,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Multiplayer for founders</span>
         </div>
         <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
-          One network for<br/><span style={{color:C.accent}}>tomorrow's founders.</span>
+          Finding tomorrow's<br/><span style={{color:C.accent}}>founders today.</span>
         </h1>
         <p style={{fontSize:19,color:"rgba(255,255,255,0.62)",lineHeight:1.75,maxWidth:650,marginBottom:38,position:"relative"}} className="fu">
           Meet serious builders, post progress, find collaborators, and keep your founder network moving in one focused social platform.
