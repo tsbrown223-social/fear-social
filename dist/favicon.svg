@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="fear.social">
+  <rect width="64" height="64" rx="16" fill="#0D0F14"/>
+  <circle cx="43" cy="20" r="7" fill="#16C74E"/>
+  <path fill="#FFFFFF" d="M21 48V28h-6v-7h6v-2.4c0-7.1 4.5-11.6 12-11.6 2.9 0 5.2.4 6.8.9v7.2c-1.4-.4-3-.7-5.1-.7-3.2 0-5 1.6-5 4.8V21h10v7h-10v20H21Z"/>
+</svg>
