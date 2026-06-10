@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fear.social Instagram Reel</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0d0f14;
+        color: #f7f8fb;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: grid;
+        grid-template-columns: minmax(320px, 440px) 1fr;
+      }
+
+      aside {
+        border-right: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        background: #111318;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 1;
+        margin: 0;
+      }
+
+      p {
+        color: #b8c0cc;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      button,
+      a {
+        border: 0;
+        border-radius: 8px;
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        text-align: center;
+      }
+
+      button {
+        background: #16c74e;
+        color: #071008;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      a {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        display: none;
+      }
+
+      main {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+      }
+
+      canvas {
+        width: min(42vh, 420px);
+        aspect-ratio: 9 / 16;
+        background: #050608;
+        border-radius: 24px;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      @media (max-width: 860px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+
+        aside {
+          border-right: 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>fear.social Reel</h1>
+      <p>A 12-second vertical social video built for Instagram profile posts, Reels, and story-style brand intros.</p>
+      <button id="export">Export WebM Video</button>
+      <a id="download" download="fear-social-instagram-reel.webm">Download video</a>
+      <div class="meta">
+        <p><strong>Format</strong>: 1080x1920 vertical</p>
+        <p><strong>Tagline</strong>: Turn fear into momentum.</p>
+        <p><strong>Length</strong>: 12 seconds</p>
+      </div>
+    </aside>
+    <main>
+      <canvas id="reel" width="1080" height="1920"></canvas>
+    </main>
+
+    <script>
+      const canvas = document.getElementById("reel");
+      const ctx = canvas.getContext("2d");
+      const exportButton = document.getElementById("export");
+      const downloadLink = document.getElementById("download");
+      const W = canvas.width;
+      const H = canvas.height;
+      const duration = 12;
+      const fps = 30;
+      const logoImage = new Image();
+      logoImage.src = "fear-social-video-logo-clean.png";
+
+      const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+      const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
+      const phase = (time, start, end) => clamp((time - start) / (end - start));
+
+      function roundedRect(x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+      }
+
+      function drawLogo(cx, cy, size, alpha = 1) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        if (logoImage.complete) {
+          ctx.drawImage(logoImage, cx - size / 2, cy - size / 2, size, size);
+        }
+        ctx.restore();
+      }
+
+      function textLine(text, x, y, size, weight, alpha, color = "#ffffff", align = "center") {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.font = `${weight} ${size}px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif`;
+        ctx.textAlign = align;
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y);
+        ctx.restore();
+      }
+
+      function renderFrame(time) {
+        ctx.clearRect(0, 0, W, H);
+
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, "#111318");
+        bg.addColorStop(0.58, "#090b0f");
+        bg.addColorStop(1, "#061108");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        const sweep = easeInOut(phase(time, 0.25, 2.2));
+        ctx.save();
+        ctx.globalAlpha = 0.1 + 0.22 * Math.sin(time * 1.6);
+        const glow = ctx.createRadialGradient(W * sweep, H * 0.3, 40, W * sweep, H * 0.3, 680);
+        glow.addColorStop(0, "#16c74e");
+        glow.addColorStop(1, "rgba(22,199,78,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+        ctx.restore();
+
+        const dotsAlpha = phase(time, 0.7, 2.5) * (1 - phase(time, 5.5, 6.8) * 0.65);
+        ctx.save();
+        ctx.globalAlpha = dotsAlpha * 0.75;
+        ctx.strokeStyle = "rgba(22,199,78,0.35)";
+        ctx.lineWidth = 3;
+        const dots = [
+          [185, 520],
+          [280, 810],
+          [772, 640],
+          [850, 1040],
+          [250, 1260],
+          [745, 1390],
+        ];
+        for (let i = 0; i < dots.length - 1; i += 1) {
+          ctx.beginPath();
+          ctx.moveTo(dots[i][0], dots[i][1]);
+          ctx.lineTo(dots[i + 1][0], dots[i + 1][1]);
+          ctx.stroke();
+        }
+        for (const [x, y] of dots) {
+          ctx.beginPath();
+          ctx.fillStyle = "#16c74e";
+          ctx.arc(x, y, 9 + Math.sin(time * 3 + x) * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        const logoIn = easeOut(phase(time, 0.2, 1.2));
+        const logoSettle = 1 + 0.08 * (1 - easeOut(phase(time, 1.2, 1.9)));
+        const logoSize = 500 * logoIn * logoSettle;
+        const logoY = 535;
+        drawLogo(W / 2, logoY, logoSize, logoIn);
+
+        const brandAlpha = phase(time, 0.9, 1.8) * (1 - phase(time, 10.4, 11.2));
+        textLine("fear.social", W / 2, 830, 76, 900, brandAlpha);
+        textLine("For the moments before you leap.", W / 2, 925, 42, 500, phase(time, 1.4, 2.4) * (1 - phase(time, 3.4, 4.0)), "#c4cbd5");
+
+        const fearAlpha = phase(time, 2.8, 3.5) * (1 - phase(time, 4.6, 5.1));
+        textLine("Fear shows up.", W / 2, 1055, 92, 900, fearAlpha);
+
+        const momentumAlpha = phase(time, 3.6, 4.4) * (1 - phase(time, 5.7, 6.2));
+        textLine("You build anyway.", W / 2, 1166, 88, 900, momentumAlpha, "#16c74e");
+
+        const foundersAlpha = phase(time, 5.8, 6.5) * (1 - phase(time, 7.7, 8.2));
+        textLine("Meet founders", W / 2, 1055, 84, 900, foundersAlpha);
+        textLine("moving through it.", W / 2, 1166, 78, 900, phase(time, 6.3, 7.0) * (1 - phase(time, 8.0, 8.5)), "#16c74e");
+
+        const taglineAlpha = phase(time, 8.25, 9.05);
+        textLine("Turn fear", W / 2, 1024, 112, 950, taglineAlpha);
+        textLine("into momentum.", W / 2, 1150, 104, 950, phase(time, 8.65, 9.45), "#16c74e");
+        textLine("A founder community for the moments before you leap.", W / 2, 1318, 37, 500, phase(time, 9.5, 10.3) * 0.92, "#c4cbd5");
+
+        const endAlpha = phase(time, 10.45, 11.25);
+        textLine("fear.social", W / 2, 1660, 54, 850, endAlpha, "#ffffff");
+      }
+
+      let start = performance.now();
+      function animate(now) {
+        const elapsed = ((now - start) / 1000) % duration;
+        renderFrame(elapsed);
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      async function exportVideo() {
+        exportButton.disabled = true;
+        exportButton.textContent = "Rendering...";
+        downloadLink.style.display = "none";
+
+        const stream = canvas.captureStream(fps);
+        const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9", videoBitsPerSecond: 9000000 });
+        const chunks = [];
+        recorder.ondataavailable = (event) => {
+          if (event.data.size) chunks.push(event.data);
+        };
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: "video/webm" });
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.style.display = "block";
+          exportButton.disabled = false;
+          exportButton.textContent = "Export Again";
+        };
+
+        recorder.start();
+        const originalStart = start;
+        start = performance.now();
+        await new Promise((resolve) => setTimeout(resolve, duration * 1000 + 180));
+        recorder.stop();
+        start = originalStart;
+      }
+
+      exportButton.addEventListener("click", exportVideo);
+      renderFrame(0);
+    </script>
+  </body>
+</html>

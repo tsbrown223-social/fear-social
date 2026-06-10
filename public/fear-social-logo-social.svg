@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="fear.social logo">
+  <defs>
+    <linearGradient id="bg" x1="128" y1="88" x2="860" y2="930" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111318"/>
+      <stop offset="1" stop-color="#050608"/>
+    </linearGradient>
+    <linearGradient id="node" x1="560" y1="572" x2="782" y2="764" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#19E65A"/>
+      <stop offset="1" stop-color="#16C74E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="176" fill="url(#bg)"/>
+  <path fill="#FFFFFF" d="M382 815V521h-82V398h82v-38c0-105 68-171 180-171 45 0 82 6 110 18v125c-27-10-57-16-88-16-48 0-76 25-76 74v8h151v123H508v294H382Z"/>
+  <path fill="url(#node)" d="M508 574h142c24 0 44 20 44 44s-20 44-44 44H508v-88Z"/>
+  <circle cx="736" cy="618" r="79" fill="url(#node)"/>
+</svg>
