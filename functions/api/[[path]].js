@@ -16,6 +16,15 @@ const readJson = async (request) => {
   }
 };
 
+const readForm = async (request) => {
+  try {
+    const text = await request.text();
+    return Object.fromEntries(new URLSearchParams(text));
+  } catch {
+    return {};
+  }
+};
+
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
 const SESSION_TTL_DAYS = 30;
@@ -30,6 +39,32 @@ const sha256 = async (value) => {
   const bytes = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+const textEncoder = new TextEncoder();
+const base64UrlEncode = (value) => {
+  const bytes = typeof value === "string" ? textEncoder.encode(value) : new Uint8Array(value);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+};
+
+const base64UrlDecode = (value = "") => {
+  const base64 = String(value).replaceAll("-", "+").replaceAll("_", "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+};
+
+const decodeJwtPayload = (token = "") => {
+  const [, payload] = String(token).split(".");
+  if (!payload) return null;
+  try {
+    return JSON.parse(new TextDecoder().decode(base64UrlDecode(payload)));
+  } catch {
+    return null;
+  }
 };
 
 const randomHex = (bytes = 16) => {
@@ -433,9 +468,91 @@ async function createSession(db, userId, token, request) {
   return sessionToken;
 }
 
+const oauthErrorRedirect = (message) => {
+  const params = new URLSearchParams({ oauth: "error", message: String(message || "Sign-in failed").slice(0, 160) });
+  return new Response(null, { status: 302, headers: { location: `/#login?${params.toString()}` } });
+};
+
+const pemToArrayBuffer = (pem = "") => {
+  const clean = String(pem)
+    .replace(/\\n/g, "\n")
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\s+/g, "");
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+};
+
+async function createAppleClientSecret(env) {
+  if (!env.APPLE_TEAM_ID || !env.APPLE_KEY_ID || !env.APPLE_CLIENT_ID || !env.APPLE_PRIVATE_KEY) {
+    return null;
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlEncode(JSON.stringify({ alg: "ES256", kid: env.APPLE_KEY_ID, typ: "JWT" }));
+  const payload = base64UrlEncode(
+    JSON.stringify({
+      iss: env.APPLE_TEAM_ID,
+      iat: now,
+      exp: now + 86400 * 30,
+      aud: "https://appleid.apple.com",
+      sub: env.APPLE_CLIENT_ID,
+    })
+  );
+  const signingInput = `${header}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToArrayBuffer(env.APPLE_PRIVATE_KEY),
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, textEncoder.encode(signingInput));
+  return `${signingInput}.${base64UrlEncode(signature)}`;
+}
+
+async function verifyAppleIdentityToken(idToken, clientId) {
+  const [headerPart, payloadPart, signaturePart] = String(idToken || "").split(".");
+  if (!headerPart || !payloadPart || !signaturePart) return null;
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(base64UrlDecode(headerPart)));
+  } catch {
+    return null;
+  }
+  const jwksResponse = await fetch("https://appleid.apple.com/auth/keys", { headers: { accept: "application/json" } });
+  const jwks = await jwksResponse.json().catch(() => ({}));
+  if (!jwksResponse.ok || !Array.isArray(jwks.keys)) return null;
+  const jwk = jwks.keys.find((key) => key.kid === header.kid);
+  if (!jwk) return null;
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+  const verified = await crypto.subtle.verify(
+    { name: "RSASSA-PKCS1-v1_5" },
+    key,
+    base64UrlDecode(signaturePart),
+    textEncoder.encode(`${headerPart}.${payloadPart}`)
+  );
+  if (!verified) return null;
+  const payload = decodeJwtPayload(idToken);
+  const now = Math.floor(Date.now() / 1000);
+  if (payload?.iss !== "https://appleid.apple.com") return null;
+  if (payload?.aud !== clientId) return null;
+  if (Number(payload?.exp || 0) < now) return null;
+  return payload;
+}
+
 async function createOrLinkOAuthUser(db, request, profile) {
+  const provider = String(profile.provider || "oauth").trim().toLowerCase();
+  const providerLabel = provider === "apple" ? "Apple" : provider === "google" ? "Google" : "OAuth";
   const email = String(profile.email || "").trim().toLowerCase().slice(0, 120);
-  if (!email || !email.includes("@")) return { error: "Google account did not provide a valid email", status: 400 };
+  if (!email || !email.includes("@")) return { error: `${providerLabel} account did not provide a valid email`, status: 400 };
   let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
   if (!user) {
     const username = normalizeUsername(profile.username || email.split("@")[0], "founder");
@@ -455,13 +572,13 @@ async function createOrLinkOAuthUser(db, request, profile) {
         String(profile.name || email.split("@")[0]).slice(0, 80),
         finalHandle,
         email,
-        "Signed in with Google.",
-        profile.provider || "google",
+        `Signed in with ${providerLabel}.`,
+        provider,
         profile.subject || "",
         String(profile.picture || "").slice(0, 500)
       )
       .run();
-    await recordRegistrationEmail(db, "google_account_created", email, {
+    await recordRegistrationEmail(db, `${provider}_account_created`, email, {
       userId: id,
       name: profile.name || "",
       handle: finalHandle,
@@ -470,7 +587,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
     user = { id, token: sessionToken, name: profile.name || email.split("@")[0], handle: finalHandle, email };
   } else {
     await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
-      profile.provider || "google",
+      provider,
       profile.subject || "",
       String(profile.picture || "").slice(0, 500),
       user.id,
@@ -738,7 +855,7 @@ async function handleRequest({ request, env, params }) {
     });
   }
 
-  const body = method === "GET" ? {} : await readJson(request);
+  const body = method === "GET" ? {} : method === "POST" && path === "/auth/apple/callback" ? await readForm(request) : await readJson(request);
 
   if (method === "POST" && path === "/auth/request-code") {
     const limited = await enforceRateLimit(db, request, "auth-request-code", 5, 600);
@@ -894,6 +1011,83 @@ async function handleRequest({ request, env, params }) {
       picture: googleProfile.picture,
     });
     if (linked.error) return json({ error: linked.error }, { status: linked.status || 400 });
+    return new Response(null, {
+      status: 302,
+      headers: {
+        location: "/#app",
+        "set-cookie": sessionCookie(linked.token),
+      },
+    });
+  }
+
+  if (method === "GET" && path === "/auth/apple/start") {
+    if (!env.APPLE_CLIENT_ID) {
+      return json({ error: "Apple sign-in is not configured yet. Add APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, and APPLE_PRIVATE_KEY in Cloudflare Pages." }, { status: 501 });
+    }
+    const url = new URL(request.url);
+    const redirectUri = env.APPLE_REDIRECT_URI || `${url.origin}/api/auth/apple/callback`;
+    const state = randomHex(16);
+    const params = new URLSearchParams({
+      client_id: env.APPLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      response_mode: "form_post",
+      scope: "name email",
+      state,
+    });
+    await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at) VALUES (?, 'apple', ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString()]);
+    return json({ ok: true, redirectUrl: `https://appleid.apple.com/auth/authorize?${params.toString()}` });
+  }
+
+  if ((method === "POST" || method === "GET") && path === "/auth/apple/callback") {
+    if (!env.APPLE_CLIENT_ID || !env.APPLE_TEAM_ID || !env.APPLE_KEY_ID || !env.APPLE_PRIVATE_KEY) {
+      return oauthErrorRedirect("Apple sign-in is not configured");
+    }
+    const url = new URL(request.url);
+    const code = body.code || url.searchParams.get("code") || "";
+    const state = body.state || url.searchParams.get("state") || "";
+    const error = body.error || url.searchParams.get("error") || "";
+    if (error) return oauthErrorRedirect(`Apple sign-in failed: ${error}`);
+    const oauthState = await db
+      .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'apple' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
+      .bind(state)
+      .first();
+    if (!code || !oauthState) return oauthErrorRedirect("Invalid Apple sign-in state");
+    await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
+    const clientSecret = await createAppleClientSecret(env);
+    if (!clientSecret) return oauthErrorRedirect("Apple sign-in is missing a client secret");
+    const tokenResponse = await fetch("https://appleid.apple.com/auth/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: env.APPLE_CLIENT_ID,
+        client_secret: clientSecret,
+        redirect_uri: oauthState.redirect_uri,
+        grant_type: "authorization_code",
+      }),
+    });
+    const tokenData = await tokenResponse.json().catch(() => ({}));
+    if (!tokenResponse.ok || !tokenData.id_token) return oauthErrorRedirect("Apple token exchange failed");
+    const appleProfile = await verifyAppleIdentityToken(tokenData.id_token, env.APPLE_CLIENT_ID);
+    if (!appleProfile?.sub) return oauthErrorRedirect("Apple identity token could not be verified");
+    let appleUser = {};
+    if (body.user) {
+      try {
+        appleUser = JSON.parse(body.user);
+      } catch {
+        appleUser = {};
+      }
+    }
+    const appleName = [appleUser?.name?.firstName, appleUser?.name?.lastName].filter(Boolean).join(" ");
+    const linked = await createOrLinkOAuthUser(db, request, {
+      provider: "apple",
+      subject: appleProfile.sub,
+      email: appleProfile.email || appleUser.email,
+      name: appleName || appleProfile.email?.split("@")[0],
+      picture: "",
+    });
+    if (linked.error) return oauthErrorRedirect(linked.error);
     return new Response(null, {
       status: 302,
       headers: {

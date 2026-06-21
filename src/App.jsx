@@ -158,6 +158,26 @@ const IconBadge=({name,pro=false,style={}})=>(
     <Icon name={name} size={24}/>
   </div>
 );
+const BrandIcon=({name,size=18})=>{
+  if(name==="google")return(
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{display:"block",flexShrink:0}}>
+      <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.7 4.7 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3-4.3 3-7.4Z"/>
+      <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4L15.4 17c-.9.6-2 .9-3.4.9a5.9 5.9 0 0 1-5.5-4.1H3.1v2.7A10 10 0 0 0 12 22Z"/>
+      <path fill="#FBBC05" d="M6.5 13.8a6 6 0 0 1 0-3.6V7.5H3.1a10 10 0 0 0 0 9l3.4-2.7Z"/>
+      <path fill="#EA4335" d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.7 9.7 0 0 0 12 2a10 10 0 0 0-8.9 5.5l3.4 2.7A5.9 5.9 0 0 1 12 6.1Z"/>
+    </svg>
+  );
+  return(
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{display:"block",flexShrink:0}} fill="currentColor">
+      <path d="M16.5 13.1c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.2-2.5 1.2-2.6 0 0-2.6-1-2.6-3.6ZM14.3 6.5c.6-.8 1.1-1.8 1-2.9-1 .1-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.8 1.1.1 2.2-.5 2.8-1.3Z"/>
+    </svg>
+  );
+};
+const OAuthButton=({provider,children,onClick,style={}})=>(
+  <button onClick={onClick} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,display:"flex",alignItems:"center",justifyContent:"center",gap:10,...style}}>
+    <BrandIcon name={provider} size={18}/>{children}
+  </button>
+);
 
 function useToast(){
   const [toasts,setToasts]=useState([]);
@@ -442,12 +462,12 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       notify(err.message||"Could not sign in","error");
     }
   };
-  const signInWithGoogle=async()=>{
+  const startOAuth=async(provider)=>{
     try{
-      const data=await api("/auth/google/start",{method:"GET"});
+      const data=await api(`/auth/${provider}/start`,{method:"GET"});
       if(data.redirectUrl) window.location.href=data.redirectUrl;
     }catch(err){
-      notify(err.message||"Google sign-in is not configured yet","error");
+      notify(err.message||`${provider==="apple"?"Apple":"Google"} sign-in is not configured yet`,"error");
     }
   };
   const enterApp=async()=>{
@@ -508,7 +528,10 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           {mode==="signup"?<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Sign up</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Create your fear.social account.</div>
-          <button onClick={signInWithGoogle} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,marginBottom:18}}>Sign up with Google</button>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
+            <OAuthButton provider="google" onClick={()=>startOAuth("google")}>Sign up with Google</OAuthButton>
+            <OAuthButton provider="apple" onClick={()=>startOAuth("apple")}>Sign up with Apple</OAuthButton>
+          </div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
@@ -523,7 +546,10 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           </>:<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Log in</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Access your existing fear.social account.</div>
-          <button onClick={signInWithGoogle} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,marginBottom:18}}>Continue with Google</button>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
+            <OAuthButton provider="google" onClick={()=>startOAuth("google")}>Continue with Google</OAuthButton>
+            <OAuthButton provider="apple" onClick={()=>startOAuth("apple")}>Continue with Apple</OAuthButton>
+          </div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             <div>
               <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
@@ -911,7 +937,8 @@ export default function App(){
   const [openPanel,setOpenPanel]=useState(null);
   const [accessibility,setAccessibility]=useLocalState("fear-accessibility",{largeText:false,highContrast:false,reduceMotion:false});
   const [cookieConsent,setCookieConsent]=useLocalState("fear-cookie-consent",{choice:null,analytics:false,marketing:false});
-  const initialScreen=consumeOAuthToken()||window.location.hash.startsWith("#app")?"app":"landing";
+  const hash=window.location.hash||"";
+  const initialScreen=consumeOAuthToken()||hash.startsWith("#app")?"app":hash.startsWith("#login")?"login":hash.startsWith("#signup")?"signup":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
     if(initialScreen==="landing"&&screenState!=="landing") setScreenState("landing");
