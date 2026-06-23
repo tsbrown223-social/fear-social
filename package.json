@@ -7,7 +7,7 @@
     "dev:vite": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=fear-social --commit-dirty=true --config wrangler.local.toml",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=fear-social --commit-dirty=true",
     "db:migrate": "wrangler d1 migrations apply fear-social-db --remote --config wrangler.local.toml",
     "db:migrate:local": "wrangler d1 migrations apply fear-social-db --local --config wrangler.local.toml",
     "icons": "node scripts/generate-icons.mjs"

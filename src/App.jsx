@@ -45,6 +45,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .desktop-app-search{background-image:none!important;}
 .uh:hover{background:rgba(22,199,78,0.06);border-radius:10px;}
 .mobile-bottom-nav{display:none;}
+.cookie-notice{left:auto!important;right:18px!important;bottom:18px!important;}
+.cookie-card{max-width:330px!important;display:block!important;padding:15px!important;}
+.cookie-actions{display:flex;margin-top:14px;}
+.cookie-actions button{flex:1;}
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
   [style*="position: sticky"]{position:static!important;}
@@ -97,6 +101,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-section h2{font-size:40px!important;line-height:1.08!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
   .landing-stats{grid-template-columns:repeat(2,1fr)!important;}
+  .cookie-notice{left:12px!important;right:12px!important;bottom:12px!important;}
+  .cookie-card{max-width:none!important;border-radius:18px!important;}
+  .cookie-actions{display:grid!important;grid-template-columns:1fr!important;}
   .signup-root{display:block!important;background:${C.dark}!important;min-height:100vh!important;}
   .signup-copy{display:none!important;}
   .signup-form-panel{width:100%!important;min-height:100vh!important;padding:82px 22px 32px!important;}
@@ -274,7 +281,7 @@ const INITIAL_MESSAGES=[];
 function Navbar({setScreen,notify,onOpenPanel}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
-  const links=[["Features","platform"],["Network","activity"],["Community","cta"],["Pricing","pricing"]];
+  const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Join","cta"]];
   return(
     <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none"}}>
       <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:scrolled?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:"auto"}}>
@@ -304,50 +311,68 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     return()=>{active=false;};
   },[]);
   const joinWaitlist=async()=>{
-    if(!email)return notify("Enter your email first","error");
+    if(!email||!email.includes("@"))return notify("Enter a valid email first","error");
     try{
       await api("/waitlist",{method:"POST",body:JSON.stringify({email})});
       setJoined(true);
+      notify("Email saved. You're on the list.");
     }catch(err){
       notify(err.message||"Could not save email","error");
     }
   };
-  const ticker=[`${fmt(stats.profiles)} verified profiles · `,`${fmt(stats.waitlist)} waitlist emails · `,`${fmt(stats.posts)} member posts · `,`${fmt(stats.comments)} comments · `,`${fmt(stats.connections)} connections · `,`${fmt(stats.rsvps)} event RSVPs · `];
-  const statRows=[["Profiles",stats.profiles],["Waitlist Emails",stats.waitlist],["Posts",stats.posts],["Comments",stats.comments],["Connections",stats.connections]];
+  const ticker=["Founder profiles · ","Warm intros · ","Mentor requests · ","Build updates · ","Events · ","Private rooms · ","Opportunity alerts · "];
+  const statRows=[["Beta status","Open"],["Emails captured",fmt(stats.waitlist)],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
+  const featureRows=[
+    ["network","Founder Directory","Create a polished profile, discover builders by stage and industry, and turn cold browsing into warm introductions."],
+    ["megaphone","Build Updates","Post progress, signal what you need, and keep investors, collaborators, and early users close to the work."],
+    ["brain","Mentor Requests","Route focused mentor asks through a cleaner workflow so advice becomes action instead of scattered DMs."],
+    ["calendar","Events & Rooms","Coordinate live sessions, small-group rooms, and RSVP-based programming without leaving the network."],
+    ["briefcase","Opportunities","Surface co-founder searches, pilot customers, jobs, and partnership leads where founders already gather."],
+    ["zap","FEAR Pro","A paid operating layer for serious builders: advanced matching, priority mentor access, and AI prep tools.",true],
+  ];
+  const readinessRows=[
+    ["Email Capture","Waitlist, account signup, and verification emails are wired through the backend so new founder demand is recorded immediately.","check"],
+    ["Account System","Email verification, passwords, Google and Apple sign-in routes, sessions, profiles, and privacy controls are in place.","user"],
+    ["Growth Engine","Free access brings founders in; Pro converts the most active members into a paid plan with clear upgrade value.","zap"],
+  ];
+  const pricingRows=[
+    {name:"Free",price:"$0",period:"forever",note:"For founders getting into the network.",features:["Founder profile and public directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and social sign-in"],grad:false,button:"Join free"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced founder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
+  ];
   return(
     <div style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Multiplayer for founders</span>
+          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting founder emails</span>
         </div>
         <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
-          Finding tomorrow's<br/><span style={{color:C.accent}}>founders today.</span>
+          A sharper social network<br/><span style={{color:C.accent}}>for serious founders.</span>
         </h1>
         <p style={{fontSize:19,color:"rgba(255,255,255,0.62)",lineHeight:1.75,maxWidth:650,marginBottom:38,position:"relative"}} className="fu">
-          Meet serious builders, post progress, find collaborators, and keep your founder network moving in one focused social platform.
+          Meet builders, capture momentum, find collaborators, and keep founder relationships moving in one focused platform.
         </p>
         {joined?(
           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
             <div style={{textAlign:"left"}}>
-              <div style={{fontWeight:700,color:"#fff",fontSize:19}}>You're on the list.</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:3}}>Check your inbox — we'll be in touch soon.</div>
+              <div style={{fontWeight:800,color:"#fff",fontSize:19}}>You're on the access list.</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.48)",marginTop:3}}>Your email is saved. Create your account whenever you're ready.</div>
             </div>
-            <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Enter app</button>
+            <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Create account</button>
           </div>
         ):(
           <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
-            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@example.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
-            <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Get early access</button>
+            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="founder@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
+            <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
           </div>
         )}
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.32)",marginTop:16}}>Real profiles · Live database counts · No fake activity</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Email capture is live · Private beta access · No credit card required</div>
         <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="fu">
           <div style={{display:"flex"}}>{["TB","EP","BP","AR"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
-            <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>{fmt(stats.profiles)} verified profiles</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} waitlist emails captured</div>
+            <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for ambitious founders</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
           </div>
         </div>
       </div>
@@ -359,10 +384,11 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div id="platform" className="landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything a founder network should remember.</h2>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything a founder network needs to feel useful on day one.</h2>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:680,margin:"0 auto"}}>The product is structured around the real workflows founders repeat every week: introductions, updates, asks, events, and opportunity flow.</p>
         </div>
         <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-          {[["network","Real Connections","Find co-founders and collaborators who get what you're going through."],["brain","Mentor Access","Mentor requests are tracked by the backend as users request intros."],["megaphone","Build in Public","Share wins and struggles. Posts, comments, likes, and saves are counted live."],["briefcase","Opportunities","Co-founder matching, jobs, and gigs can be listed once details are verified."],["calendar","Events","RSVP totals come directly from the platform database."],["zap","FEAR Pro","Premium tools are planned and will show real pricing only when active.",true]].map(([icon,title,desc,pro],i)=>(
+          {featureRows.map(([icon,title,desc,pro],i)=>(
             <div key={i} className="ch" style={{background:i%2===0?"#101114":"#0B0C0E",border:"1px solid rgba(255,255,255,0.09)",borderRadius:18,padding:"30px 26px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)"}}>
               <IconBadge name={icon} pro={pro}/>
               <div style={{fontWeight:700,fontSize:18,color:"#fff",marginBottom:10}}>{title}</div>
@@ -375,49 +401,58 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div className="landing-stats" style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
           {statRows.map(([l,n])=>(
             <div key={l} style={{textAlign:"center",padding:"28px 16px",background:"#fff",border:"1px solid #EAECF0",borderRadius:18}}>
-              <div style={{fontFamily:"Georgia,serif",fontSize:42,fontWeight:800,letterSpacing:0,color:"#111318"}}>{fmt(n)}</div>
+              <div style={{fontFamily:"Georgia,serif",fontSize:42,fontWeight:800,letterSpacing:0,color:"#111318"}}>{n}</div>
               <div style={{fontSize:12,color:"#687080",marginTop:7,fontWeight:700}}>{l}</div>
             </div>
           ))}
         </div>
       </div>
       <div id="activity" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
-        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0,textAlign:"center",marginBottom:64}}>Live platform activity</h2>
+        <div style={{textAlign:"center",marginBottom:64}}>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Launch Ready</div>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0}}>The foundation is ready to accept real demand.</h2>
+        </div>
         <div className="landing-testimonial-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
-          {[{q:`${fmt(stats.posts)} posts are stored in the live database from real platform activity.`,name:"Posts",stage:"Cloudflare D1",av:"PO"},{q:`${fmt(stats.mentorRequests)} mentor requests have been submitted by users.`,name:"Mentors",stage:"Cloudflare D1",av:"ME"},{q:`${fmt(stats.messages)} messages have been sent through the platform.`,name:"Messages",stage:"Cloudflare D1",av:"DM"}].map((t,i)=>(
-            <div key={i} className="ch" style={{background:"#101114",borderRadius:18,padding:"30px",border:"1px solid rgba(255,255,255,0.09)"}}>
-              <div style={{fontSize:40,color:C.accent,marginBottom:20,lineHeight:1}}>"</div>
-              <p style={{fontSize:15,color:"rgba(255,255,255,0.75)",lineHeight:1.8,marginBottom:24,fontStyle:"italic"}}>{t.q}</p>
-              <div style={{display:"flex",alignItems:"center",gap:12}}><Av i={t.av} size={40} grad/><div><div style={{fontSize:14,fontWeight:700,color:"#fff"}}>{t.name}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.3)"}}>{t.stage}</div></div></div>
+          {readinessRows.map(([title,desc,icon],i)=>(
+            <div key={title} className="ch" style={{background:"#101114",borderRadius:18,padding:"30px",border:"1px solid rgba(255,255,255,0.09)"}}>
+              <IconBadge name={icon} style={{marginBottom:20}}/>
+              <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:10}}>{title}</div>
+              <p style={{fontSize:15,color:"rgba(255,255,255,0.62)",lineHeight:1.78}}>{desc}</p>
             </div>
           ))}
         </div>
       </div>
       <div id="pricing" className="landing-section" style={{background:"#fff",borderTop:"1px solid #ECEFF3",padding:"110px 52px"}}>
-        <div style={{maxWidth:880,margin:"0 auto",textAlign:"center"}}>
+        <div style={{maxWidth:980,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:56}}>Start free. Upgrade only when it is real.</h2>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>A clean plan for free growth and paid power users.</h2>
+          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:660,margin:"0 auto 56px"}}>Start with a free founder profile. Convert the most active members into FEAR Pro at a simple founding-member price when billing opens.</p>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
-            {[{name:"Free",price:"Available",period:"now",features:["Social feed & posts","Discover & connect","Events access","DMs","Waitlist capture"],grad:false},{name:"FEAR Pro",price:"Planned",period:"not active",features:["Premium tools planned","AI assistant planned","Checkout required before launch","No active paid plan yet"],grad:true}].map((p,i)=>(
+            {pricingRows.map((p,i)=>(
               <div key={i} className="ch" style={{background:p.grad?"#111318":"#F7F8FA",border:`1px solid ${p.grad?"#111318":"#EAECF0"}`,borderRadius:22,padding:"38px 34px",position:"relative",overflow:"hidden",boxShadow:p.grad?"0 28px 80px rgba(0,0,0,0.18)":"none"}}>
                 <div style={{position:"relative"}}>
                   <div style={{fontSize:11,fontWeight:800,letterSpacing:2,color:p.grad?C.accent:"#687080",textTransform:"uppercase",marginBottom:10}}>{p.name}</div>
-                  <div style={{display:"flex",alignItems:"baseline",gap:5,marginBottom:30}}><span style={{fontFamily:"Georgia,serif",fontSize:54,fontWeight:800,color:p.grad?"#fff":"#111318"}}>{p.price}</span><span style={{fontSize:14,color:p.grad?"rgba(255,255,255,0.34)":"#687080"}}>/{p.period}</span></div>
+                  <div style={{display:"flex",alignItems:"baseline",gap:5,marginBottom:8}}><span style={{fontFamily:"Georgia,serif",fontSize:54,fontWeight:800,color:p.grad?"#fff":"#111318"}}>{p.price}</span><span style={{fontSize:14,color:p.grad?"rgba(255,255,255,0.34)":"#687080"}}>/{p.period}</span></div>
+                  <div style={{fontSize:13,color:p.grad?"rgba(255,255,255,0.48)":"#687080",lineHeight:1.6,marginBottom:28}}>{p.note}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:13,marginBottom:34}}>
                     {p.features.map(f=><div key={f} style={{display:"flex",alignItems:"center",gap:11}}><span style={{width:20,height:20,borderRadius:"50%",background:p.grad?"rgba(22,199,78,0.18)":"#fff",display:"flex",alignItems:"center",justifyContent:"center",color:C.accent,flexShrink:0,border:p.grad?"none":"1px solid #EAECF0"}}><Icon name="check" size={12} color={C.accent} strokeWidth={3}/></span><span style={{fontSize:14,color:p.grad?"rgba(255,255,255,0.62)":"#555B66"}}>{f}</span></div>)}
                   </div>
-                  {p.grad?<button onClick={()=>setScreen("signup")} className="bs" style={{width:"100%",background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:900}}>Join Pro waitlist →</button>:<button onClick={()=>setScreen("signup")} className="bs" style={{width:"100%",background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:900}}>Get started →</button>}
+                  <button onClick={()=>setScreen("signup")} className="bs" style={{width:"100%",background:p.grad?"#fff":"#111318",color:p.grad?"#111318":"#fff",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:900}}>{p.button} →</button>
                 </div>
               </div>
             ))}
           </div>
+          <div style={{marginTop:18,fontSize:13,color:"#687080",lineHeight:1.65}}>Paid plan path: validate Pro demand from the waitlist, open Stripe checkout for FEAR Pro, then add annual billing once monthly conversion is proven.</div>
         </div>
       </div>
       <div id="cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
         <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Build with people<br/>who are also building.</h2>
-        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:560,position:"relative"}}>A social layer for serious founders: profiles, posts, messages, events, and numbers pulled from your real backend.</p>
-        <button onClick={()=>setScreen("signup")} className="bs" style={{position:"relative",background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900,boxShadow:"0 18px 50px rgba(22,199,78,0.28)"}}>Join fear.social free →</button>
+        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:590,position:"relative"}}>Get on the list, create your account, and start building a founder graph that compounds instead of disappearing into scattered chats.</p>
+        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",position:"relative"}}>
+          <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900,boxShadow:"0 18px 50px rgba(22,199,78,0.28)"}}>Create free account →</button>
+          <button onClick={()=>scrollToSection("pricing")} className="bs" style={{background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.16)",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900}}>See Pro plan</button>
+        </div>
       </div>
       <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",background:"#050506",padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
@@ -894,13 +929,13 @@ function AccessibilityPanel({settings,setSettings,onClose}){
 function CookieConsent({consent,setConsent,onManage}){
   if(consent.choice)return null;
   return (
-    <div role="region" aria-label="Cookie notice" style={{position:"fixed",left:18,right:18,bottom:18,zIndex:8500,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
-      <div style={{maxWidth:920,width:"100%",background:"#fff",border:`1px solid ${C.border}`,borderRadius:20,padding:18,boxShadow:"0 24px 90px rgba(0,0,0,.22)",display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",pointerEvents:"auto"}}>
+    <div className="cookie-notice" role="region" aria-label="Cookie notice" style={{position:"fixed",left:18,right:18,bottom:18,zIndex:8500,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
+      <div className="cookie-card" style={{maxWidth:920,width:"100%",background:"#fff",border:`1px solid ${C.border}`,borderRadius:20,padding:18,boxShadow:"0 24px 90px rgba(0,0,0,.22)",display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",pointerEvents:"auto"}}>
         <div style={{flex:"1 1 320px"}}>
           <b style={{display:"block",fontSize:15,color:C.text,marginBottom:4}}>Cookie and privacy choices</b>
-          <p style={{fontSize:13,color:C.muted,lineHeight:1.55}}>We use essential storage for sign-in, accessibility preferences, and security. Optional cookies stay off unless you allow them.</p>
+          <p style={{fontSize:13,color:C.muted,lineHeight:1.55}}>Essential storage keeps sign-in and preferences working. Optional cookies stay off unless you allow them.</p>
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <div className="cookie-actions" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <button onClick={()=>setConsent({choice:"essential",analytics:false,marketing:false})} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.text}}>Essential only</button>
           <button onClick={onManage} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent}}>Manage</button>
           <button onClick={()=>setConsent({choice:"all",analytics:true,marketing:true})} className="bs" style={{background:"#111318",border:"none",borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:"#fff"}}>Accept all</button>
