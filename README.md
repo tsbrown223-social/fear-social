@@ -4,7 +4,7 @@ Founder community platform built with Vite, React, Cloudflare Pages, and Cloudfl
 
 ## Launch plan
 
-- Public positioning: a sharper social network for serious founders.
+- Public positioning: empowering tomorrow's founders today.
 - Email capture: the landing page posts directly to `/api/waitlist`, storing invite demand in Cloudflare D1.
 - Free plan: founder profile, build updates, discovery, events, rooms, direct messages, email verification, and social sign-in.
 - FEAR Pro: founding-member plan at `$19/month` with priority mentor request routing, advanced matching, private Pro rooms, opportunity alerts, and AI prep notes.

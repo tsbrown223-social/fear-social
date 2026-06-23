@@ -348,10 +348,10 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting founder emails</span>
         </div>
         <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
-          A sharper social network<br/><span style={{color:C.accent}}>for serious founders.</span>
+          Empowering tomorrow's<br/><span style={{color:C.accent}}>founders today.</span>
         </h1>
         <p style={{fontSize:19,color:"rgba(255,255,255,0.62)",lineHeight:1.75,maxWidth:650,marginBottom:38,position:"relative"}} className="fu">
-          Meet builders, capture momentum, find collaborators, and keep founder relationships moving in one focused platform.
+          A sharper social network for serious builders: capture momentum, find collaborators, and keep founder relationships moving in one focused platform.
         </p>
         {joined?(
           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
