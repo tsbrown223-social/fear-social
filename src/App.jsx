@@ -320,24 +320,24 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       notify(err.message||"Could not save email","error");
     }
   };
-  const ticker=["Founder profiles · ","Warm intros · ","Mentor requests · ","Build updates · ","Events · ","Private rooms · ","Opportunity alerts · "];
+  const ticker=["First steps · ","Business ideas · ","Warm intros · ","Mentor requests · ","Build updates · ","Events · ","Private rooms · ","Opportunity alerts · "];
   const statRows=[["Beta status","Open"],["Emails captured",fmt(stats.waitlist)],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
   const featureRows=[
-    ["network","Founder Directory","Create a polished profile, discover builders by stage and industry, and turn cold browsing into warm introductions."],
-    ["megaphone","Build Updates","Post progress, signal what you need, and keep investors, collaborators, and early users close to the work."],
-    ["brain","Mentor Requests","Route focused mentor asks through a cleaner workflow so advice becomes action instead of scattered DMs."],
+    ["network","Builder Directory","Create a polished profile, discover people by ambition and industry, and turn cold browsing into warm introductions."],
+    ["megaphone","Build Updates","Post progress, signal what you need, and keep mentors, collaborators, and early supporters close to the work."],
+    ["brain","Mentor Requests","Route focused business asks through a cleaner workflow so advice becomes action instead of scattered DMs."],
     ["calendar","Events & Rooms","Coordinate live sessions, small-group rooms, and RSVP-based programming without leaving the network."],
-    ["briefcase","Opportunities","Surface co-founder searches, pilot customers, jobs, and partnership leads where founders already gather."],
-    ["zap","FEAR Pro","A paid operating layer for serious builders: advanced matching, priority mentor access, and AI prep tools.",true],
+    ["briefcase","Opportunities","Surface co-founder searches, pilot customers, jobs, and partnership leads where ambitious builders gather."],
+    ["zap","FEAR Pro","A paid operating layer for people ready to move: advanced matching, priority mentor access, and AI prep tools.",true],
   ];
   const readinessRows=[
-    ["Email Capture","Waitlist, account signup, and verification emails are wired through the backend so new founder demand is recorded immediately.","check"],
+    ["Email Capture","Waitlist, account signup, and verification emails are wired through the backend so new demand is recorded immediately.","check"],
     ["Account System","Email verification, passwords, Google and Apple sign-in routes, sessions, profiles, and privacy controls are in place.","user"],
-    ["Growth Engine","Free access brings founders in; Pro converts the most active members into a paid plan with clear upgrade value.","zap"],
+    ["Growth Engine","Free access brings future founders and business starters in; Pro converts the most active members into a paid plan with clear upgrade value.","zap"],
   ];
   const pricingRows=[
-    {name:"Free",price:"$0",period:"forever",note:"For founders getting into the network.",features:["Founder profile and public directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and social sign-in"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced founder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
+    {name:"Free",price:"$0",period:"forever",note:"For anyone taking the first real step into business.",features:["Public profile and builder directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and social sign-in"],grad:false,button:"Join free"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced builder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
@@ -345,13 +345,16 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting founder emails</span>
+          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting first-step emails</span>
         </div>
         <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
-          Empowering tomorrow's<br/><span style={{color:C.accent}}>founders today.</span>
+          Your first step<br/><span style={{color:C.accent}}>is fear.</span>
         </h1>
-        <p style={{fontSize:19,color:"rgba(255,255,255,0.62)",lineHeight:1.75,maxWidth:650,marginBottom:38,position:"relative"}} className="fu">
-          A sharper social network for serious builders: capture momentum, find collaborators, and keep founder relationships moving in one focused platform.
+        <p style={{fontSize:20,color:"rgba(255,255,255,0.76)",lineHeight:1.65,maxWidth:680,marginBottom:12,position:"relative",fontWeight:800}} className="fu">
+          Empowering tomorrow's founders today.
+        </p>
+        <p style={{fontSize:18,color:"rgba(255,255,255,0.56)",lineHeight:1.75,maxWidth:720,marginBottom:38,position:"relative"}} className="fu">
+          A sharper social network for future founders, early builders, and anyone ready to step into business before they know exactly where to begin.
         </p>
         {joined?(
           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
@@ -363,7 +366,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         ):(
           <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
-            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="founder@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
+            <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
             <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
           </div>
         )}
@@ -371,7 +374,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="fu">
           <div style={{display:"flex"}}>{["TB","EP","BP","AR"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
-            <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for ambitious founders</div>
+            <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for first-time business builders</div>
             <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
           </div>
         </div>
@@ -384,8 +387,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div id="platform" className="landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything a founder network needs to feel useful on day one.</h2>
-          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:680,margin:"0 auto"}}>The product is structured around the real workflows founders repeat every week: introductions, updates, asks, events, and opportunity flow.</p>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything you need to turn intent into a first move.</h2>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:700,margin:"0 auto"}}>The product is structured around the workflows business starters repeat every week: clarity, introductions, updates, asks, events, and opportunity flow.</p>
         </div>
         <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
           {featureRows.map(([icon,title,desc,pro],i)=>(
@@ -426,7 +429,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{maxWidth:980,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>A clean plan for free growth and paid power users.</h2>
-          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:660,margin:"0 auto 56px"}}>Start with a free founder profile. Convert the most active members into FEAR Pro at a simple founding-member price when billing opens.</p>
+          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:680,margin:"0 auto 56px"}}>Start with a free profile, even if the business is still just an idea. Convert the most active members into FEAR Pro at a simple founding-member price when billing opens.</p>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
             {pricingRows.map((p,i)=>(
               <div key={i} className="ch" style={{background:p.grad?"#111318":"#F7F8FA",border:`1px solid ${p.grad?"#111318":"#EAECF0"}`,borderRadius:22,padding:"38px 34px",position:"relative",overflow:"hidden",boxShadow:p.grad?"0 28px 80px rgba(0,0,0,0.18)":"none"}}>
@@ -448,7 +451,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div id="cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
         <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Build with people<br/>who are also building.</h2>
-        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:590,position:"relative"}}>Get on the list, create your account, and start building a founder graph that compounds instead of disappearing into scattered chats.</p>
+        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:620,position:"relative"}}>Get on the list, create your account, and start turning the idea in your head into relationships, action, and momentum.</p>
         <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",position:"relative"}}>
           <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900,boxShadow:"0 18px 50px rgba(22,199,78,0.28)"}}>Create free account →</button>
           <button onClick={()=>scrollToSection("pricing")} className="bs" style={{background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.16)",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900}}>See Pro plan</button>
