@@ -49,6 +49,42 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .cookie-card{max-width:330px!important;display:block!important;padding:15px!important;}
 .cookie-actions{display:flex;margin-top:14px;}
 .cookie-actions button{flex:1;}
+.theme-toggle-label{display:inline;}
+.theme-light{background:#F7F8FA;color:#0D0F14;}
+.theme-light .landing-root{background:#F7F8FA!important;}
+.theme-light .landing-hero{background:radial-gradient(circle at 50% 0%, rgba(22,199,78,0.12), transparent 48%), #F7F8FA!important;}
+.theme-light .landing-hero h1,.theme-light .landing-platform h2,.theme-light .landing-launch h2,.theme-light .landing-cta h2{color:#0D0F14!important;}
+.theme-light .landing-hero p{color:#44505F!important;}
+.theme-light .landing-hero p:first-of-type{color:#0D0F14!important;}
+.theme-light .landing-badge{background:#E8FBF0!important;border-color:#B8F5CE!important;}
+.theme-light .landing-badge span:last-child{color:#0D0F14!important;}
+.theme-light .landing-proof-row div:last-child div:first-child{color:#0D0F14!important;}
+.theme-light .landing-proof-row div:last-child div:last-child{color:#687080!important;}
+.theme-light .landing-ticker{background:#FFFFFF!important;border-color:#E6EAF0!important;}
+.theme-light .landing-ticker span{color:#687080!important;}
+.theme-light .landing-platform,.theme-light .landing-launch,.theme-light .landing-cta,.theme-light .landing-footer{background:#F7F8FA!important;}
+.theme-light .landing-platform p,.theme-light .landing-launch p,.theme-light .landing-cta p{color:#5C6675!important;}
+.theme-light .landing-feature-grid .ch,.theme-light .landing-testimonial-grid .ch{background:#FFFFFF!important;border-color:#E5E9F0!important;box-shadow:0 18px 55px rgba(13,15,20,0.06)!important;}
+.theme-light .landing-card-title{color:#0D0F14!important;}
+.theme-light .landing-card-copy{color:#5C6675!important;}
+.theme-light .icon-badge{background:#F1F4F8!important;border-color:#E1E6EE!important;}
+.theme-light .landing-footer{border-top-color:#E5E9F0!important;}
+.theme-light .landing-footer div:first-child{color:#0D0F14!important;}
+.theme-light .landing-footer div:nth-child(2),.theme-light .landing-footer button{color:#687080!important;}
+.theme-light .landing-cta button:last-child{background:#FFFFFF!important;color:#0D0F14!important;border-color:#E1E6EE!important;}
+.theme-dark .app-view{background:#050506!important;color:#F7F8FA!important;}
+.theme-dark .app-topbar{background:rgba(11,12,14,0.96)!important;border-bottom-color:#252830!important;}
+.theme-dark .app-topbar-logo,.theme-dark .app-view h1,.theme-dark .app-view h2,.theme-dark .app-view b,.theme-dark .app-view strong{color:#F7F8FA!important;}
+.theme-dark .app-shell,.theme-dark .directory-wrap{color:#F7F8FA!important;}
+.theme-dark .desktop-feed-side>div,.theme-dark .mobile-profile-summary,.theme-dark .composer-card,.theme-dark .post-card,.theme-dark .directory-grid .ch,.theme-dark .message-list,.theme-dark .message-panel,.theme-dark .profile-stats>div,.theme-dark .edit-sheet{background:#101114!important;border-color:#252830!important;}
+.theme-dark .app-view input,.theme-dark .app-view textarea,.theme-dark .desktop-app-search{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
+.theme-dark .app-view p,.theme-dark .app-view .directory-title,.theme-dark .app-view article p{color:rgba(255,255,255,0.72)!important;}
+.theme-dark .app-view [style*="color: rgb(107, 114, 128)"],.theme-dark .app-view [style*="color: #6B7280"],.theme-dark .app-view [style*="color: rgb(156, 163, 175)"],.theme-dark .app-view [style*="color: #9CA3AF"]{color:rgba(255,255,255,0.48)!important;}
+.theme-dark .mobile-bottom-nav{background:rgba(16,17,20,0.96)!important;border-color:#252830!important;}
+.theme-dark .mobile-bottom-nav button.active{background:rgba(22,199,78,0.16)!important;}
+.theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
+.theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
+.theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
   [style*="position: sticky"]{position:static!important;}
@@ -90,6 +126,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .edit-sheet{width:100%!important;border-radius:22px 22px 0 0!important;max-height:88vh!important;overflow:auto!important;}
   .landing-nav{height:auto!important;padding:14px 18px!important;}
   .landing-nav-links{display:none!important;}
+  .theme-toggle-label{display:none!important;}
   .landing-hero{min-height:92vh!important;padding:104px 18px 58px!important;justify-content:flex-start!important;}
   .landing-hero h1{font-size:46px!important;line-height:1.08!important;}
   .landing-hero p{font-size:16px!important;margin-bottom:32px!important;}
@@ -154,6 +191,8 @@ const iconPaths = {
   heart:<path d="M20.4 5.6a5 5 0 0 0-7.1 0L12 6.9l-1.3-1.3a5 5 0 1 0-7.1 7.1L12 21l8.4-8.3a5 5 0 0 0 0-7.1Z"/>,
   comment:<><path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1.1-4.2A8 8 0 1 1 21 12Z"/></>,
   bookmark:<path d="M6 4h12v17l-6-4-6 4V4Z"/>,
+  sun:<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></>,
+  moon:<path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/>,
 };
 const Icon=({name,size=18,color="currentColor",strokeWidth=2,filled=false,style={}})=>(
   <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{display:"block",flexShrink:0,...style}} fill={filled?"currentColor":"none"} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
@@ -161,7 +200,7 @@ const Icon=({name,size=18,color="currentColor",strokeWidth=2,filled=false,style=
   </svg>
 );
 const IconBadge=({name,pro=false,style={}})=>(
-  <div style={{width:48,height:48,borderRadius:14,background:pro?"#18271E":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:22,border:"1px solid rgba(255,255,255,0.08)",color:C.accent,...style}}>
+  <div className="icon-badge" style={{width:48,height:48,borderRadius:14,background:pro?"#18271E":"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:22,border:"1px solid rgba(255,255,255,0.08)",color:C.accent,...style}}>
     <Icon name={name} size={24}/>
   </div>
 );
@@ -185,6 +224,38 @@ const OAuthButton=({provider,children,onClick,style={}})=>(
     <BrandIcon name={provider} size={18}/>{children}
   </button>
 );
+
+const ThemeToggle=({themeMode,setThemeMode,compact=false,style={}})=>{
+  const dark=themeMode==="dark";
+  const next=dark?"light":"dark";
+  return (
+    <button
+      onClick={()=>setThemeMode(next)}
+      className="bs"
+      aria-label={`Switch to ${next} mode`}
+      title={`Switch to ${next} mode`}
+      style={{
+        background:dark?"rgba(255,255,255,0.08)":"#fff",
+        border:`1px solid ${dark?"rgba(255,255,255,0.16)":"#E4E7EC"}`,
+        borderRadius:999,
+        padding:compact?"9px 11px":"9px 14px",
+        color:dark?"#fff":"#111318",
+        fontSize:13,
+        fontWeight:900,
+        display:"inline-flex",
+        alignItems:"center",
+        justifyContent:"center",
+        gap:8,
+        whiteSpace:"nowrap",
+        boxShadow:dark?"none":"0 8px 28px rgba(13,15,20,0.08)",
+        ...style,
+      }}
+    >
+      <Icon name={dark?"sun":"moon"} size={16} color="currentColor"/>
+      {!compact&&<span className="theme-toggle-label">{dark?"Light":"Dark"}</span>}
+    </button>
+  );
+};
 
 function useToast(){
   const [toasts,setToasts]=useState([]);
@@ -278,7 +349,7 @@ const DEALS=[];
 const GROUPS=[];
 const INITIAL_MESSAGES=[];
 
-function Navbar({setScreen,notify,onOpenPanel}){
+function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
   const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Join","cta"]];
@@ -292,6 +363,7 @@ function Navbar({setScreen,notify,onOpenPanel}){
         ))}
       </div>
       <div style={{display:"flex",gap:8}}>
+        <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>onOpenPanel("accessibility")} className="bs" aria-label="Accessibility settings" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,width:38,height:38,color:"#111318",fontSize:15,fontWeight:900,cursor:"pointer",whiteSpace:"nowrap"}}>Aa</button>
         <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <button onClick={()=>setScreen("signup")} className="bs" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
@@ -340,10 +412,10 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced builder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
   ];
   return(
-    <div style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
+    <div className="landing-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
-        <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="bs fu" onClick={()=>setScreen("signup")}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
           <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting first-step emails</span>
         </div>
@@ -371,7 +443,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         )}
         <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Email capture is live · Private beta access · No credit card required</div>
-        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="fu">
+        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="landing-proof-row fu">
           <div style={{display:"flex"}}>{["TB","EP","BP","AR"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
             <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for first-time business builders</div>
@@ -379,12 +451,12 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
-      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
+      <div className="landing-ticker" style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
         <div style={{display:"flex",width:"max-content"}} className="ticker">
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:12,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={12} color={C.accent}/> {t}</span>)}
         </div>
       </div>
-      <div id="platform" className="landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
+      <div id="platform" className="landing-platform landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything you need to turn intent into a first move.</h2>
@@ -394,8 +466,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           {featureRows.map(([icon,title,desc,pro],i)=>(
             <div key={i} className="ch" style={{background:i%2===0?"#101114":"#0B0C0E",border:"1px solid rgba(255,255,255,0.09)",borderRadius:18,padding:"30px 26px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)"}}>
               <IconBadge name={icon} pro={pro}/>
-              <div style={{fontWeight:700,fontSize:18,color:"#fff",marginBottom:10}}>{title}</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.52)",lineHeight:1.72}}>{desc}</div>
+              <div className="landing-card-title" style={{fontWeight:700,fontSize:18,color:"#fff",marginBottom:10}}>{title}</div>
+              <div className="landing-card-copy" style={{fontSize:14,color:"rgba(255,255,255,0.52)",lineHeight:1.72}}>{desc}</div>
             </div>
           ))}
         </div>
@@ -410,7 +482,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           ))}
         </div>
       </div>
-      <div id="activity" className="landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
+      <div id="activity" className="landing-launch landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:64}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Launch Ready</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0}}>The foundation is ready to accept real demand.</h2>
@@ -419,13 +491,13 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           {readinessRows.map(([title,desc,icon],i)=>(
             <div key={title} className="ch" style={{background:"#101114",borderRadius:18,padding:"30px",border:"1px solid rgba(255,255,255,0.09)"}}>
               <IconBadge name={icon} style={{marginBottom:20}}/>
-              <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:10}}>{title}</div>
-              <p style={{fontSize:15,color:"rgba(255,255,255,0.62)",lineHeight:1.78}}>{desc}</p>
+              <div className="landing-card-title" style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:10}}>{title}</div>
+              <p className="landing-card-copy" style={{fontSize:15,color:"rgba(255,255,255,0.62)",lineHeight:1.78}}>{desc}</p>
             </div>
           ))}
         </div>
       </div>
-      <div id="pricing" className="landing-section" style={{background:"#fff",borderTop:"1px solid #ECEFF3",padding:"110px 52px"}}>
+      <div id="pricing" className="landing-pricing landing-section" style={{background:"#fff",borderTop:"1px solid #ECEFF3",padding:"110px 52px"}}>
         <div style={{maxWidth:980,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>A clean plan for free growth and paid power users.</h2>
@@ -448,7 +520,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <div style={{marginTop:18,fontSize:13,color:"#687080",lineHeight:1.65}}>Paid plan path: validate Pro demand from the waitlist, open Stripe checkout for FEAR Pro, then add annual billing once monthly conversion is proven.</div>
         </div>
       </div>
-      <div id="cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
+      <div id="cta" className="landing-cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
         <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Build with people<br/>who are also building.</h2>
         <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:620,position:"relative"}}>Get on the list, create your account, and start turning the idea in your head into relationships, action, and momentum.</p>
@@ -457,7 +529,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <button onClick={()=>scrollToSection("pricing")} className="bs" style={{background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.16)",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900}}>See Pro plan</button>
         </div>
       </div>
-      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",background:"#050506",padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+      <div className="landing-footer" style={{borderTop:"1px solid rgba(255,255,255,0.08)",background:"#050506",padding:"32px 52px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · Empowering tomorrow's founders today.</div>
         <div style={{display:"flex",gap:20}}>
@@ -471,7 +543,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
 }
 
 
-function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
+function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,setThemeMode}){
   const [mode,setMode]=useState(initialMode);
   const [form,setForm]=useState({name:"",username:"",email:""});
   const [login,setLogin]=useState({identifier:"",password:""});
@@ -543,6 +615,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   );
   return(
     <div className="signup-root" style={{minHeight:"100vh",background:C.dark,display:"flex"}}>
+      <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} style={{position:"fixed",top:18,right:18,zIndex:20}}/>
       <div className="signup-copy" style={{flex:1,background:GR2,display:"flex",alignItems:"center",justifyContent:"center",padding:72}}>
         <div style={{maxWidth:520}}>
           <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>The community<br/>you've been<br/>looking for.</div>
@@ -607,7 +680,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   );
 }
 
-function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
+function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setThemeMode}){
   const [view,setView]=useLocalState("fear-view","feed");
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
@@ -752,13 +825,14 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     </div>
   );
   return(
-    <div style={{minHeight:"100vh",background:C.bg}}>
+    <div className="app-view" style={{minHeight:"100vh",background:C.bg}}>
       <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <div className="app-topbar-logo" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div className="desktop-app-tabs" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
           {tabs.map(([id,label])=><button key={id} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
         </div>
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
+        <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>notify(`${unread} notifications`,"info")} className="bs" aria-label="Notifications" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:C.muted}}><Icon name="bell" size={18}/><span style={{position:"absolute",top:-6,right:-6,width:17,height:17,borderRadius:"50%",background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span></button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none"}}><Av i={initials} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
@@ -975,6 +1049,7 @@ export default function App(){
   const [openPanel,setOpenPanel]=useState(null);
   const [accessibility,setAccessibility]=useLocalState("fear-accessibility",{largeText:false,highContrast:false,reduceMotion:false});
   const [cookieConsent,setCookieConsent]=useLocalState("fear-cookie-consent",{choice:null,analytics:false,marketing:false});
+  const [themeMode,setThemeMode]=useLocalState("fear-theme","dark");
   const hash=window.location.hash||"";
   const initialScreen=consumeOAuthToken()||hash.startsWith("#app")?"app":hash.startsWith("#login")?"login":hash.startsWith("#signup")?"signup":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
@@ -1002,16 +1077,16 @@ export default function App(){
     notify("Signed out");
   },[notify,setScreenState]);
   const screen=screenState;
-  const a11yClass=[accessibility.largeText&&"a11y-large-text",accessibility.highContrast&&"a11y-high-contrast",accessibility.reduceMotion&&"a11y-reduce-motion"].filter(Boolean).join(" ");
+  const a11yClass=[`theme-${themeMode}`,accessibility.largeText&&"a11y-large-text",accessibility.highContrast&&"a11y-high-contrast",accessibility.reduceMotion&&"a11y-reduce-motion"].filter(Boolean).join(" ");
   return(
     <>
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
-      <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
+      <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
-        {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
-        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
+        {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"} themeMode={themeMode} setThemeMode={setThemeMode}/>}
+        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         <button onClick={()=>setOpenPanel("accessibility")} aria-label="Open accessibility settings" className="bs" style={{position:"fixed",left:18,bottom:cookieConsent.choice?18:128,zIndex:8400,width:48,height:48,borderRadius:"50%",border:`1px solid ${C.border}`,background:"#fff",boxShadow:"0 12px 40px rgba(0,0,0,.18)",color:C.text,fontWeight:900}}>Aa</button>
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
         {openPanel==="privacy"&&<PrivacyPolicyPanel onClose={()=>setOpenPanel(null)} onOpenAccessibility={()=>setOpenPanel("accessibility")}/>}
