@@ -40,7 +40,8 @@ All product email should use `contact@fear.social`.
 
 - Sender: `fear.social <contact@fear.social>`
 - Owner/backend notification recipient: `contact@fear.social`
-- Cloudflare Pages variables/secrets: `EMAIL_FROM` and `NOTIFICATION_EMAIL`
+- Cloudflare Pages variables/secrets: `EMAIL_FROM`, `NOTIFICATION_EMAIL`, and `RESEND_API_KEY`
+- The `fear.social` sending domain must be verified in Resend before verification codes can be delivered from `contact@fear.social`.
 
 ### OAuth sign-in
 

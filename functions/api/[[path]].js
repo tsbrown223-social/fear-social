@@ -281,11 +281,17 @@ async function updateNotification(db, id, status, providerId = "", error = "") {
   }
 }
 
+function emailDeliveryError(notification) {
+  if (notification?.sent) return "";
+  if (notification?.queued) return "Email delivery is not configured yet. Add RESEND_API_KEY to Cloudflare Pages secrets.";
+  return "Verification email could not be sent right now. Please try again shortly.";
+}
+
 async function sendEmailNotification(db, env, type, recipient, subject, payload) {
   const logId = await recordNotification(db, type, recipient, subject, payload);
 
   if (!env.RESEND_API_KEY) {
-    await updateNotification(db, logId, "queued", "", "RESEND_API_KEY is not configured in Cloudflare Pages secrets.");
+    await updateNotification(db, logId, "failed", "", "RESEND_API_KEY is not configured in Cloudflare Pages secrets.");
     return { sent: false, queued: true, logId };
   }
 
@@ -299,6 +305,7 @@ async function sendEmailNotification(db, env, type, recipient, subject, payload)
     body: JSON.stringify({
       from: env.EMAIL_FROM || DEFAULT_EMAIL_FROM,
       to: recipient,
+      reply_to: CONTACT_EMAIL,
       subject,
       html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#111318"><h2>${escapeHtml(subject)}</h2>${lines}</div>`,
       text: `${subject}\n\n${Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join("\n")}`,
@@ -870,6 +877,16 @@ async function handleRequest({ request, env, params }) {
       username: existing?.handle || username,
       handle: existing?.handle || `@${username}`,
     });
+    if (!verification?.notification?.sent) {
+      return json(
+        {
+          error: emailDeliveryError(verification?.notification),
+          verificationSent: false,
+          verificationQueued: Boolean(verification?.notification?.queued),
+        },
+        { status: 503 }
+      );
+    }
     return json({
       ok: true,
       verificationSent: Boolean(verification?.notification?.sent),
