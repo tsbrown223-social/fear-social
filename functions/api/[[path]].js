@@ -283,7 +283,7 @@ async function updateNotification(db, id, status, providerId = "", error = "") {
 
 function emailDeliveryError(notification) {
   if (notification?.sent) return "";
-  if (notification?.queued) return "Email delivery is not configured yet. Add RESEND_API_KEY to Cloudflare Pages secrets.";
+  if (notification?.queued) return "Verification email is not available yet. Please contact contact@fear.social for access.";
   return "Verification email could not be sent right now. Please try again shortly.";
 }
 
