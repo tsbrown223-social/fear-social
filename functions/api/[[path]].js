@@ -26,7 +26,9 @@ const readForm = async (request) => {
 };
 
 const createId = (prefix) => `${prefix}_${crypto.randomUUID()}`;
-const NOTIFICATION_EMAIL = "tsbrown223@gmail.com";
+const CONTACT_EMAIL = "contact@fear.social";
+const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
+const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
 
 const createVerificationCode = () => {
@@ -295,7 +297,7 @@ async function sendEmailNotification(db, env, type, recipient, subject, payload)
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      from: env.EMAIL_FROM || "fear.social <notifications@fear.social>",
+      from: env.EMAIL_FROM || DEFAULT_EMAIL_FROM,
       to: recipient,
       subject,
       html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#111318"><h2>${escapeHtml(subject)}</h2>${lines}</div>`,

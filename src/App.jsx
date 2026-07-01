@@ -535,7 +535,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{display:"flex",gap:20}}>
           <button onClick={()=>onOpenPanel("privacy")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Privacy</button>
           <button onClick={()=>onOpenPanel("accessibility")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Accessibility</button>
-          <button onClick={()=>notify("Contact: tsbrown223@gmail.com","info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Contact</button>
+          <button onClick={()=>notify("Contact: contact@fear.social","info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Contact</button>
         </div>
       </div>
     </div>
@@ -971,8 +971,8 @@ function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
       {section("Cookies and Local Storage","fear.social uses essential local storage for sign-in state, cookie preference storage, accessibility preferences, and basic app functionality. Optional analytics or marketing cookies should remain off unless you add those services and receive consent where required.")}
       {section("Sharing and Processors","Information may be processed by infrastructure providers used to run the site, including Cloudflare services for hosting, database, and serverless functions. Information may also be disclosed if required by law or needed to protect users, the service, or the public.")}
       {section("Security","The site uses HTTPS through Cloudflare, security headers, database-backed records, email verification, and restricted browser permissions. No internet service can guarantee that it is impossible to compromise, so security is maintained as an ongoing process.")}
-      {section("User Choices","Users can request access, correction, or deletion of account data by contacting tsbrown223@gmail.com. Accessibility controls are available in the site settings.")}
-      {section("Children","fear.social is not intended for children under 13. If a child has submitted personal information, contact tsbrown223@gmail.com so it can be removed.")}
+      {section("User Choices","Users can request access, correction, or deletion of account data by contacting contact@fear.social. Accessibility controls are available in the site settings.")}
+      {section("Children","fear.social is not intended for children under 13. If a child has submitted personal information, contact contact@fear.social so it can be removed.")}
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:24}}>
         <GBtn onClick={onClose}>Done</GBtn>
         <GhostBtn onClick={onOpenAccessibility}>Accessibility settings</GhostBtn>

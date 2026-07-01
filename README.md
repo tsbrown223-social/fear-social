@@ -34,6 +34,14 @@ npm run dev:vite
 
 The D1 binding is configured in `wrangler.local.toml` as `DB`. Pages Functions in `functions/api/` use it for posts, profiles, waitlist, messages, and live stats.
 
+### Email
+
+All product email should use `contact@fear.social`.
+
+- Sender: `fear.social <contact@fear.social>`
+- Owner/backend notification recipient: `contact@fear.social`
+- Cloudflare Pages variables/secrets: `EMAIL_FROM` and `NOTIFICATION_EMAIL`
+
 ### OAuth sign-in
 
 Google and Apple sign-in are handled by Pages Functions and require Cloudflare Pages environment variables/secrets.
