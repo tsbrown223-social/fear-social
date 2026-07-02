@@ -326,6 +326,20 @@ async function sendOwnerNotification(db, env, type, subject, payload) {
   return sendEmailNotification(db, env, type, env.NOTIFICATION_EMAIL || NOTIFICATION_EMAIL, subject, payload);
 }
 
+async function sendSignupReceivedEmail(db, env, email, details = {}) {
+  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+  const username = details.handle || (details.username ? `@${details.username}` : "");
+  return sendEmailNotification(db, env, "signup_received", normalizedEmail, "We received your fear.social signup", {
+    message: "Your fear.social signup was received.",
+    email: normalizedEmail,
+    username,
+    status: details.status || "Received",
+    nextStep: details.nextStep || "We will keep you posted as access opens.",
+    contact: CONTACT_EMAIL,
+  });
+}
+
 async function createEmailVerification(db, env, purpose, email, details = {}) {
   const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
   if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
@@ -950,6 +964,12 @@ async function handleRequest({ request, env, params }) {
         handle: profile.handle,
         username: profile.username,
       });
+      await sendSignupReceivedEmail(db, env, email, {
+        username: profile.username,
+        handle: profile.handle,
+        status: "Account created",
+        nextStep: "Your account is ready. You can now log in with your email and password.",
+      });
       user = { id, token: sessionToken, ...profile, email_verified_at: new Date().toISOString() };
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
@@ -1134,6 +1154,12 @@ async function handleRequest({ request, env, params }) {
     const existingWaitlist = await db.prepare("SELECT username FROM waitlist WHERE email = ?").bind(email).first();
     if (existingWaitlist) {
       const existingUsername = existingWaitlist.username || username;
+      const confirmation = await sendSignupReceivedEmail(db, env, email, {
+        username: existingUsername,
+        handle: `@${existingUsername}`,
+        status: "Already received",
+        nextStep: "You are already on the access list. We will keep you posted as access opens.",
+      });
       const verification = await createEmailVerification(db, env, "early_access", email, {
         username: existingUsername,
         handle: `@${existingUsername}`,
@@ -1141,6 +1167,8 @@ async function handleRequest({ request, env, params }) {
       return json({
         ok: true,
         username: `@${existingUsername}`,
+        confirmationSent: Boolean(confirmation?.sent),
+        confirmationQueued: Boolean(confirmation?.queued),
         verificationSent: Boolean(verification?.notification?.sent),
         verificationQueued: Boolean(verification?.notification?.queued),
       });
@@ -1162,18 +1190,34 @@ async function handleRequest({ request, env, params }) {
         email,
         username: handle,
       });
+      const confirmation = await sendSignupReceivedEmail(db, env, email, {
+        username,
+        handle,
+        status: "Received",
+        nextStep: "You are on the access list. We will keep you posted as access opens.",
+      });
       const verification = await createEmailVerification(db, env, "early_access", email, { username, handle });
       return json({
         ok: true,
         username: handle,
+        confirmationSent: Boolean(confirmation?.sent),
+        confirmationQueued: Boolean(confirmation?.queued),
         verificationSent: Boolean(verification?.notification?.sent),
         verificationQueued: Boolean(verification?.notification?.queued),
       });
     }
+    const confirmation = await sendSignupReceivedEmail(db, env, email, {
+      username,
+      handle,
+      status: "Received",
+      nextStep: "You are on the access list. We will keep you posted as access opens.",
+    });
     const verification = await createEmailVerification(db, env, "early_access", email, { username, handle });
     return json({
       ok: true,
       username: handle,
+      confirmationSent: Boolean(confirmation?.sent),
+      confirmationQueued: Boolean(confirmation?.queued),
       verificationSent: Boolean(verification?.notification?.sent),
       verificationQueued: Boolean(verification?.notification?.queued),
     });
