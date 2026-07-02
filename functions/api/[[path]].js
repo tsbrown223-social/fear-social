@@ -158,17 +158,23 @@ const normalizeProfile = (profile = {}) => {
   const name = String(profile.name || "Your Name").trim().slice(0, 80) || "Your Name";
   const username = normalizeUsername(profile.username || profile.handle, name);
   const handle = `@${username}`;
+  const website = String(profile.website || "").trim().slice(0, 180);
   return {
     name,
     username,
     handle,
     email: String(profile.email || "").trim().slice(0, 120),
     location: String(profile.location || "").trim().slice(0, 80),
-    industry: String(profile.industry || "Tech").trim().slice(0, 40),
+    industry: String(profile.industry || "Exploring").trim().slice(0, 40),
     stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
     bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
-    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 1200),
+    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 250000),
+    coverUrl: String(profile.coverUrl || profile.cover_url || "").trim().slice(0, 250000),
+    headline: String(profile.headline || "").trim().slice(0, 140),
+    website: /^https?:\/\//i.test(website) ? website : website ? `https://${website}` : "",
+    lookingFor: String(profile.lookingFor || profile.looking_for || "").trim().slice(0, 160),
+    goal: String(profile.goal || "").trim().slice(0, 160),
   };
 };
 
@@ -189,6 +195,10 @@ const formatProfileSummary = (profile = {}) =>
     `Location: ${profile.location || ""}`,
     `Industry: ${profile.industry || ""}`,
     `Stage: ${profile.stage || ""}`,
+    `Headline: ${profile.headline || ""}`,
+    `Looking for: ${profile.lookingFor || profile.looking_for || ""}`,
+    `Goal: ${profile.goal || ""}`,
+    `Website: ${profile.website || ""}`,
     `Bio: ${profile.bio || ""}`,
   ].join("\n");
 
@@ -438,10 +448,10 @@ async function getOrCreateUser(db, env, request, body = {}) {
   const sessionToken = token || crypto.randomUUID();
   await db
     .prepare(
-      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl)
+    .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal)
       .run();
   await createSession(db, id, sessionToken, request);
 
@@ -587,7 +597,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
     await db
       .prepare(
         `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, oauth_provider, oauth_subject, avatar_url)
-         VALUES (?, ?, ?, ?, ?, '', 'Tech', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, '', 'Exploring', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
       )
       .bind(
         id,
@@ -720,12 +730,45 @@ async function getStats(db) {
   };
 }
 
+async function getNotifications(db, userId) {
+  const rows = await db
+    .prepare(
+      `SELECT n.*, u.name AS actor_name, u.handle AS actor_handle, u.avatar_url AS actor_avatar_url
+       FROM user_notifications n
+       LEFT JOIN users u ON u.id = n.actor_user_id
+       WHERE n.user_id = ?
+       ORDER BY datetime(n.created_at) DESC
+       LIMIT 80`
+    )
+    .bind(userId)
+    .all();
+  return (rows.results || []).map((notification) => ({
+    id: notification.id,
+    type: notification.type,
+    body: notification.body,
+    targetType: notification.target_type || "",
+    targetId: notification.target_id || "",
+    read: Boolean(notification.read_at),
+    time: timeAgo(notification.created_at),
+    actor: notification.actor_user_id
+      ? {
+          id: notification.actor_user_id,
+          name: notification.actor_name || "Member",
+          handle: notification.actor_handle || "",
+          av: initials(notification.actor_name),
+          avatarUrl: notification.actor_avatar_url || "",
+        }
+      : null,
+  }));
+}
+
 async function getBootstrap(db, userId) {
-  const [posts, people, events, mentors, conversations, stats] = await Promise.all([
+  const [posts, people, events, mentors, conversations, stats, notifications] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url,
+          u.headline, u.website, u.looking_for, u.goal,
           0 AS mutual,
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
           EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
@@ -758,8 +801,23 @@ async function getBootstrap(db, userId) {
       )
       .bind(userId)
       .all(),
-    db.prepare("SELECT * FROM conversations ORDER BY id").all(),
+    db
+      .prepare(
+        `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle,
+          other.avatar_url AS other_avatar_url, other.last_seen_at AS other_last_seen_at
+         FROM conversations c
+         LEFT JOIN users other ON other.id = CASE
+           WHEN c.user_a_id = ? THEN c.user_b_id
+           WHEN c.user_b_id = ? THEN c.user_a_id
+           ELSE NULL
+         END
+         WHERE c.user_a_id IS NULL OR c.user_b_id IS NULL OR c.user_a_id = ? OR c.user_b_id = ?
+         ORDER BY datetime(COALESCE(c.updated_at, '1970-01-01')) DESC, c.id DESC`
+      )
+      .bind(userId, userId, userId, userId)
+      .all(),
     getStats(db),
+    getNotifications(db, userId),
   ]);
 
   const messages = await db.prepare("SELECT * FROM messages ORDER BY datetime(created_at), id").all();
@@ -781,6 +839,11 @@ async function getBootstrap(db, userId) {
       ...person,
       av: initials(person.name),
       avatarUrl: person.avatar_url || "",
+      coverUrl: person.cover_url || "",
+      headline: person.headline || "",
+      website: person.website || "",
+      lookingFor: person.looking_for || "",
+      goal: person.goal || "",
       online: Boolean(person.online),
       connected: Boolean(person.connected),
     })),
@@ -795,13 +858,18 @@ async function getBootstrap(db, userId) {
     })),
     messages: (conversations.results || []).map((conversation) => ({
       id: conversation.id,
-      name: conversation.name,
-      av: conversation.av,
+      userId: conversation.other_id || "",
+      name: conversation.other_name || conversation.name,
+      handle: conversation.other_handle || "",
+      av: initials(conversation.other_name || conversation.name || conversation.av),
+      avatarUrl: conversation.other_avatar_url || "",
       online: Boolean(conversation.online),
       thread: messageGroups.get(conversation.id) || [],
       draft: "",
     })),
     stats,
+    notifications,
+    unreadNotifications: notifications.filter((notification) => !notification.read).length,
   };
 }
 
@@ -974,10 +1042,10 @@ async function handleRequest({ request, env, params }) {
       const sessionToken = crypto.randomUUID();
       await db
         .prepare(
-          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, password_hash, email_verified_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, email_verified_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
         )
-        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, passwordHash)
+        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash)
         .run();
       await recordRegistrationEmail(db, "verified_account_created", email, {
         userId: id,
@@ -1297,7 +1365,7 @@ async function handleRequest({ request, env, params }) {
       const mergedProfile = normalizeProfile({ ...duplicate, ...profile });
       await db
         .prepare(
-          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP
+          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
            WHERE id = ?`
         )
         .bind(
@@ -1310,6 +1378,11 @@ async function handleRequest({ request, env, params }) {
           mergedProfile.bio,
           mergedProfile.privacy,
           mergedProfile.avatarUrl,
+          mergedProfile.coverUrl,
+          mergedProfile.headline,
+          mergedProfile.website,
+          mergedProfile.lookingFor,
+          mergedProfile.goal,
           duplicate.id
         )
         .run();
@@ -1321,10 +1394,10 @@ async function handleRequest({ request, env, params }) {
 
     await db
       .prepare(
-        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP
+        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`
       )
-      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, user.id)
+      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
       .run();
     if (shouldNotify) {
       await recordRegistrationEmail(db, "account_email_added", profile.email, {
@@ -1355,7 +1428,7 @@ async function handleRequest({ request, env, params }) {
     const content = String(body.content || "").trim().slice(0, 1200);
     if (!content) return json({ error: "Post content required" }, { status: 400 });
     const id = createId("post");
-    const tag = String(body.tag || user.industry || "Tech").slice(0, 40);
+    const tag = String(body.tag || user.industry || "Exploring").slice(0, 40);
     const type = String(body.type || "Update").slice(0, 40);
     const stage = String(body.stage || "Building").slice(0, 40);
     await db
@@ -1427,6 +1500,50 @@ async function handleRequest({ request, env, params }) {
     return json(await getBootstrap(db, user.id));
   }
 
+  if (method === "POST" && segments[0] === "people" && segments[2] === "message") {
+    const targetUserId = segments[1];
+    const text = String(body.text || "").trim().slice(0, 800);
+    if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    const target = await db.prepare("SELECT id, name FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
+    if (!target) return json({ error: "User not found" }, { status: 404 });
+    let conversation = await db
+      .prepare(
+        `SELECT id FROM conversations
+         WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)
+         LIMIT 1`
+      )
+      .bind(user.id, targetUserId, targetUserId, user.id)
+      .first();
+    if (!conversation) {
+      const result = await db
+        .prepare("INSERT INTO conversations (name, av, online, user_a_id, user_b_id, updated_at) VALUES (?, ?, 0, ?, ?, CURRENT_TIMESTAMP)")
+        .bind(target.name, initials(target.name), user.id, targetUserId)
+        .run();
+      const created = await db
+        .prepare(
+          `SELECT id FROM conversations
+           WHERE user_a_id = ? AND user_b_id = ?
+           ORDER BY id DESC LIMIT 1`
+        )
+        .bind(user.id, targetUserId)
+        .first();
+      conversation = { id: result?.meta?.last_row_id || created?.id };
+    }
+    if (text) {
+      await db
+        .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
+        .bind(createId("message"), Number(conversation.id), user.id, text)
+        .run();
+      await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(conversation.id)]);
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(conversation.id)]
+      );
+    }
+    return json(await getBootstrap(db, user.id));
+  }
+
   if (method === "POST" && path === "/reports") {
     const targetType = String(body.targetType || "").trim().slice(0, 40);
     const targetId = String(body.targetId || "").trim().slice(0, 120);
@@ -1455,6 +1572,16 @@ async function handleRequest({ request, env, params }) {
     return json({ ok: true, media: { id, kind, url, alt } }, { status: 201 });
   }
 
+  if (method === "POST" && path === "/notifications/read") {
+    const id = String(body.id || "").trim();
+    if (id) {
+      await safeRun(db, "UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?", [id, user.id]);
+    } else {
+      await safeRun(db, "UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL", [user.id]);
+    }
+    return json(await getBootstrap(db, user.id));
+  }
+
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
     await toggleRow(db, "event_rsvps", user.id, "event_id", Number(segments[1]));
     return json(await getBootstrap(db, user.id));
@@ -1468,10 +1595,24 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "messages" && segments[2] === "send") {
     const text = String(body.text || "").trim().slice(0, 800);
     if (!text) return json({ error: "Message text required" }, { status: 400 });
+    const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
+    if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
+    if (conversation.user_a_id && conversation.user_b_id && conversation.user_a_id !== user.id && conversation.user_b_id !== user.id) {
+      return json({ error: "Conversation access denied" }, { status: 403 });
+    }
     await db
       .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
       .bind(createId("message"), Number(segments[1]), user.id, text)
       .run();
+    await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(segments[1])]);
+    const targetUserId = conversation.user_a_id === user.id ? conversation.user_b_id : conversation.user_a_id;
+    if (targetUserId) {
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(segments[1])]
+      );
+    }
     return json(await getBootstrap(db, user.id));
   }
 

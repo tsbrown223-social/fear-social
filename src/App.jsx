@@ -9,9 +9,12 @@ const C = {
   muted:"#6B7280", dim:"#9CA3AF", dark:"#0C0D10", dCard:"#1A1D24",
   dBorder:"#252830", coral:"#E53935",
   ind:{
-    Tech:{bg:"#EEF2FF",color:"#3730A3"}, Finance:{bg:"#E8FBF0",color:"#14532D"},
+    Exploring:{bg:"#E8FBF0",color:"#14532D"}, Finance:{bg:"#E8FBF0",color:"#14532D"},
+    Tech:{bg:"#EEF2FF",color:"#3730A3"}, "Brand Management":{bg:"#F4F0FF",color:"#5B21B6"},
     Fashion:{bg:"#FDF2F8",color:"#9D174D"}, Food:{bg:"#FFF7ED",color:"#C2410C"},
-    Health:{bg:"#F0FDFA",color:"#0F766E"}, Other:{bg:"#F3F4F6",color:"#6B7280"},
+    Health:{bg:"#F0FDFA",color:"#0F766E"}, Psychology:{bg:"#ECFEFF",color:"#155E75"},
+    Creative:{bg:"#FFF1F2",color:"#BE123C"}, Education:{bg:"#F0F9FF",color:"#0369A1"},
+    Other:{bg:"#F3F4F6",color:"#6B7280"},
     Networking:{bg:"#FFF7ED",color:"#C2410C"}, Growth:{bg:"#F0FDFA",color:"#0F766E"},
   }
 };
@@ -82,7 +85,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .app-topbar-logo,.theme-dark .app-view h1,.theme-dark .app-view h2,.theme-dark .app-view b,.theme-dark .app-view strong{color:#F7F8FA!important;}
 .theme-dark .app-shell,.theme-dark .directory-wrap{color:#F7F8FA!important;}
 .theme-dark .desktop-feed-side>div,.theme-dark .mobile-profile-summary,.theme-dark .composer-card,.theme-dark .post-card,.theme-dark .directory-grid .ch,.theme-dark .message-list,.theme-dark .message-panel,.theme-dark .profile-stats>div,.theme-dark .edit-sheet{background:#101114!important;border-color:#252830!important;}
-.theme-dark .app-view input,.theme-dark .app-view textarea,.theme-dark .desktop-app-search{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
+.theme-dark .app-view [style*="background: rgb(255, 255, 255)"],.theme-dark .app-view [style*="background: #fff"],.theme-dark .app-view [style*="background: #FFFFFF"],.theme-dark .app-view [style*="background: rgb(240, 242, 245)"],.theme-dark .app-view [style*="background: #F0F2F5"]{background:#15171C!important;border-color:#2C313A!important;color:#F7F8FA!important;}
+.theme-dark .app-view [style*="color: rgb(13, 15, 20)"],.theme-dark .app-view [style*="color: #0D0F14"],.theme-dark .app-view [style*="color: rgb(42, 45, 56)"],.theme-dark .app-view [style*="color: #2A2D38"]{color:#F7F8FA!important;}
+.theme-dark .app-view .message-bubble[style*="background: rgb(22, 199, 78)"]{background:#16C74E!important;color:#fff!important;}
+.theme-dark .app-view .activity-unread{background:rgba(22,199,78,0.14)!important;border-color:rgba(22,199,78,0.32)!important;}
+.theme-dark .app-view input,.theme-dark .app-view textarea,.theme-dark .app-view select,.theme-dark .desktop-app-search{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .app-view p,.theme-dark .app-view .directory-title,.theme-dark .app-view article p{color:rgba(255,255,255,0.72)!important;}
 .theme-dark .app-view [style*="color: rgb(107, 114, 128)"],.theme-dark .app-view [style*="color: #6B7280"],.theme-dark .app-view [style*="color: rgb(156, 163, 175)"],.theme-dark .app-view [style*="color: #9CA3AF"]{color:rgba(255,255,255,0.48)!important;}
 .theme-dark .mobile-bottom-nav{background:rgba(16,17,20,0.96)!important;border-color:#252830!important;}
@@ -197,6 +204,28 @@ const safeImageUrl=url=>{
     return parsed.protocol==="https:"?value:"";
   }catch{return "";}
 };
+const readImageFile=(file,maxSize=720)=>new Promise((resolve,reject)=>{
+  if(!file?.type?.startsWith("image/"))return reject(new Error("Choose an image file"));
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error("Could not read image"));
+  reader.onload=()=>{
+    const img=new Image();
+    img.onerror=()=>reject(new Error("Could not load image"));
+    img.onload=()=>{
+      const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+      const width=Math.max(1,Math.round(img.width*scale));
+      const height=Math.max(1,Math.round(img.height*scale));
+      const canvas=document.createElement("canvas");
+      canvas.width=width;
+      canvas.height=height;
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(img,0,0,width,height);
+      resolve(canvas.toDataURL("image/jpeg",0.82));
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+});
 const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
   const image=safeImageUrl(src);
   return (
@@ -234,6 +263,10 @@ const iconPaths = {
   heart:<path d="M20.4 5.6a5 5 0 0 0-7.1 0L12 6.9l-1.3-1.3a5 5 0 1 0-7.1 7.1L12 21l8.4-8.3a5 5 0 0 0 0-7.1Z"/>,
   comment:<><path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1.1-4.2A8 8 0 1 1 21 12Z"/></>,
   bookmark:<path d="M6 4h12v17l-6-4-6 4V4Z"/>,
+  send:<><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></>,
+  camera:<><path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13.5" r="3.5"/></>,
+  link:<><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></>,
+  eye:<><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
   sun:<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></>,
   moon:<path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/>,
 };
@@ -336,8 +369,11 @@ try{
     localStorage.setItem("fear-data-version",version);
   }
   const savedProfile=JSON.parse(localStorage.getItem("fear-profile")||"null");
-  if(savedProfile?.location==="Denver, CO"&&(!savedProfile.email||savedProfile.name==="Your Name"||savedProfile.handle==="@yourhandle")){
-    localStorage.setItem("fear-profile",JSON.stringify({...savedProfile,location:""}));
+  if(savedProfile&&(!savedProfile.email||savedProfile.name==="Your Name"||savedProfile.handle==="@yourhandle")){
+    const cleaned={...savedProfile};
+    if(cleaned.location==="Denver, CO")cleaned.location="";
+    if(cleaned.industry==="Tech")cleaned.industry="Exploring";
+    localStorage.setItem("fear-profile",JSON.stringify(cleaned));
   }
 }catch{}
 
@@ -365,7 +401,7 @@ const ToastCtx=({toasts,remove})=>(
 
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
 const cleanUsername=value=>String(value||"").toLowerCase().replace(/^@+/,"").replace(/[^a-z0-9._]+/g,"_").replace(/[._]{2,}/g,"_").replace(/^[._]+|[._]+$/g,"").slice(0,30);
-const profileMeta=profile=>[profile.handle||"@yourhandle",profile.location||"Location not set",profile.industry||"Tech"].filter(Boolean).join(" · ");
+const profileMeta=profile=>[profile.handle||"@yourhandle",profile.location||"Location not set",profile.industry||"Exploring"].filter(Boolean).join(" · ");
 const activateOnEnter=(event,callback)=>{
   if(event.key==="Enter"||event.key===" "){
     event.preventDefault();
@@ -799,6 +835,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [events,setEvents]=useLocalState("fear-events",EVENTS);
   const [mentors,setMentors]=useLocalState("fear-mentors",MENTORS);
   const [messages,setMessages]=useLocalState("fear-messages",INITIAL_MESSAGES);
+  const [notifications,setNotifications]=useLocalState("fear-notifications",[]);
+  const [unreadNotifications,setUnreadNotifications]=useLocalState("fear-unread-notifications",0);
   const [stats,setStats]=useLocalState("fear-stats",REAL_STATS);
   const [filter,setFilter]=useState("All");
   const [composer,setComposer]=useState("");
@@ -820,8 +858,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if(data.events)setEvents(data.events);
     if(data.mentors)setMentors(data.mentors);
     if(data.messages)setMessages(data.messages);
+    if(data.notifications)setNotifications(data.notifications);
+    if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[setEvents,setMentors,setMessages,setPeople,setPosts,setProfile,setStats]);
+  },[setEvents,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     applyBackendState(data);
@@ -841,19 +881,20 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     ["events","Events"],
     ["mentors","Mentors"],
     ["messages","Messages"],
+    ["notifications","Activity"],
     ["groups","Groups"],
     ["opportunities","Deals"],
   ];
   const mobileTabs=[
     ["feed","Feed","home"],
     ["discover","Find","diamond"],
+    ["notifications","Activity","heart"],
     ["messages","DMs","mail"],
-    ["mentors","Mentors","star"],
     ["profile","Me","user"],
   ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
   const visiblePosts=posts.filter(p=>(filter==="All"||p.tag===filter)&&(query.trim()===""||`${p.user} ${p.content} ${p.tag}`.toLowerCase().includes(query.toLowerCase())));
-  const unread=messages.reduce((n,m)=>n+(m.thread.length>2?1:0),0);
+  const unread=unreadNotifications;
   const statCards=[
     ["Posts",fmt(stats.posts)],
     ["Following",fmt(people.filter(p=>p.connected).length)],
@@ -865,10 +906,15 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     name:person.name||person.user||"Founder",
     handle:person.handle||"@member",
     location:person.location||person.loc||"",
-    industry:person.industry||person.tag||"Tech",
+    industry:person.industry||person.tag||"Exploring",
     stage:person.stage||"Building",
     bio:person.bio||"Building in public, meeting ambitious people, and turning fear into momentum.",
     avatarUrl:person.avatarUrl||person.avatar_url||"",
+    coverUrl:person.coverUrl||person.cover_url||"",
+    headline:person.headline||"",
+    website:person.website||"",
+    lookingFor:person.lookingFor||person.looking_for||"",
+    goal:person.goal||"",
     av:person.av,
     followers:Number(person.followers||0),
     mutual:Number(person.mutual||0),
@@ -895,7 +941,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if(!composer.trim())return notify("Write something before publishing","error");
     const optimistic={
       id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",
-      tag:profile.industry||"Tech",stage:profile.stage?.toLowerCase().includes("launched")?"Launched":"Building",
+      tag:profile.industry||"Exploring",stage:profile.stage?.toLowerCase().includes("launched")?"Launched":"Building",
       time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,isNew:true
     };
     setPosts(ps=>[optimistic,...ps]);
@@ -910,6 +956,21 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const connect=async id=>{
     setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
     try{await callBackend(`/people/${id}/connect`,{method:"POST"});}catch{}
+  };
+  const startMessage=async person=>{
+    if(!person?.id)return;
+    try{
+      await callBackend(`/people/${person.id}/message`,{method:"POST",body:JSON.stringify({})});
+      setView("messages");
+      notify(`Message ${person.name}`);
+    }catch(err){
+      notify(err.message||"Could not open message","error");
+    }
+  };
+  const markNotificationsRead=async(id="")=>{
+    setNotifications(ns=>ns.map(n=>id&&n.id!==id?n:{...n,read:true}));
+    if(!id)setUnreadNotifications(0);
+    try{await callBackend("/notifications/read",{method:"POST",body:JSON.stringify({id})});}catch{}
   };
   const rsvp=async id=>{
     setEvents(es=>es.map(e=>e.id===id?{...e,going:!e.going,attending:e.going?e.attending-1:e.attending+1}:e));
@@ -963,6 +1024,19 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify("Profile saved locally. Cloud sync failed.","error");
     }
   };
+  const uploadProfileImage=async(event,key="avatarUrl")=>{
+    const file=event.target.files?.[0];
+    if(!file)return;
+    try{
+      const dataUrl=await readImageFile(file,key==="coverUrl"?1200:720);
+      setProfileDraft(p=>({...p,[key]:dataUrl}));
+      notify(key==="coverUrl"?"Cover photo ready":"Profile picture ready");
+    }catch(err){
+      notify(err.message||"Could not use that image","error");
+    }finally{
+      event.target.value="";
+    }
+  };
   const SectionTitle=({eyebrow,title,action})=>(
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:20,marginBottom:20}}>
       <div>
@@ -977,11 +1051,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <div className="app-topbar-logo" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div className="desktop-app-tabs" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
-          {tabs.map(([id,label])=><button key={id} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
+          {tabs.map(([id,label])=><button key={id} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
-        <button onClick={()=>notify(`${unread} notifications`,"info")} className="bs" aria-label="Notifications" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:C.muted}}><Icon name="bell" size={18}/><span style={{position:"absolute",top:-6,right:-6,width:17,height:17,borderRadius:"50%",background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span></button>
+        <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
@@ -1010,7 +1084,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   <Av i={initials} src={profile.avatarUrl} size={46} grad online/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:900,color:C.text}}>{profile.name||"Your Name"}</div>
-                    <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.industry||"Tech"}</div>
+                    <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.industry||"Exploring"}</div>
                   </div>
                   <button onClick={()=>setEditProfile(true)} style={{background:C.aLight,color:C.accent,border:"none",borderRadius:9,padding:"8px 11px",fontSize:12,fontWeight:900}}>Edit</button>
                 </div>
@@ -1027,7 +1101,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   </div>
                 </div>
               </div>
-              <div className="filter-row" style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Tech","Finance","Fashion","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
+              <div className="filter-row" style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Exploring","Finance","Brand Management","Creative","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
               {visiblePosts.length===0&&<EmptyState title="No real posts yet" text="The feed is intentionally empty until a real account publishes a post."/>}
               {visiblePosts.map(p=>(
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
@@ -1053,34 +1127,41 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:14,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={52} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</b><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.handle} · {p.loc||"Location not set"}</div></div><IT label={p.industry} style={{maxWidth:"38%",flex:"0 1 auto",marginTop:3}}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} verified connections</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}>{p.name}</b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} verified connections</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
+        {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<Directory title="Founder groups" eyebrow="Rooms" items={GROUPS} render={g=><div key={g.id} className="ch" style={cardStyle}><b>{g.name}</b><p style={bodyCopy}>{g.desc}</p><div style={{fontSize:13,color:C.muted,margin:"14px 0"}}>{g.active}</div><GBtn sm onClick={()=>notify(`Joined ${g.name}`)}>Join room</GBtn></div>}/>}
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards}/>}
-        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}}/>}
+        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)}/>}
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
-        {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} onClick={()=>setView(id)}><span><Icon name={icon} size={18} color="currentColor"/></span>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
+        {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} onClick={()=>setView(id)} aria-label={id==="notifications"?`${label}, ${unread} unread`:label}><span><Icon name={icon} size={18} color="currentColor" filled={id==="notifications"&&unread>0}/></span>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
       </nav>
       {editProfile&&(
         <div className="edit-modal" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)}>
           <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
             <SectionTitle eyebrow="Profile" title="Edit your founder card"/>
-            <div className="profile-photo-editor" style={{display:"flex",alignItems:"center",gap:16,background:C.bg,border:`1px solid ${C.border}`,borderRadius:16,padding:14,marginBottom:16}}>
-              <Av i={initials} src={profileDraft.avatarUrl} size={72} grad/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:7}}>Profile picture</div>
-                <input value={profileDraft.avatarUrl||""} onChange={e=>setProfileDraft(p=>({...p,avatarUrl:e.target.value}))} placeholder="https://example.com/photo.jpg" className="if" style={{width:"100%",border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text,background:"#fff"}}/>
-                <div style={{fontSize:12,color:C.dim,lineHeight:1.45,marginTop:7}}>Use a secure image URL. Leave blank to show initials.</div>
-              </div>
+            <div style={{height:116,borderRadius:18,background:safeImageUrl(profileDraft.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profileDraft.coverUrl)}")`:GR,border:`1px solid ${C.border}`,marginBottom:44,position:"relative",overflow:"visible"}}>
+              <div style={{position:"absolute",left:16,bottom:-34}}><Av i={initials} src={profileDraft.avatarUrl} size={78} grad style={{border:"4px solid #fff"}}/></div>
+              <label className="bs" style={{position:"absolute",right:12,top:12,background:"rgba(255,255,255,0.92)",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Cover<input type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"coverUrl")} style={{display:"none"}}/></label>
+              <label className="bs" style={{position:"absolute",left:100,bottom:-26,background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Photo<input type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"avatarUrl")} style={{display:"none"}}/></label>
             </div>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>name<input value={profileDraft.name||""} onChange={e=>setProfileDraft(p=>({...p,name:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>username<input value={cleanUsername(profileDraft.username||profileDraft.handle||"")} onChange={e=>setProfileDraft(p=>{const username=cleanUsername(e.target.value);return {...p,username,handle:`@${username}`};})} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/><span style={{display:"block",fontSize:12,color:C.dim,textTransform:"none",fontWeight:600,marginTop:6}}>Your profile URL name is @{cleanUsername(profileDraft.username||profileDraft.handle||"username")}</span></label>
-            {["location","industry"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>headline<input value={profileDraft.headline||""} onChange={e=>setProfileDraft(p=>({...p,headline:e.target.value}))} placeholder="Brand builder, student founder, first-time operator..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {["location","industry"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} placeholder={k==="industry"?"Exploring, Brand Management...":"City, State"} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>looking for<input value={profileDraft.lookingFor||""} onChange={e=>setProfileDraft(p=>({...p,lookingFor:e.target.value}))} placeholder="Mentors, clients, cofounder..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
+              <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>first step<input value={profileDraft.goal||""} onChange={e=>setProfileDraft(p=>({...p,goal:e.target.value}))} placeholder="Validate an idea, meet operators..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
+            </div>
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>website or link<input value={profileDraft.website||""} onChange={e=>setProfileDraft(p=>({...p,website:e.target.value}))} placeholder="your site, portfolio, LinkedIn, store..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>bio<textarea value={profileDraft.bio||""} onChange={e=>setProfileDraft(p=>({...p,bio:e.target.value}))} className="if" style={{display:"block",width:"100%",minHeight:96,resize:"vertical",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text,lineHeight:1.5}}/></label>
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>profile visibility<select value={profileDraft.privacy||"public"} onChange={e=>setProfileDraft(p=>({...p,privacy:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text,background:"#fff"}}><option value="public">Public</option><option value="private">Private</option></select></label>
             <div className="edit-actions" style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}>
               <GhostBtn onClick={()=>setEditProfile(false)}>Cancel</GhostBtn>
               <GBtn onClick={saveProfile}>Save profile</GBtn>
@@ -1103,27 +1184,34 @@ function MiniEmpty({text}){
 function Directory({eyebrow,title,items,render}){
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
 }
+function NotificationsView({notifications,markRead,openProfile}){
+  const unread=notifications.filter(n=>!n.read).length;
+  return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
+}
 function MessagesView({messages,setMessages,sendMessage}){
   const [active,setActive]=useState(messages[0]?.id);
+  useEffect(()=>{if(!messages.some(m=>m.id===active))setActive(messages[0]?.id);},[active,messages]);
   const thread=messages.find(m=>m.id===active)||messages[0];
   const messageText=msg=>typeof msg==="string"?msg:msg.text;
   const messageAuthor=msg=>typeof msg==="string"?"them":msg.author;
   if(messages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
-  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{messageText(m.thread[m.thread.length-1])}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
+  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Direct messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{m.name}</div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1])||"Start the conversation"}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":thread.handle||"Direct message"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>{thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input value={thread.draft||""} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="send" size={15} color="#fff"/> Send</GBtn></div></div>}</div></div>;
 }
 function ProfilePanel({profile,setEditProfile,stats}){
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
-  return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={profileInitials} src={profile.avatarUrl} size={72} style={{background:"#fff",color:C.accent}}/><div className="profile-hero-copy" style={{minWidth:0}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere"}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75,overflowWrap:"anywhere"}}>{profileMeta(profile)}</div></div><button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82,overflowWrap:"anywhere"}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
+  const detailRows=[["First step",profile.goal],["Looking for",profile.lookingFor],["Stage",profile.stage],["Field",profile.industry||"Exploring"]].filter(([,v])=>v);
+  return <div className="directory-wrap" style={{maxWidth:900}}><div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:18}}><div style={{height:180,background:safeImageUrl(profile.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/><div style={{padding:"0 28px 28px"}}><div className="profile-hero-row" style={{display:"flex",alignItems:"end",gap:18,marginTop:-46}}><Av i={profileInitials} src={profile.avatarUrl} size={94} style={{background:"#fff",color:C.accent,border:"5px solid #fff"}}/><div className="profile-hero-copy" style={{minWidth:0,flex:1,paddingTop:52}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere",color:C.text,lineHeight:1}}>{profile.name||"Your Name"}</h1><div style={{color:C.muted,overflowWrap:"anywhere",marginTop:6}}>{profileMeta(profile)}</div></div><button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"11px 17px",fontWeight:900}}>Edit profile</button></div>{profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}<p style={{marginTop:12,maxWidth:720,lineHeight:1.75,color:C.tSoft,overflowWrap:"anywhere"}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p>{profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:18}}>{detailRows.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div></div></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
-function PublicProfilePanel({profile,onBack,onConnect}){
+function PublicProfilePanel({profile,onBack,onConnect,onMessage}){
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
   const stats=[
     ["Connections",fmt(profile.followers)],
     ["Mutuals",fmt(profile.mutual)],
     ["Stage",profile.stage||"Building"],
-    ["Industry",profile.industry||"Tech"],
+    ["Field",profile.industry||"Exploring"],
   ];
-  return <div className="directory-wrap" style={{maxWidth:860}}><button onClick={onBack} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:900,color:C.text,marginBottom:16,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="close" size={14}/> Back</button><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={profileInitials} src={profile.avatarUrl} size={76} style={{background:"#fff",color:C.accent}} online/><div className="profile-hero-copy" style={{minWidth:0}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere"}}>{profile.name}</h1><div style={{opacity:.76,overflowWrap:"anywhere"}}>{profileMeta(profile)}</div></div>{profile.id&&<GBtn onClick={onConnect} style={{marginLeft:"auto",background:profile.connected?"#fff":GR,color:profile.connected?C.accent:"#fff",boxShadow:"none"}}>{profile.connected?"Connected":"Connect"}</GBtn>}</div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82,overflowWrap:"anywhere"}}>{profile.bio}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:typeof v==="string"&&v.length>12?16:24,fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
+  const details=[["First step",profile.goal],["Looking for",profile.lookingFor],["Headline",profile.headline]].filter(([,v])=>v);
+  return <div className="directory-wrap" style={{maxWidth:900}}><button onClick={onBack} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:900,color:C.text,marginBottom:16,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="close" size={14}/> Back</button><div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:18}}><div style={{height:180,background:safeImageUrl(profile.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/><div style={{padding:"0 28px 28px"}}><div className="profile-hero-row" style={{display:"flex",alignItems:"end",gap:18,marginTop:-48}}><Av i={profileInitials} src={profile.avatarUrl} size={96} style={{background:"#fff",color:C.accent,border:"5px solid #fff"}} online/><div className="profile-hero-copy" style={{minWidth:0,flex:1,paddingTop:54}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere",color:C.text,lineHeight:1}}>{profile.name}</h1><div style={{color:C.muted,overflowWrap:"anywhere",marginTop:6}}>{profileMeta(profile)}</div></div>{profile.id&&<div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}><button onClick={onMessage} className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7}}><Icon name="send" size={15}/> Message</button><GBtn onClick={onConnect} style={{background:profile.connected?"#fff":GR,color:profile.connected?C.accent:"#fff",boxShadow:"none"}}>{profile.connected?"Connected":"Connect"}</GBtn></div>}</div>{profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}<p style={{marginTop:12,maxWidth:720,lineHeight:1.75,color:C.tSoft,overflowWrap:"anywhere"}}>{profile.bio}</p>{profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}<div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:18}}>{details.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div></div></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:typeof v==="string"&&v.length>12?16:24,fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
 
 function ModalShell({title,eyebrow,onClose,children}){
@@ -1248,16 +1336,22 @@ export default function App(){
     handle:"@yourhandle",
     email:"",
     location:"",
-    industry:"Tech",
+    industry:"Exploring",
     stage:"I'm actively building",
     bio:"Building in public, meeting ambitious founders, and turning fear into useful momentum.",
     avatarUrl:"",
   });
   const setScreen=useCallback((next)=>{
     setScreenState(next);
-    if(next==="app"&&window.location.hash!=="#app") window.history.replaceState(null,"","#app");
-    if(next!=="app"&&window.location.hash==="#app") window.history.replaceState(null,"#",window.location.pathname);
-  },[setScreenState]);
+    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":"";
+    if(nextHash){
+      window.history.replaceState(null,"",nextHash);
+      setRouteHash(nextHash);
+    }else{
+      window.history.replaceState(null,"",window.location.pathname);
+      setRouteHash("");
+    }
+  },[setScreenState,setRouteHash]);
   const signOut=useCallback(()=>{
     clearSessionToken();
     setScreenState("landing");
