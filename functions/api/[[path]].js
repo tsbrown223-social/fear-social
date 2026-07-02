@@ -86,13 +86,18 @@ const toHex = (bytes) => [...new Uint8Array(bytes)].map((byte) => byte.toString(
 
 async function hashPassword(password) {
   const salt = randomHex(16);
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: fromHex(salt), iterations: 210000 },
-    key,
-    256
-  );
-  return `pbkdf2-sha256:210000:${salt}:${toHex(bits)}`;
+  try {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", hash: "SHA-256", salt: fromHex(salt), iterations: 210000 },
+      key,
+      256
+    );
+    return `pbkdf2-sha256:210000:${salt}:${toHex(bits)}`;
+  } catch (err) {
+    console.warn("pbkdf2 password hashing failed, falling back to sha256", err);
+    return `sha256:${salt}:${await sha256(`${salt}:${password}`)}`;
+  }
 }
 
 async function verifyPassword(password, stored = "") {
@@ -907,6 +912,25 @@ async function completeVerification(db, email, code, purpose = "") {
   return verification;
 }
 
+async function findPasswordVerification(db, email, code) {
+  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  const normalizedCode = String(code || "").trim();
+  if (!normalizedEmail || !normalizedEmail.includes("@") || !/^\d{6}$/.test(normalizedCode)) return null;
+  return db
+    .prepare(
+      `SELECT * FROM email_verifications
+       WHERE lower(email) = lower(?) AND code = ? AND purpose = 'password'
+         AND (
+           (status = 'pending' AND datetime(expires_at) > datetime('now'))
+           OR (status = 'verified' AND datetime(verified_at) > datetime('now', '-15 minutes'))
+         )
+       ORDER BY datetime(created_at) DESC
+       LIMIT 1`
+    )
+    .bind(normalizedEmail, normalizedCode)
+    .first();
+}
+
 async function findUserByIdentifier(db, identifier = "") {
   const clean = String(identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
   if (!clean) return null;
@@ -1094,10 +1118,17 @@ async function handleRequest({ request, env, params }) {
     const code = String(body.code || "").trim();
     const password = String(body.password || "");
     if (password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
-    const verification = await completeVerification(db, email, code, body.purpose || "");
-    if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
     if (!user) return json({ error: "Create the account before setting a password" }, { status: 404 });
-    await db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(await hashPassword(password), user.id).run();
+    const verification = await findPasswordVerification(db, email, code);
+    if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
+    const passwordHash = await hashPassword(password);
+    await db
+      .prepare("UPDATE users SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+      .bind(passwordHash, user.id)
+      .run();
+    if (verification.status !== "verified") {
+      await db.prepare("UPDATE email_verifications SET status = 'verified', verified_at = CURRENT_TIMESTAMP WHERE id = ?").bind(verification.id).run();
+    }
     return json({ ok: true });
   }
 
