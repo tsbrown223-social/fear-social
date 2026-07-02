@@ -163,7 +163,7 @@ const normalizeProfile = (profile = {}) => {
     username,
     handle,
     email: String(profile.email || "").trim().slice(0, 120),
-    location: String(profile.location || "Denver, CO").trim().slice(0, 80),
+    location: String(profile.location || "").trim().slice(0, 80),
     industry: String(profile.industry || "Tech").trim().slice(0, 40),
     stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
     bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
@@ -587,7 +587,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
     await db
       .prepare(
         `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, oauth_provider, oauth_subject, avatar_url)
-         VALUES (?, ?, ?, ?, ?, 'Denver, CO', 'Tech', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, '', 'Tech', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
       )
       .bind(
         id,
