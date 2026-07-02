@@ -846,6 +846,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [postType,setPostType]=useState("Update");
   const [commentInputs,setCommentInputs]=useState({});
   const [openComments,setOpenComments]=useState({});
+  const [editingPost,setEditingPost]=useState(null);
   const [query,setQuery]=useState("");
   const [editProfile,setEditProfile]=useState(false);
   const [selectedProfile,setSelectedProfile]=useState(null);
@@ -1021,6 +1022,35 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify("Comment saved locally. Cloud sync failed.","error");
     }
   };
+  const beginEditPost=post=>setEditingPost({id:post.id,content:post.content,type:post.type||"Update",tag:post.tag||profile.industry||"Exploring",stage:post.stage||"Building"});
+  const cancelEditPost=()=>setEditingPost(null);
+  const savePostEdit=async id=>{
+    const draft=editingPost;
+    if(!draft||draft.id!==id)return;
+    const content=draft.content.trim();
+    if(!content)return notify("Post cannot be empty","error");
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,content,type:draft.type,tag:draft.tag,stage:draft.stage,edited:true}:p));
+    setEditingPost(null);
+    try{
+      await callBackend(`/posts/${id}`,{method:"PUT",body:JSON.stringify({content,type:draft.type,tag:draft.tag,stage:draft.stage})});
+      notify("Post updated");
+    }catch(err){
+      notify(err.message||"Post updated locally. Cloud sync failed.","error");
+    }
+  };
+  const deletePost=async id=>{
+    const post=posts.find(p=>p.id===id);
+    if(!post||!ownPost(post))return notify("You can only delete your own posts","error");
+    if(!window.confirm("Delete this post?"))return;
+    setPosts(ps=>ps.filter(p=>p.id!==id));
+    setEditingPost(e=>e?.id===id?null:e);
+    try{
+      await callBackend(`/posts/${id}`,{method:"DELETE"});
+      notify("Post deleted");
+    }catch(err){
+      notify(err.message||"Post deleted locally. Cloud sync failed.","error");
+    }
+  };
   const sendMessage=async id=>{
     const thread=messages.find(m=>m.id===id);
     const text=thread?.draft?.trim();
@@ -1127,14 +1157,26 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
               </div>
               <div className="filter-row" style={{display:"flex",gap:8,marginBottom:16,overflow:"visible",flexWrap:"wrap"}}>{["All","Exploring","Finance","Brand Management","Creative","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
               {visiblePosts.length===0&&<EmptyState title={feedMode==="following"?"No following posts yet":"No real posts yet"} text={feedMode==="following"?"Connect with people in Discover, then their posts will show up here.":"The For You feed will rank real posts around your field, goals, follows, and activity."}/>}
-              {visiblePosts.map(p=>(
+              {visiblePosts.map(p=>{
+                const isOwner=ownPost(p);
+                const isEditing=editingPost?.id===p.id;
+                return (
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
                     <div className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
                       <Av i={p.av} src={p.avatarUrl} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
-                      <div style={{flex:1}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text}}>{p.user}</b><Tag label={p.type||p.stage} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago</div></div>
+                      <div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text}}>{p.user}</b><Tag label={p.type||p.stage} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago{p.edited?" · edited":""}</div></div>
+                      {isOwner&&<div style={{display:"flex",gap:6,flexShrink:0}}><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></div>}
                     </div>
-                    <p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>
+                    {isEditing?(
+                      <div style={{display:"grid",gap:10}}>
+                        <textarea value={editingPost.content} onChange={e=>setEditingPost(d=>({...d,content:e.target.value}))} className="if" autoFocus style={{width:"100%",minHeight:120,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:13,fontSize:15,color:C.text,lineHeight:1.65}}/>
+                        <div style={{display:"flex",gap:8,justifyContent:"flex-end",flexWrap:"wrap"}}>
+                          <button onClick={cancelEditPost} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:C.text}}>Cancel</button>
+                          <GBtn sm onClick={()=>savePostEdit(p.id)}>Save changes</GBtn>
+                        </div>
+                      </div>
+                    ):<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>}
                   </div>
                   <div className="post-actions" style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
                     <button className="bs" onClick={()=>togglePostAction(p.id,"like")} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="heart" size={17} color="currentColor" filled={p.liked}/> {p.likes}</button>
@@ -1143,7 +1185,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   </div>
                   {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
-              ))}
+              );})}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry} · {p.stage}</div></div><button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>View</button><button onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>

@@ -701,6 +701,7 @@ async function getPosts(db, userId) {
     type: post.type,
     time: timeAgo(post.created_at),
     content: post.content,
+    edited: Boolean(post.updated_at && post.created_at && post.updated_at !== post.created_at),
     likes: post.likes,
     comments: grouped.get(post.id) || [],
     saved: Boolean(post.saved),
@@ -1467,6 +1468,35 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), postOwner.user_id, user.id, "comment", `${user.name} commented on your post.`, "post", segments[1]]
       );
     }
+    return json({ posts: await getPosts(db, user.id) });
+  }
+
+  if (method === "PUT" && segments[0] === "posts" && segments[1]) {
+    const postId = segments[1];
+    const post = await db.prepare("SELECT * FROM posts WHERE id = ?").bind(postId).first();
+    if (!post) return json({ error: "Post not found" }, { status: 404 });
+    if (post.user_id !== user.id) return json({ error: "You can only edit your own posts" }, { status: 403 });
+    const content = String(body.content || "").trim().slice(0, 1200);
+    if (!content) return json({ error: "Post content required" }, { status: 400 });
+    const type = String(body.type || post.type || "Update").slice(0, 40);
+    const tag = String(body.tag || post.tag || user.industry || "Exploring").slice(0, 40);
+    const stage = String(body.stage || post.stage || "Building").slice(0, 40);
+    await db
+      .prepare("UPDATE posts SET content = ?, type = ?, tag = ?, stage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+      .bind(content, type, tag, stage, postId, user.id)
+      .run();
+    return json({ posts: await getPosts(db, user.id) });
+  }
+
+  if (method === "DELETE" && segments[0] === "posts" && segments[1]) {
+    const postId = segments[1];
+    const post = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(postId).first();
+    if (!post) return json({ error: "Post not found" }, { status: 404 });
+    if (post.user_id !== user.id) return json({ error: "You can only delete your own posts" }, { status: 403 });
+    await safeRun(db, "DELETE FROM comments WHERE post_id = ?", [postId]);
+    await safeRun(db, "DELETE FROM post_reactions WHERE post_id = ?", [postId]);
+    await safeRun(db, "DELETE FROM user_notifications WHERE target_type = 'post' AND target_id = ?", [postId]);
+    await db.prepare("DELETE FROM posts WHERE id = ? AND user_id = ?").bind(postId, user.id).run();
     return json({ posts: await getPosts(db, user.id) });
   }
 
