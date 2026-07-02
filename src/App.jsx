@@ -44,6 +44,8 @@ input,textarea,select{outline:none;font-family:inherit;}button{font-family:inher
 input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-results-button,input[type="search"]::-webkit-search-results-decoration{display:none;}
 .desktop-app-search{background-image:none!important;}
 .uh:hover{background:rgba(22,199,78,0.06);border-radius:10px;}
+.profile-link{cursor:pointer;border-radius:12px;}
+.profile-link:focus-visible{outline:3px solid rgba(22,199,78,0.35);outline-offset:3px;}
 .mobile-bottom-nav{display:none;}
 .cookie-notice{left:auto!important;right:18px!important;bottom:18px!important;}
 .cookie-card{max-width:330px!important;display:block!important;padding:15px!important;}
@@ -326,6 +328,10 @@ try{
     ["fear-posts","fear-people","fear-events","fear-mentors","fear-messages","fear-stats"].forEach(key=>localStorage.removeItem(key));
     localStorage.setItem("fear-data-version",version);
   }
+  const savedProfile=JSON.parse(localStorage.getItem("fear-profile")||"null");
+  if(savedProfile?.location==="Denver, CO"&&(!savedProfile.email||savedProfile.name==="Your Name"||savedProfile.handle==="@yourhandle")){
+    localStorage.setItem("fear-profile",JSON.stringify({...savedProfile,location:""}));
+  }
 }catch{}
 
 async function api(path,options={}){
@@ -353,6 +359,12 @@ const ToastCtx=({toasts,remove})=>(
 const REAL_STATS={profiles:0,waitlist:0,posts:0,comments:0,likes:0,saves:0,connections:0,rsvps:0,mentorRequests:0,messages:0,events:0,mentors:0};
 const cleanUsername=value=>String(value||"").toLowerCase().replace(/^@+/,"").replace(/[^a-z0-9._]+/g,"_").replace(/[._]{2,}/g,"_").replace(/^[._]+|[._]+$/g,"").slice(0,30);
 const profileMeta=profile=>[profile.handle||"@yourhandle",profile.location||"Location not set",profile.industry||"Tech"].filter(Boolean).join(" · ");
+const activateOnEnter=(event,callback)=>{
+  if(event.key==="Enter"||event.key===" "){
+    event.preventDefault();
+    callback();
+  }
+};
 const scrollToSection=id=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});
 
 const POSTS=[];
@@ -693,6 +705,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [openComments,setOpenComments]=useState({});
   const [query,setQuery]=useState("");
   const [editProfile,setEditProfile]=useState(false);
+  const [selectedProfile,setSelectedProfile]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
   const applyBackendState=useCallback((data)=>{
     if(data.profile){
@@ -716,6 +729,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>notify("Offline mode: changes are saved in this browser","info"));
     return()=>{active=false;};
   },[applyBackendState,notify]);
+  useEffect(()=>{
+    if(view==="publicProfile"&&!selectedProfile) setView("discover");
+  },[selectedProfile,setView,view]);
   const tabs=[
     ["feed","Feed"],
     ["discover","Discover"],
@@ -741,6 +757,36 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     ["Saved",fmt(posts.filter(p=>p.saved).length)],
     ["RSVPs",fmt(events.filter(e=>e.going).length)],
   ];
+  const toPublicProfile=person=>({
+    id:person.id||person.userId||"",
+    name:person.name||person.user||"Founder",
+    handle:person.handle||"@member",
+    location:person.location||person.loc||"",
+    industry:person.industry||person.tag||"Tech",
+    stage:person.stage||"Building",
+    bio:person.bio||"Building in public, meeting ambitious people, and turning fear into momentum.",
+    avatarUrl:person.avatarUrl||person.avatar_url||"",
+    av:person.av,
+    followers:Number(person.followers||0),
+    mutual:Number(person.mutual||0),
+    connected:Boolean(person.connected),
+  });
+  const openProfile=source=>{
+    const sourceId=source?.id||source?.userId;
+    const sourceHandle=source?.handle;
+    const ownHandle=profile.handle;
+    if((sourceId&&sourceId===profile.id)||(sourceHandle&&ownHandle&&sourceHandle===ownHandle)){
+      setView("profile");
+      requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"smooth"}));
+      return;
+    }
+    const match=people.find(p=>(sourceId&&(p.id===sourceId||p.userId===sourceId))||(sourceHandle&&p.handle===sourceHandle))||source;
+    setSelectedProfile(toPublicProfile(match));
+    setView("publicProfile");
+    requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"smooth"}));
+  };
+  const activePublicProfile=selectedProfile&&(people.find(p=>p.id===selectedProfile.id)||selectedProfile);
+  const publicProfile=activePublicProfile?toPublicProfile(activePublicProfile):null;
   const publish=async()=>{
     if(!composer.trim())return notify("Write something before publishing","error");
     const optimistic={
@@ -780,7 +826,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const addComment=async id=>{
     const text=commentInputs[id]?.trim();
     if(!text)return;
-    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",av:initials,avatarUrl:profile.avatarUrl||"",text,time:"Just now"}]}:p));
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",handle:profile.handle||"@you",av:initials,avatarUrl:profile.avatarUrl||"",text,time:"Just now"}]}:p));
     setCommentInputs(ci=>({...ci,[id]:""}));
     try{
       await callBackend(`/posts/${id}/comments`,{method:"POST",body:JSON.stringify({text})});
@@ -882,7 +928,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
               {visiblePosts.map(p=>(
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
-                    <div style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
+                    <div className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p)} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p))} style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
                       <Av i={p.av} src={p.avatarUrl} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
                       <div style={{flex:1}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text}}>{p.user}</b><Tag label={p.type||p.stage} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago</div></div>
                     </div>
@@ -893,23 +939,24 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> {p.comments.length}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}><Icon name="bookmark" size={17} color="currentColor" filled={p.saved}/> {p.saved?"Saved":"Save"}</button>
                   </div>
-                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
+                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c)} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
               ))}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p)} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p))} style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry} · {p.stage}</div></div><button onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={p.av} src={p.avatarUrl} size={52} online={p.online}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</b><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.handle} · {p.loc}</div></div><IT label={p.industry}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:18}}><span style={{fontSize:12,color:C.muted}}>{fmt(p.followers)} verified connections</span><GBtn sm onClick={()=>{connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p)} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={p.av} src={p.avatarUrl} size={52} online={p.online}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</b><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.handle} · {p.loc||"Location not set"}</div></div><IT label={p.industry}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:18}}><span style={{fontSize:12,color:C.muted}}>{fmt(p.followers)} verified connections</span><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
         {view==="groups"&&<Directory title="Founder groups" eyebrow="Rooms" items={GROUPS} render={g=><div key={g.id} className="ch" style={cardStyle}><b>{g.name}</b><p style={bodyCopy}>{g.desc}</p><div style={{fontSize:13,color:C.muted,margin:"14px 0"}}>{g.active}</div><GBtn sm onClick={()=>notify(`Joined ${g.name}`)}>Join room</GBtn></div>}/>}
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards}/>}
+        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} onBack={()=>setView("discover")} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}}/>}
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} onClick={()=>setView(id)}><span><Icon name={icon} size={18} color="currentColor"/></span>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
@@ -963,6 +1010,16 @@ function MessagesView({messages,setMessages,sendMessage}){
 function ProfilePanel({profile,setEditProfile,stats}){
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
   return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={profileInitials} src={profile.avatarUrl} size={72} style={{background:"#fff",color:C.accent}}/><div className="profile-hero-copy" style={{minWidth:0}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere"}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75,overflowWrap:"anywhere"}}>{profileMeta(profile)}</div></div><button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82,overflowWrap:"anywhere"}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
+}
+function PublicProfilePanel({profile,onBack,onConnect}){
+  const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
+  const stats=[
+    ["Connections",fmt(profile.followers)],
+    ["Mutuals",fmt(profile.mutual)],
+    ["Stage",profile.stage||"Building"],
+    ["Industry",profile.industry||"Tech"],
+  ];
+  return <div className="directory-wrap" style={{maxWidth:860}}><button onClick={onBack} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:900,color:C.text,marginBottom:16,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="close" size={14}/> Back</button><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={profileInitials} src={profile.avatarUrl} size={76} style={{background:"#fff",color:C.accent}} online/><div className="profile-hero-copy" style={{minWidth:0}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere"}}>{profile.name}</h1><div style={{opacity:.76,overflowWrap:"anywhere"}}>{profileMeta(profile)}</div></div>{profile.id&&<GBtn onClick={onConnect} style={{marginLeft:"auto",background:profile.connected?"#fff":GR,color:profile.connected?C.accent:"#fff",boxShadow:"none"}}>{profile.connected?"Connected":"Connect"}</GBtn>}</div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82,overflowWrap:"anywhere"}}>{profile.bio}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:typeof v==="string"&&v.length>12?16:24,fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
 
 function ModalShell({title,eyebrow,onClose,children}){

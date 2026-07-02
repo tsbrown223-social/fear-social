@@ -641,7 +641,7 @@ const initials = (name) =>
 async function getPosts(db, userId) {
   const posts = await db
     .prepare(
-      `SELECT p.*, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
+      `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved
@@ -654,7 +654,7 @@ async function getPosts(db, userId) {
 
   const comments = await db
     .prepare(
-      `SELECT c.*, u.name AS user_name, u.avatar_url AS user_avatar_url
+      `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url
        FROM comments c
        JOIN users u ON u.id = c.user_id
        ORDER BY datetime(c.created_at) ASC`
@@ -666,7 +666,9 @@ async function getPosts(db, userId) {
     const list = grouped.get(comment.post_id) || [];
     list.push({
       id: comment.id,
+      userId: comment.user_id,
       user: comment.user_name,
+      handle: comment.handle,
       av: initials(comment.user_name),
       avatarUrl: comment.user_avatar_url || "",
       text: comment.text,
@@ -677,6 +679,7 @@ async function getPosts(db, userId) {
 
   return (posts.results || []).map((post) => ({
     id: post.id,
+    userId: post.user_id,
     user: post.user_name,
     handle: post.handle,
     av: initials(post.user_name),
