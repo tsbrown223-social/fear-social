@@ -85,31 +85,41 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
+.app-view button,.app-view input,.app-view textarea{max-width:100%;}
+.post-card,.composer-card,.directory-grid .ch,.message-panel,.message-list,.profile-hero,.edit-sheet{overflow-wrap:anywhere;}
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
   [style*="position: sticky"]{position:static!important;}
 }
 @media(max-width:760px){
   body{background:${C.bg};}
+  .app-view{overflow-x:hidden!important;}
   .ch:hover{transform:none;box-shadow:none;}
   .desktop-app-tabs,.desktop-app-search,.desktop-signout,.desktop-feed-side{display:none!important;}
-  .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:12px;right:12px;bottom:12px;z-index:500;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border:1px solid ${C.border};border-radius:18px;padding:8px;box-shadow:0 18px 60px rgba(13,15,20,.18);}
-  .mobile-bottom-nav button{min-width:0;border:none;background:transparent;border-radius:12px;padding:8px 4px;color:${C.muted};font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:10px;right:10px;bottom:10px;z-index:500;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border:1px solid ${C.border};border-radius:18px;padding:7px;box-shadow:0 18px 60px rgba(13,15,20,.18);}
+  .mobile-bottom-nav button{min-width:0;height:52px;border:none;background:transparent;border-radius:12px;padding:7px 2px;color:${C.muted};font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;}
   .mobile-bottom-nav button.active{background:${C.aLight};color:${C.accent};}
   .mobile-bottom-nav span{font-size:17px;line-height:1;}
-  .app-topbar{min-height:62px!important;padding:8px 14px!important;gap:10px!important;flex-wrap:nowrap!important;}
-  .app-topbar-logo{font-size:20px!important;flex:1;}
-  .app-shell{padding:14px 12px 96px!important;}
+  .app-topbar{min-height:62px!important;padding:8px 12px!important;gap:8px!important;flex-wrap:nowrap!important;}
+  .app-topbar-logo{font-size:19px!important;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .app-topbar>button{flex-shrink:0;}
+  .app-shell{padding:14px 12px 104px!important;width:100%!important;}
   .feed-grid{display:block!important;}
   .mobile-profile-summary{display:block!important;}
   .composer-card{border-radius:18px!important;padding:14px!important;}
+  .composer-card>div{gap:10px!important;}
   .composer-card textarea{min-height:92px!important;font-size:16px!important;}
-  .composer-actions{overflow-x:auto;padding-bottom:2px;}
-  .composer-actions button{flex-shrink:0;}
+  .composer-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;overflow:visible!important;padding-bottom:2px;}
+  .composer-actions button{flex-shrink:0;min-width:0!important;padding:9px 8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .composer-actions button:last-child{grid-column:1/-1;margin-left:0!important;width:100%!important;}
   .post-card{border-radius:18px!important;margin-bottom:12px!important;}
   .post-card>div:first-child{padding:16px!important;}
-  .post-actions{padding:10px 14px!important;gap:10px!important;}
-  .post-actions button{font-size:13px!important;}
+  .post-actions{padding:10px 14px!important;gap:8px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .post-actions button{font-size:13px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;}
+  .comment-row{display:grid!important;grid-template-columns:1fr!important;}
+  .comment-row button{width:100%!important;}
+  .filter-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;overflow:visible!important;gap:7px!important;}
+  .filter-row button{min-width:0!important;padding:9px 8px!important;overflow:hidden;text-overflow:ellipsis;}
   .directory-grid{grid-template-columns:1fr!important;}
   .directory-wrap{padding-bottom:86px!important;}
   .directory-title{font-size:32px!important;}
@@ -119,13 +129,23 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-panel{min-height:55vh!important;}
   .message-bubble{max-width:86%!important;}
   .profile-hero{padding:22px!important;border-radius:20px!important;}
-  .profile-hero-row{align-items:flex-start!important;flex-wrap:wrap!important;}
+  .profile-hero-row{align-items:flex-start!important;flex-wrap:wrap!important;gap:14px!important;}
+  .profile-hero-copy{flex:1 1 calc(100% - 92px)!important;}
   .profile-hero h1{font-size:30px!important;}
+  .profile-edit-button{width:100%!important;margin-left:0!important;}
   .profile-stats{grid-template-columns:repeat(2,1fr)!important;}
   .edit-modal{align-items:flex-end!important;padding:0!important;}
-  .edit-sheet{width:100%!important;border-radius:22px 22px 0 0!important;max-height:88vh!important;overflow:auto!important;}
+  .edit-sheet{width:100%!important;border-radius:22px 22px 0 0!important;max-height:88vh!important;overflow:auto!important;padding:22px!important;}
+  .profile-photo-editor{align-items:flex-start!important;flex-direction:column!important;}
+  .profile-photo-editor>div:last-child{width:100%!important;}
+  .edit-actions{display:grid!important;grid-template-columns:1fr!important;}
+  .edit-actions button{width:100%!important;}
   .landing-nav{height:auto!important;padding:14px 18px!important;}
+  .landing-nav>div{height:52px!important;padding:0 8px 0 16px!important;}
   .landing-nav-links{display:none!important;}
+  .landing-nav-actions{gap:6px!important;flex-shrink:0;}
+  .landing-nav-a11y{display:none!important;}
+  .landing-nav-login,.landing-nav-join{padding:8px 12px!important;font-size:12px!important;}
   .theme-toggle-label{display:none!important;}
   .landing-hero{min-height:92vh!important;padding:104px 18px 58px!important;justify-content:flex-start!important;}
   .landing-hero h1{font-size:46px!important;line-height:1.08!important;}
@@ -144,8 +164,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .signup-root{display:block!important;background:${C.dark}!important;min-height:100vh!important;}
   .signup-copy{display:none!important;}
   .signup-form-panel{width:100%!important;min-height:100vh!important;padding:82px 22px 32px!important;}
+  .signup-form-panel>div{max-width:440px!important;margin:0 auto!important;}
   .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
   .toast-stack>div{min-width:0!important;width:100%!important;}
+  .app-view>[aria-label="Open accessibility settings"]{bottom:82px!important;left:12px!important;width:44px!important;height:44px!important;}
   [style*="grid-template-columns: 310px 1fr"]{grid-template-columns:1fr!important;}
   [style*="grid-template-columns: repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
   [style*="grid-template-columns: repeat(5,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
@@ -157,12 +179,24 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 
 const Tag=({label,style={}})=><span style={{fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:4,padding:"2px 8px",whiteSpace:"nowrap",...style}}>{label}</span>;
 const IT=({label})=>{const s=C.ind[label]||C.ind.Other;return <Tag label={label} style={{background:s.bg,color:s.color}}/>;};
-const Av=({i,size=40,grad=false,online=false,style={}})=>(
+const safeImageUrl=url=>{
+  const value=String(url||"").trim();
+  if(!value)return "";
+  if(value.startsWith("data:image/"))return value;
+  try{
+    const parsed=new URL(value);
+    return parsed.protocol==="https:"?value:"";
+  }catch{return "";}
+};
+const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
+  const image=safeImageUrl(src);
+  return (
   <div style={{position:"relative",flexShrink:0}}>
-    <div style={{width:size,height:size,borderRadius:"50%",background:grad?GR:C.aLight,border:grad?"none":`1.5px solid ${C.aSoft}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,color:grad?"#fff":C.accent,...style}}>{i}</div>
+    <div style={{width:size,height:size,borderRadius:"50%",background:image?`center / cover no-repeat url("${image}")`:grad?GR:C.aLight,border:image?"1.5px solid rgba(255,255,255,0.35)":grad?"none":`1.5px solid ${C.aSoft}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,color:grad?"#fff":C.accent,overflow:"hidden",...style}}>{image?"":i}</div>
     {online&&<div style={{position:"absolute",bottom:1,right:1,width:size*0.27,height:size*0.27,borderRadius:"50%",background:C.accent,border:"2px solid #fff"}}/>}
   </div>
-);
+  );
+};
 const GBtn=({children,onClick,sm=false,lg=false,full=false,style={}})=>(
   <button onClick={onClick} className="bs" style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",...style}}>{children}</button>
 );
@@ -341,11 +375,11 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
           <button key={label} onClick={()=>scrollToSection(id)} className="nl bs" style={{background:"none",border:"none",color:"#555B66",fontSize:13,fontWeight:700,padding:"9px 13px",cursor:"pointer",borderRadius:999}}>{label}</button>
         ))}
       </div>
-      <div style={{display:"flex",gap:8}}>
+      <div className="landing-nav-actions" style={{display:"flex",gap:8}}>
         <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
-        <button onClick={()=>onOpenPanel("accessibility")} className="bs" aria-label="Accessibility settings" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,width:38,height:38,color:"#111318",fontSize:15,fontWeight:900,cursor:"pointer",whiteSpace:"nowrap"}}>Aa</button>
-        <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
-        <button onClick={()=>setScreen("signup")} className="bs" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
+        <button onClick={()=>onOpenPanel("accessibility")} className="bs landing-nav-a11y" aria-label="Accessibility settings" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,width:38,height:38,color:"#111318",fontSize:15,fontWeight:900,cursor:"pointer",whiteSpace:"nowrap"}}>Aa</button>
+        <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs landing-nav-login" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
+        <button onClick={()=>setScreen("signup")} className="bs landing-nav-join" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
       </div>
       </div>
     </div>
@@ -709,7 +743,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const publish=async()=>{
     if(!composer.trim())return notify("Write something before publishing","error");
     const optimistic={
-      id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:"YO",
+      id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",
       tag:profile.industry||"Tech",stage:profile.stage?.toLowerCase().includes("launched")?"Launched":"Building",
       time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,isNew:true
     };
@@ -745,7 +779,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const addComment=async id=>{
     const text=commentInputs[id]?.trim();
     if(!text)return;
-    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",av:"YO",text,time:"Just now"}]}:p));
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",av:initials,avatarUrl:profile.avatarUrl||"",text,time:"Just now"}]}:p));
     setCommentInputs(ci=>({...ci,[id]:""}));
     try{
       await callBackend(`/posts/${id}/comments`,{method:"POST",body:JSON.stringify({text})});
@@ -797,7 +831,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>notify(`${unread} notifications`,"info")} className="bs" aria-label="Notifications" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:C.muted}}><Icon name="bell" size={18}/><span style={{position:"absolute",top:-6,right:-6,width:17,height:17,borderRadius:"50%",background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span></button>
-        <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none"}}><Av i={initials} size={38} grad online/></button>
+        <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
       <div className="app-shell" style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
@@ -805,7 +839,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:"270px minmax(0,1fr) 310px",gap:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
-                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} size={54} grad online/><div><div style={{fontWeight:900,color:C.text}}>{profile.name||"Your Name"}</div><div style={{fontSize:12,color:C.dim}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"}</div></div></div>
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} src={profile.avatarUrl} size={54} grad online/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.name||"Your Name"}</div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"}</div></div></div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>{statCards.map(([k,v])=><div key={k} className="uh" style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontWeight:900,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{k}</div></div>)}</div>
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
@@ -822,7 +856,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
             <main>
               <div className="mobile-profile-summary" style={{display:"none",background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:16,marginBottom:14}}>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                  <Av i={initials} size={46} grad online/>
+                  <Av i={initials} src={profile.avatarUrl} size={46} grad online/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:900,color:C.text}}>{profile.name||"Your Name"}</div>
                     <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.industry||"Tech"}</div>
@@ -832,7 +866,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
               </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-                  <Av i={initials} size={44} grad/>
+                  <Av i={initials} src={profile.avatarUrl} size={44} grad/>
                   <div style={{flex:1}}>
                     <textarea value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
                     <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
@@ -842,13 +876,13 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   </div>
                 </div>
               </div>
-              <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Tech","Finance","Fashion","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
+              <div className="filter-row" style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto"}}>{["All","Tech","Finance","Fashion","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
               {visiblePosts.length===0&&<EmptyState title="No real posts yet" text="The feed is intentionally empty until a real account publishes a post."/>}
               {visiblePosts.map(p=>(
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
                     <div style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
-                      <Av i={p.av} size={45} grad={p.av==="YO"} online={["MK","SR","YO"].includes(p.av)}/>
+                      <Av i={p.av} src={p.avatarUrl} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
                       <div style={{flex:1}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text}}>{p.user}</b><Tag label={p.type||p.stage} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago</div></div>
                     </div>
                     <p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>
@@ -858,17 +892,17 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> {p.comments.length}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}><Icon name="bookmark" size={17} color="currentColor" filled={p.saved}/> {p.saved?"Saved":"Save"}</button>
                   </div>
-                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5}}>{c.text}</p></div></div>)}<div style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px"}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
+                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}>{c.user}</b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
               ))}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} size={36} online={p.online}/><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{p.name}</div><div style={{fontSize:11,color:C.dim}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested founders</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh" style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry} · {p.stage}</div></div><button onClick={()=>{connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={p.av} size={52} online={p.online}/><div style={{flex:1}}><b>{p.name}</b><div style={{fontSize:12,color:C.dim}}>{p.handle} · {p.loc}</div></div><IT label={p.industry}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:18}}><span style={{fontSize:12,color:C.muted}}>{fmt(p.followers)} verified connections</span><GBtn sm onClick={()=>{connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={p.av} src={p.avatarUrl} size={52} online={p.online}/><div style={{flex:1,minWidth:0}}><b style={{display:"block",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</b><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.handle} · {p.loc}</div></div><IT label={p.industry}/></div><p style={bodyCopy}>{p.bio}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginTop:18}}><span style={{fontSize:12,color:C.muted}}>{fmt(p.followers)} verified connections</span><GBtn sm onClick={()=>{connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
@@ -879,7 +913,29 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} onClick={()=>setView(id)}><span><Icon name={icon} size={18} color="currentColor"/></span>{label}{id==="messages"&&unread>0?` ${unread}`:""}</button>)}
       </nav>
-      {editProfile&&<div className="edit-modal" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)}><div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(520px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}><SectionTitle eyebrow="Profile" title="Edit your founder card"/><label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>name<input value={profileDraft.name||""} onChange={e=>setProfileDraft(p=>({...p,name:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label><label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>username<input value={cleanUsername(profileDraft.username||profileDraft.handle||"")} onChange={e=>setProfileDraft(p=>{const username=cleanUsername(e.target.value);return {...p,username,handle:`@${username}`};})} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/><span style={{display:"block",fontSize:12,color:C.dim,textTransform:"none",fontWeight:600,marginTop:6}}>Your profile URL name is @{cleanUsername(profileDraft.username||profileDraft.handle||"username")}</span></label>{["location","industry","bio"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}<div style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}><GhostBtn onClick={()=>setEditProfile(false)}>Cancel</GhostBtn><GBtn onClick={saveProfile}>Save profile</GBtn></div></div></div>}
+      {editProfile&&(
+        <div className="edit-modal" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)}>
+          <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
+            <SectionTitle eyebrow="Profile" title="Edit your founder card"/>
+            <div className="profile-photo-editor" style={{display:"flex",alignItems:"center",gap:16,background:C.bg,border:`1px solid ${C.border}`,borderRadius:16,padding:14,marginBottom:16}}>
+              <Av i={initials} src={profileDraft.avatarUrl} size={72} grad/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:7}}>Profile picture</div>
+                <input value={profileDraft.avatarUrl||""} onChange={e=>setProfileDraft(p=>({...p,avatarUrl:e.target.value}))} placeholder="https://example.com/photo.jpg" className="if" style={{width:"100%",border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text,background:"#fff"}}/>
+                <div style={{fontSize:12,color:C.dim,lineHeight:1.45,marginTop:7}}>Use a secure image URL. Leave blank to show initials.</div>
+              </div>
+            </div>
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>name<input value={profileDraft.name||""} onChange={e=>setProfileDraft(p=>({...p,name:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>username<input value={cleanUsername(profileDraft.username||profileDraft.handle||"")} onChange={e=>setProfileDraft(p=>{const username=cleanUsername(e.target.value);return {...p,username,handle:`@${username}`};})} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/><span style={{display:"block",fontSize:12,color:C.dim,textTransform:"none",fontWeight:600,marginTop:6}}>Your profile URL name is @{cleanUsername(profileDraft.username||profileDraft.handle||"username")}</span></label>
+            {["location","industry"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}
+            <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>bio<textarea value={profileDraft.bio||""} onChange={e=>setProfileDraft(p=>({...p,bio:e.target.value}))} className="if" style={{display:"block",width:"100%",minHeight:96,resize:"vertical",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text,lineHeight:1.5}}/></label>
+            <div className="edit-actions" style={{display:"flex",gap:10,justifyContent:"end",marginTop:20}}>
+              <GhostBtn onClick={()=>setEditProfile(false)}>Cancel</GhostBtn>
+              <GBtn onClick={saveProfile}>Save profile</GBtn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -904,7 +960,8 @@ function MessagesView({messages,setMessages,sendMessage}){
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{messages.map(m=><button key={m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} size={40} online={m.online}/><div><div style={{fontWeight:900,color:C.text}}>{m.name}</div><div style={{fontSize:12,color:C.dim}}>{messageText(m.thread[m.thread.length-1])}</div></div></button>)}</div>{thread&&<div className="message-panel" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} size={44} online={thread.online}/><div><b>{thread.name}</b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":"Usually replies today"}</div></div></div><div style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10}}>{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input value={thread.draft} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)}>Send</GBtn></div></div>}</div></div>;
 }
 function ProfilePanel({profile,setEditProfile,stats}){
-  return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()} size={72} style={{background:"#fff",color:C.accent}}/><div><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
+  const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
+  return <div className="directory-wrap" style={{maxWidth:840}}><div className="profile-hero" style={{background:GR,borderRadius:24,padding:32,color:"#fff",marginBottom:18}}><div className="profile-hero-row" style={{display:"flex",alignItems:"center",gap:18}}><Av i={profileInitials} src={profile.avatarUrl} size={72} style={{background:"#fff",color:C.accent}}/><div className="profile-hero-copy" style={{minWidth:0}}><h1 style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,overflowWrap:"anywhere"}}>{profile.name||"Your Name"}</h1><div style={{opacity:.75,overflowWrap:"anywhere"}}>{profile.handle||"@yourhandle"} · {profile.location||"Denver, CO"} · {profile.industry||"Tech"}</div></div><button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{marginLeft:"auto",background:"#fff",color:C.accent,border:"none",borderRadius:10,padding:"10px 16px",fontWeight:900}}>Edit profile</button></div><p style={{marginTop:24,maxWidth:640,lineHeight:1.75,opacity:.82,overflowWrap:"anywhere"}}>{profile.bio||"Building in public, meeting ambitious founders, and turning fear into useful momentum."}</p></div><div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>{stats.map(([k,v])=><div key={k} style={cardStyle}><div style={{fontSize:26,fontWeight:900,color:C.text}}>{v}</div><div style={{fontSize:12,color:C.muted}}>{k}</div></div>)}</div></div>;
 }
 
 function ModalShell({title,eyebrow,onClose,children}){
@@ -1017,8 +1074,8 @@ export default function App(){
   const initialScreen=consumeOAuthToken()||hash.startsWith("#app")?"app":hash.startsWith("#login")?"login":hash.startsWith("#signup")?"signup":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
-    if(initialScreen==="landing"&&screenState!=="landing") setScreenState("landing");
-  },[]);
+    if(initialScreen!==screenState) setScreenState(initialScreen);
+  },[initialScreen,screenState,setScreenState]);
   const [profile,setProfile]=useLocalState("fear-profile",{
     name:"Your Name",
     handle:"@yourhandle",
@@ -1027,6 +1084,7 @@ export default function App(){
     industry:"Tech",
     stage:"I'm actively building",
     bio:"Building in public, meeting ambitious founders, and turning fear into useful momentum.",
+    avatarUrl:"",
   });
   const setScreen=useCallback((next)=>{
     setScreenState(next);

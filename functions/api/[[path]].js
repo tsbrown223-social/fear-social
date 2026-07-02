@@ -168,7 +168,7 @@ const normalizeProfile = (profile = {}) => {
     stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
     bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
-    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 500),
+    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 1200),
   };
 };
 
@@ -641,7 +641,7 @@ const initials = (name) =>
 async function getPosts(db, userId) {
   const posts = await db
     .prepare(
-      `SELECT p.*, u.name AS user_name, u.handle,
+      `SELECT p.*, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved
@@ -654,7 +654,7 @@ async function getPosts(db, userId) {
 
   const comments = await db
     .prepare(
-      `SELECT c.*, u.name AS user_name
+      `SELECT c.*, u.name AS user_name, u.avatar_url AS user_avatar_url
        FROM comments c
        JOIN users u ON u.id = c.user_id
        ORDER BY datetime(c.created_at) ASC`
@@ -668,6 +668,7 @@ async function getPosts(db, userId) {
       id: comment.id,
       user: comment.user_name,
       av: initials(comment.user_name),
+      avatarUrl: comment.user_avatar_url || "",
       text: comment.text,
       time: timeAgo(comment.created_at),
     });
@@ -679,6 +680,7 @@ async function getPosts(db, userId) {
     user: post.user_name,
     handle: post.handle,
     av: initials(post.user_name),
+    avatarUrl: post.user_avatar_url || "",
     tag: post.tag,
     stage: post.stage,
     type: post.type,
@@ -720,7 +722,7 @@ async function getBootstrap(db, userId) {
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url,
           0 AS mutual,
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
           EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
@@ -775,6 +777,7 @@ async function getBootstrap(db, userId) {
     people: (people.results || []).map((person) => ({
       ...person,
       av: initials(person.name),
+      avatarUrl: person.avatar_url || "",
       online: Boolean(person.online),
       connected: Boolean(person.connected),
     })),
