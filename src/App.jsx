@@ -52,6 +52,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .cookie-actions{display:flex;margin-top:14px;}
 .cookie-actions button{flex:1;}
 .theme-toggle-label{display:inline;}
+.verify-shell{background:radial-gradient(circle at 50% 0%, rgba(22,199,78,0.24), transparent 34%), #050506;}
+.verify-card{background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));}
+.verify-code-input{font-variant-numeric:tabular-nums;}
 .theme-light{background:#F7F8FA;color:#0D0F14;}
 .theme-light .landing-root{background:#F7F8FA!important;}
 .theme-light .landing-hero{background:radial-gradient(circle at 50% 0%, rgba(22,199,78,0.12), transparent 48%), #F7F8FA!important;}
@@ -167,6 +170,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .signup-copy{display:none!important;}
   .signup-form-panel{width:100%!important;min-height:100vh!important;padding:82px 22px 32px!important;}
   .signup-form-panel>div{max-width:440px!important;margin:0 auto!important;}
+  .verify-shell{padding:20px 14px!important;align-items:flex-start!important;}
+  .verify-card{padding:24px!important;border-radius:24px!important;margin-top:34px!important;}
+  .verify-card h1{font-size:34px!important;}
+  .verify-card .verify-actions{grid-template-columns:1fr!important;}
   .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
   .toast-stack>div{min-width:0!important;width:100%!important;}
   .app-view>[aria-label="Open accessibility settings"]{bottom:82px!important;left:12px!important;width:44px!important;height:44px!important;}
@@ -611,13 +618,37 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
     notify("Welcome to fear.social!");
   };
   if(step===1) return(
-    <div style={{minHeight:"100vh",background:C.dark,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{background:"#fff",borderRadius:24,padding:36,width:"min(440px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.28)"}}>
-        <div style={{fontFamily:"Georgia,serif",fontSize:34,fontWeight:700,color:C.text,marginBottom:8,letterSpacing:0}}>Verify your email</div>
-        <div style={{fontSize:14,color:C.muted,lineHeight:1.7,marginBottom:24}}>Enter the 6-digit code sent to {form.email}.</div>
-        <input value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&code.length===6&&enterApp()} placeholder="000000" inputMode="numeric" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${code.length===6?C.accent:C.border}`,borderRadius:12,padding:"16px",fontSize:24,fontWeight:900,letterSpacing:4,textAlign:"center",color:C.text,marginBottom:16}}/>
-        <GBtn full onClick={enterApp} style={{opacity:code.length===6?1:.45,pointerEvents:code.length===6?"auto":"none"}}>Verify and enter →</GBtn>
-        <button onClick={requestCode} className="bs" style={{marginTop:14,width:"100%",background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Send a new code</button>
+    <div className="verify-shell" style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg, rgba(255,255,255,0.04), transparent 34%, rgba(22,199,78,0.08))",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:24,left:24,fontFamily:"Georgia,serif",fontWeight:800,fontSize:23,color:"#fff",letterSpacing:0}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
+      <div className="verify-card" style={{width:"min(560px,100%)",borderRadius:32,padding:38,boxShadow:"0 34px 120px rgba(0,0,0,.42)",border:"1px solid rgba(255,255,255,0.62)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-80,right:-80,width:190,height:190,borderRadius:"50%",background:"rgba(22,199,78,0.13)",filter:"blur(2px)"}}/>
+        <div style={{position:"relative"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,marginBottom:28}}>
+            <div style={{width:58,height:58,borderRadius:18,background:GR,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 18px 50px rgba(22,199,78,0.32)"}}><Icon name="mail" size={28} color="#fff"/></div>
+            <div style={{display:"flex",gap:7,alignItems:"center"}}>
+              {[0,1,2].map(i=><span key={i} style={{width:i===1?34:8,height:8,borderRadius:999,background:i<=1?C.accent:"#DDE3EC",display:"block"}}/> )}
+            </div>
+          </div>
+          <div style={{fontSize:11,fontWeight:900,letterSpacing:2.2,textTransform:"uppercase",color:C.accent,marginBottom:12}}>Email verification</div>
+          <h1 style={{fontFamily:"Georgia,serif",fontSize:44,lineHeight:1,letterSpacing:0,color:C.text,marginBottom:14}}>Check your inbox.</h1>
+          <p style={{fontSize:15,color:C.muted,lineHeight:1.75,marginBottom:22}}>We sent a 6-digit access code to <b style={{color:C.text}}>{form.email}</b>. Enter it below to unlock your fear.social profile.</p>
+          <div style={{background:"#0D0F14",borderRadius:20,padding:18,marginBottom:18,color:"#fff",boxShadow:"inset 0 0 0 1px rgba(255,255,255,0.08)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+              <span style={{width:9,height:9,borderRadius:"50%",background:C.accent,boxShadow:"0 0 0 6px rgba(22,199,78,0.14)"}}/>
+              <span style={{fontSize:12,fontWeight:900,letterSpacing:1.5,textTransform:"uppercase",color:"rgba(255,255,255,0.58)"}}>Secure code</span>
+            </div>
+            <input value={code} autoFocus onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&code.length===6&&enterApp()} placeholder="000000" inputMode="numeric" className="if verify-code-input" style={{width:"100%",background:"#fff",border:`2px solid ${code.length===6?C.accent:"transparent"}`,borderRadius:16,padding:"18px 16px",fontSize:30,fontWeight:950,letterSpacing:8,textAlign:"center",color:C.text,boxShadow:code.length===6?"0 0 0 5px rgba(22,199,78,0.16)":"none",transition:"all .18s ease"}}/>
+          </div>
+          <div className="verify-actions" style={{display:"grid",gridTemplateColumns:"1fr auto",gap:10,alignItems:"center"}}>
+            <GBtn full onClick={enterApp} style={{opacity:code.length===6?1:.45,pointerEvents:code.length===6?"auto":"none",padding:"14px 18px",fontWeight:900}}>Verify and enter →</GBtn>
+            <button onClick={requestCode} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,color:C.text,fontSize:13,fontWeight:900,padding:"13px 15px",whiteSpace:"nowrap"}}>Resend code</button>
+          </div>
+          <button onClick={()=>setStep(0)} className="bs" style={{marginTop:16,width:"100%",background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Use a different email</button>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginTop:24}}>
+            {["Encrypted session","No card needed","Private beta"].map(text=><div key={text} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:"10px 8px",fontSize:11,fontWeight:800,color:C.muted,textAlign:"center",background:"#fff"}}>{text}</div>)}
+          </div>
+        </div>
       </div>
     </div>
   );
