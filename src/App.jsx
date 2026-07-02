@@ -578,12 +578,20 @@ function LandingPage({setScreen,notify,onOpenPanel}){
 
 function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,setThemeMode}){
   const [mode,setMode]=useState(initialMode);
-  const [form,setForm]=useState({name:"",username:"",email:""});
+  useEffect(()=>{
+    setMode(initialMode);
+    setStep(0);
+  },[initialMode]);
+  const [form,setForm]=useState({name:"",username:"",email:"",password:"",confirmPassword:""});
   const [login,setLogin]=useState({identifier:"",password:""});
+  const [passwordSetup,setPasswordSetup]=useState({identifier:"",code:"",password:"",confirmPassword:""});
+  const [passwordStep,setPasswordStep]=useState(0);
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
-  const valid=form.name&&form.username&&form.email;
+  const passwordReady=form.password.length>=8&&form.password===form.confirmPassword;
+  const valid=form.name&&form.username&&form.email&&passwordReady;
   const loginValid=login.identifier&&login.password;
+  const passwordSetupReady=passwordSetup.password.length>=8&&passwordSetup.password===passwordSetup.confirmPassword;
   const requestCode=async()=>{
     if(!valid)return;
     try{
@@ -605,10 +613,32 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
       notify(err.message||"Could not sign in","error");
     }
   };
+  const requestPasswordCode=async()=>{
+    if(!passwordSetup.identifier)return;
+    try{
+      await api("/auth/request-code",{method:"POST",body:JSON.stringify({identifier:passwordSetup.identifier,purpose:"password"})});
+      setPasswordStep(1);
+      notify("Password code sent");
+    }catch(err){
+      notify(err.message||"Could not send password code","error");
+    }
+  };
+  const savePassword=async()=>{
+    if(!passwordSetupReady||passwordSetup.code.length!==6)return;
+    try{
+      await api("/auth/password",{method:"POST",body:JSON.stringify({identifier:passwordSetup.identifier,code:passwordSetup.code,password:passwordSetup.password,purpose:"password"})});
+      setLogin({identifier:passwordSetup.identifier,password:passwordSetup.password});
+      setMode("login");
+      setPasswordStep(0);
+      notify("Password ready. You can log in now.");
+    }catch(err){
+      notify(err.message||"Could not set password","error");
+    }
+  };
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
-      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile})});
+      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password})});
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       notify(err.message||"Could not verify email","error");
@@ -683,7 +713,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
         <div style={{width:"100%",maxWidth:400}}>
           <div style={{display:"flex",gap:8,background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:4,marginBottom:28}}>
             <button onClick={()=>setMode("signup")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="signup"?"#fff":C.muted,background:mode==="signup"?C.accent:"transparent"}}>Sign up</button>
-            <button onClick={()=>setMode("login")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"?"#fff":C.muted,background:mode==="login"?C.accent:"transparent"}}>Log in</button>
+            <button onClick={()=>setMode("login")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"||mode==="password"?"#fff":C.muted,background:mode==="login"||mode==="password"?C.accent:"transparent"}}>Log in</button>
           </div>
           {mode==="signup"?<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Sign up</div>
@@ -696,10 +726,20 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
                 {key==="username"&&form.username&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Your profile will be @{form.username}</div>}
               </div>
             ))}
+            <div>
+              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Password</label>
+              <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder="Create a password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form.password.length>=8?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+              <div style={{fontSize:12,color:form.password&&form.password.length<8?"#D64545":C.muted,marginTop:6}}>Use at least 8 characters.</div>
+            </div>
+            <div>
+              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Confirm password</label>
+              <input type="password" value={form.confirmPassword} onChange={e=>setForm(f=>({...f,confirmPassword:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&requestCode()} placeholder="Confirm your password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form.confirmPassword&&form.confirmPassword===form.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+              {form.confirmPassword&&form.confirmPassword!==form.password&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Passwords need to match.</div>}
+            </div>
             <GBtn full onClick={requestCode} style={{opacity:valid?1:0.45,pointerEvents:valid?"auto":"none"}}>Send verification code →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
-          </>:<>
+          </>:mode==="login"?<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Log in</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Access your existing fear.social account.</div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
@@ -712,7 +752,38 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
               <input type="password" value={login.password} onChange={e=>setLogin(l=>({...l,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&loginWithPassword()} placeholder="Password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${login.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
             </div>
             <GBtn full onClick={loginWithPassword} style={{opacity:loginValid?1:0.45,pointerEvents:loginValid?"auto":"none"}}>Log in →</GBtn>
+            <button onClick={()=>{setMode("password");setPasswordStep(0);}} className="bs" style={{background:"transparent",border:"none",color:C.accent,fontSize:13,fontWeight:900}}>Set or reset password</button>
             <button onClick={()=>setMode("signup")} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Need an account? Sign up</button>
+          </div>
+          </>:<>
+          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Set password</div>
+          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Use your email or username. We'll send a code to the email on that account.</div>
+          <div style={{display:"flex",flexDirection:"column",gap:18}}>
+            {passwordStep===0?<>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
+                <input value={passwordSetup.identifier} onChange={e=>setPasswordSetup(p=>({...p,identifier:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&requestPasswordCode()} placeholder="username or email" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.identifier?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+              </div>
+              <GBtn full onClick={requestPasswordCode} style={{opacity:passwordSetup.identifier?1:0.45,pointerEvents:passwordSetup.identifier?"auto":"none"}}>Send password code →</GBtn>
+            </>:<>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Verification code</label>
+                <input value={passwordSetup.code} onChange={e=>setPasswordSetup(p=>({...p,code:e.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="000000" inputMode="numeric" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.code.length===6?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,letterSpacing:4,transition:"all 0.2s"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>New password</label>
+                <input type="password" value={passwordSetup.password} onChange={e=>setPasswordSetup(p=>({...p,password:e.target.value}))} placeholder="Create a password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.password.length>=8?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+                <div style={{fontSize:12,color:passwordSetup.password&&passwordSetup.password.length<8?"#D64545":C.muted,marginTop:6}}>Use at least 8 characters.</div>
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Confirm password</label>
+                <input type="password" value={passwordSetup.confirmPassword} onChange={e=>setPasswordSetup(p=>({...p,confirmPassword:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&savePassword()} placeholder="Confirm your password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.confirmPassword&&passwordSetup.confirmPassword===passwordSetup.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
+                {passwordSetup.confirmPassword&&passwordSetup.confirmPassword!==passwordSetup.password&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Passwords need to match.</div>}
+              </div>
+              <GBtn full onClick={savePassword} style={{opacity:passwordSetupReady&&passwordSetup.code.length===6?1:0.45,pointerEvents:passwordSetupReady&&passwordSetup.code.length===6?"auto":"none"}}>Save password →</GBtn>
+              <button onClick={requestPasswordCode} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Resend code</button>
+            </>}
+            <button onClick={()=>setMode("login")} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Back to log in</button>
           </div>
           </>}
         </div>
@@ -1161,8 +1232,13 @@ export default function App(){
   const [accessibility,setAccessibility]=useLocalState("fear-accessibility",{largeText:false,highContrast:false,reduceMotion:false});
   const [cookieConsent,setCookieConsent]=useLocalState("fear-cookie-consent",{choice:null,analytics:false,marketing:false});
   const [themeMode,setThemeMode]=useLocalState("fear-theme","dark");
-  const hash=window.location.hash||"";
-  const initialScreen=consumeOAuthToken()||hash.startsWith("#app")?"app":hash.startsWith("#login")?"login":hash.startsWith("#signup")?"signup":"landing";
+  const [routeHash,setRouteHash]=useState(()=>window.location.hash||"");
+  useEffect(()=>{
+    const onHashChange=()=>setRouteHash(window.location.hash||"");
+    window.addEventListener("hashchange",onHashChange);
+    return()=>window.removeEventListener("hashchange",onHashChange);
+  },[]);
+  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
     if(initialScreen!==screenState) setScreenState(initialScreen);

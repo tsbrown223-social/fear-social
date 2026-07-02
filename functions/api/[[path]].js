@@ -827,6 +827,20 @@ async function completeVerification(db, email, code, purpose = "") {
   return verification;
 }
 
+async function findUserByIdentifier(db, identifier = "") {
+  const clean = String(identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+  if (!clean) return null;
+  return db
+    .prepare(
+      `SELECT * FROM users
+       WHERE id <> 'demo-user'
+         AND (lower(email) = lower(?) OR lower(replace(handle, '@', '')) = lower(?))
+       LIMIT 1`
+    )
+    .bind(clean, clean)
+    .first();
+}
+
 async function toggleRow(db, table, userId, column, value) {
   const existing = await db.prepare(`SELECT 1 FROM ${table} WHERE user_id = ? AND ${column} = ?`).bind(userId, value).first();
   if (existing) {
@@ -889,11 +903,14 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/request-code") {
     const limited = await enforceRateLimit(db, request, "auth-request-code", 5, 600);
     if (limited) return limited;
-    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const identifier = String(body.identifier || body.email || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+    const identifiedUser = !String(body.email || "").includes("@") ? await findUserByIdentifier(db, identifier) : null;
+    const email = String(body.email || identifiedUser?.email || "").trim().toLowerCase().slice(0, 120);
     const username = normalizeUsername(body.username || email.split("@")[0], "founder");
     if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
     const existing = await db.prepare("SELECT handle FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
-    const verification = await createEmailVerification(db, env, "login", email, {
+    const purpose = ["login", "password"].includes(body.purpose) ? body.purpose : "login";
+    const verification = await createEmailVerification(db, env, purpose, email, {
       username: existing?.handle || username,
       handle: existing?.handle || `@${username}`,
     });
@@ -920,16 +937,11 @@ async function handleRequest({ request, env, params }) {
     const identifier = String(body.identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
     const password = String(body.password || "");
     if (!identifier || !password) return json({ error: "Username or email and password required" }, { status: 400 });
-    const user = await db
-      .prepare(
-        `SELECT * FROM users
-         WHERE id <> 'demo-user'
-           AND (lower(email) = lower(?) OR lower(replace(handle, '@', '')) = lower(?))
-         LIMIT 1`
-      )
-      .bind(identifier, identifier)
-      .first();
-    if (!user?.password_hash || !(await verifyPassword(password, user.password_hash))) {
+    const user = await findUserByIdentifier(db, identifier);
+    if (user && !user.password_hash) {
+      return json({ error: "This account needs a password. Use set or reset password to create one." }, { status: 409 });
+    }
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
       return json({ error: "Invalid username/email or password" }, { status: 401 });
     }
     if (String(user.password_hash).startsWith("sha256:")) {
@@ -946,6 +958,9 @@ async function handleRequest({ request, env, params }) {
     const limited = await enforceRateLimit(db, request, "auth-verify", 10, 600);
     if (limited) return limited;
     const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const password = String(body.password || "");
+    if (password && password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    const passwordHash = password ? await hashPassword(password) : "";
     const verification = await completeVerification(db, email, body.code, body.purpose || "");
     if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
     let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
@@ -959,10 +974,10 @@ async function handleRequest({ request, env, params }) {
       const sessionToken = crypto.randomUUID();
       await db
         .prepare(
-          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, email_verified_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, password_hash, email_verified_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
         )
-        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl)
+        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, passwordHash)
         .run();
       await recordRegistrationEmail(db, "verified_account_created", email, {
         userId: id,
@@ -976,7 +991,12 @@ async function handleRequest({ request, env, params }) {
         status: "Account created",
         nextStep: "Your account is ready. You can now log in with your email and password.",
       });
-      user = { id, token: sessionToken, ...profile, email_verified_at: new Date().toISOString() };
+      user = { id, token: sessionToken, ...profile, password_hash: passwordHash, email_verified_at: new Date().toISOString() };
+    } else {
+      if (passwordHash) {
+        await safeRun(db, "UPDATE users SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP) WHERE id = ?", [passwordHash, user.id]);
+        user = { ...user, password_hash: passwordHash, email_verified_at: user.email_verified_at || new Date().toISOString() };
+      }
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json(
@@ -988,13 +1008,14 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/password") {
     const limited = await enforceRateLimit(db, request, "auth-password", 5, 600);
     if (limited) return limited;
-    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const identifier = String(body.identifier || body.email || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+    const user = await findUserByIdentifier(db, identifier);
+    const email = String(body.email || user?.email || "").trim().toLowerCase().slice(0, 120);
     const code = String(body.code || "").trim();
     const password = String(body.password || "");
     if (password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
     const verification = await completeVerification(db, email, code, body.purpose || "");
     if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
-    const user = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
     if (!user) return json({ error: "Create the account before setting a password" }, { status: 404 });
     await db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(await hashPassword(password), user.id).run();
     return json({ ok: true });
