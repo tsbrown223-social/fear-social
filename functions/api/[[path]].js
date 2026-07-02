@@ -160,6 +160,7 @@ const normalizeProfile = (profile = {}) => {
   const handle = `@${username}`;
   const website = String(profile.website || "").trim().slice(0, 180);
   return {
+    id: String(profile.id || "").trim(),
     name,
     username,
     handle,
@@ -654,12 +655,13 @@ async function getPosts(db, userId) {
       `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
-        EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved
+        EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved,
+        EXISTS(SELECT 1 FROM user_connections c WHERE c.user_id = ? AND c.target_user_id = p.user_id) AS following_author
        FROM posts p
        JOIN users u ON u.id = p.user_id
        ORDER BY datetime(p.created_at) DESC`
     )
-    .bind(userId, userId)
+    .bind(userId, userId, userId)
     .all();
 
   const comments = await db
@@ -703,7 +705,16 @@ async function getPosts(db, userId) {
     comments: grouped.get(post.id) || [],
     saved: Boolean(post.saved),
     liked: Boolean(post.liked),
+    followingAuthor: Boolean(post.following_author),
   }));
+}
+
+async function profileWithFollowerCount(db, user) {
+  const row = await db
+    .prepare("SELECT COUNT(*) AS followers FROM user_connections WHERE target_user_id = ?")
+    .bind(user.id)
+    .first();
+  return { ...normalizeProfile(user), followers: Number(row?.followers || 0) };
 }
 
 async function getStats(db) {
@@ -1017,7 +1028,7 @@ async function handleRequest({ request, env, params }) {
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json(
-      { ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1068,7 +1079,7 @@ async function handleRequest({ request, env, params }) {
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json(
-      { ok: true, token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1324,7 +1335,7 @@ async function handleRequest({ request, env, params }) {
 
   if (method === "GET" && path === "/bootstrap") {
     return json(
-      { token, profile: normalizeProfile(user), ...(await getBootstrap(db, user.id)) },
+      { token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1389,7 +1400,7 @@ async function handleRequest({ request, env, params }) {
       if (!user.email && user.id !== duplicate.id) {
         await db.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
       }
-      return json({ token: duplicate.token, profile: mergedProfile });
+      return json({ token: duplicate.token, profile: await profileWithFollowerCount(db, { ...duplicate, ...mergedProfile }) });
     }
 
     await db
@@ -1419,7 +1430,7 @@ async function handleRequest({ request, env, params }) {
       });
       await createEmailVerification(db, env, "account_email_added", profile.email, profile);
     }
-    return json({ token, profile });
+    return json({ token, profile: await profileWithFollowerCount(db, { ...user, ...profile }) });
   }
 
   if (method === "POST" && path === "/posts") {

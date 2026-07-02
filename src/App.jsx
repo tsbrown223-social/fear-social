@@ -841,6 +841,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [unreadNotifications,setUnreadNotifications]=useLocalState("fear-unread-notifications",0);
   const [stats,setStats]=useLocalState("fear-stats",REAL_STATS);
   const [filter,setFilter]=useState("All");
+  const [feedMode,setFeedMode]=useLocalState("fear-feed-mode","forYou");
   const [composer,setComposer]=useState("");
   const [postType,setPostType]=useState("Update");
   const [commentInputs,setCommentInputs]=useState({});
@@ -895,11 +896,29 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     ["profile","Me","user"],
   ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
-  const visiblePosts=posts.filter(p=>(filter==="All"||p.tag===filter)&&(query.trim()===""||`${p.user} ${p.content} ${p.tag}`.toLowerCase().includes(query.toLowerCase())));
+  const followedIds=new Set(people.filter(p=>p.connected).map(p=>p.id));
+  const ownPost=p=>(profile.id&&p.userId===profile.id)||(profile.handle&&p.handle===profile.handle);
+  const algorithmTerms=[profile.industry,profile.stage,profile.goal,profile.lookingFor,profile.headline].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3);
+  const postScore=p=>{
+    const haystack=`${p.user} ${p.handle} ${p.content} ${p.tag} ${p.stage} ${p.type}`.toLowerCase();
+    let score=Number(p.likes||0)*2+(p.comments?.length||0)*3+(p.saved?4:0);
+    if(ownPost(p))score+=8;
+    if(p.followingAuthor||followedIds.has(p.userId))score+=28;
+    if(profile.industry&&p.tag===profile.industry)score+=18;
+    if(profile.stage&&haystack.includes(String(profile.stage).toLowerCase().split(" ")[0]))score+=6;
+    score+=algorithmTerms.reduce((total,term)=>total+(haystack.includes(term)?4:0),0);
+    return score;
+  };
+  const visiblePosts=posts
+    .filter(p=>(filter==="All"||p.tag===filter)&&(query.trim()===""||`${p.user} ${p.content} ${p.tag}`.toLowerCase().includes(query.toLowerCase())))
+    .filter(p=>feedMode==="forYou"||p.followingAuthor||followedIds.has(p.userId)||ownPost(p))
+    .map((p,index)=>({...p,_score:postScore(p),_index:index}))
+    .sort((a,b)=>feedMode==="forYou"?(b._score-a._score)||(a._index-b._index):a._index-b._index);
   const unread=unreadNotifications;
+  const followerCount=Number(profile.followers||0);
   const statCards=[
     ["Posts",fmt(stats.posts)],
-    ["Following",fmt(people.filter(p=>p.connected).length)],
+    ["Followers",fmt(followerCount)],
     ["Saved",fmt(posts.filter(p=>p.saved).length)],
     ["RSVPs",fmt(events.filter(e=>e.going).length)],
   ];
@@ -942,9 +961,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const publish=async()=>{
     if(!composer.trim())return notify("Write something before publishing","error");
     const optimistic={
-      id:Date.now(),user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",
+      id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",
       tag:profile.industry||"Exploring",stage:profile.stage?.toLowerCase().includes("launched")?"Launched":"Building",
-      time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,isNew:true
+      time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,followingAuthor:false,isNew:true
     };
     setPosts(ps=>[optimistic,...ps]);
     setComposer("");
@@ -1091,6 +1110,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   <button onClick={()=>setEditProfile(true)} style={{background:C.aLight,color:C.accent,border:"none",borderRadius:9,padding:"8px 11px",fontSize:12,fontWeight:900}}>Edit</button>
                 </div>
               </div>
+              <div style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:14}}>
+                {[["forYou","For You"],["following","Following"]].map(([id,label])=><button key={id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"11px 14px",fontSize:14,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</button>)}
+              </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                   <Av i={initials} src={profile.avatarUrl} size={44} grad/>
@@ -1104,7 +1126,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                 </div>
               </div>
               <div className="filter-row" style={{display:"flex",gap:8,marginBottom:16,overflow:"visible",flexWrap:"wrap"}}>{["All","Exploring","Finance","Brand Management","Creative","Food","Health"].map(t=><button key={t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
-              {visiblePosts.length===0&&<EmptyState title="No real posts yet" text="The feed is intentionally empty until a real account publishes a post."/>}
+              {visiblePosts.length===0&&<EmptyState title={feedMode==="following"?"No following posts yet":"No real posts yet"} text={feedMode==="following"?"Connect with people in Discover, then their posts will show up here.":"The For You feed will rank real posts around your field, goals, follows, and activity."}/>}
               {visiblePosts.map(p=>(
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
@@ -1129,7 +1151,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}>{p.name}</b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} verified connections</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}>{p.name}</b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
@@ -1207,7 +1229,7 @@ function ProfilePanel({profile,setEditProfile,stats}){
 function PublicProfilePanel({profile,onBack,onConnect,onMessage}){
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
   const stats=[
-    ["Connections",fmt(profile.followers)],
+    ["Followers",fmt(profile.followers)],
     ["Mutuals",fmt(profile.mutual)],
     ["Stage",profile.stage||"Building"],
     ["Field",profile.industry||"Exploring"],
