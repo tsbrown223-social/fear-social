@@ -7,7 +7,7 @@ Business-starter community platform built with Vite, React, Cloudflare Pages, an
 - Public positioning: Your first step is fear. Empowering tomorrow's founders today.
 - Email capture: the landing page posts directly to `/api/waitlist`, storing invite demand in Cloudflare D1.
 - Audience: future founders, early builders, first-time business starters, and people who have not taken the first step yet.
-- Free plan: public profile, build updates, discovery, events, rooms, direct messages, email verification, and social sign-in.
+- Free plan: public profile, build updates, discovery, events, rooms, direct messages, email verification, and password login.
 - FEAR Pro: founding-member plan at `$19/month` with priority mentor request routing, advanced matching, private Pro rooms, opportunity alerts, and AI prep notes.
 - Billing path: validate Pro demand from the waitlist, open Stripe checkout for FEAR Pro, then add annual billing once monthly conversion is proven.
 
@@ -42,36 +42,6 @@ All product email should use `contact@fear.social`.
 - Owner/backend notification recipient: `contact@fear.social`
 - Cloudflare Pages variables/secrets: `EMAIL_FROM`, `NOTIFICATION_EMAIL`, and `RESEND_API_KEY`
 - The `fear.social` sending domain must be verified in Resend before verification codes can be delivered from `contact@fear.social`.
-
-### OAuth sign-in
-
-Google and Apple sign-in are handled by Pages Functions and require Cloudflare Pages environment variables/secrets.
-
-Google:
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REDIRECT_URI` optional override, defaults to `https://your-domain/api/auth/google/callback`
-
-Google OAuth callback URL:
-
-```text
-https://fear.social/api/auth/google/callback
-```
-
-Apple:
-
-- `APPLE_CLIENT_ID` service id
-- `APPLE_TEAM_ID`
-- `APPLE_KEY_ID`
-- `APPLE_PRIVATE_KEY` private key PEM contents from the Apple `.p8` key
-- `APPLE_REDIRECT_URI` optional override, defaults to `https://your-domain/api/auth/apple/callback`
-
-Apple return URL:
-
-```text
-https://fear.social/api/auth/apple/callback
-```
 
 ## Build
 

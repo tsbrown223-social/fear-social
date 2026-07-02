@@ -204,27 +204,6 @@ const IconBadge=({name,pro=false,style={}})=>(
     <Icon name={name} size={24}/>
   </div>
 );
-const BrandIcon=({name,size=18})=>{
-  if(name==="google")return(
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{display:"block",flexShrink:0}}>
-      <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.7 4.7 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3-4.3 3-7.4Z"/>
-      <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4L15.4 17c-.9.6-2 .9-3.4.9a5.9 5.9 0 0 1-5.5-4.1H3.1v2.7A10 10 0 0 0 12 22Z"/>
-      <path fill="#FBBC05" d="M6.5 13.8a6 6 0 0 1 0-3.6V7.5H3.1a10 10 0 0 0 0 9l3.4-2.7Z"/>
-      <path fill="#EA4335" d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.7 9.7 0 0 0 12 2a10 10 0 0 0-8.9 5.5l3.4 2.7A5.9 5.9 0 0 1 12 6.1Z"/>
-    </svg>
-  );
-  return(
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{display:"block",flexShrink:0}} fill="currentColor">
-      <path d="M16.5 13.1c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.2-2.5 1.2-2.6 0 0-2.6-1-2.6-3.6ZM14.3 6.5c.6-.8 1.1-1.8 1-2.9-1 .1-2.1.7-2.8 1.4-.6.7-1.1 1.8-1 2.8 1.1.1 2.2-.5 2.8-1.3Z"/>
-    </svg>
-  );
-};
-const OAuthButton=({provider,children,onClick,style={}})=>(
-  <button onClick={onClick} className="bs" style={{width:"100%",background:"#fff",border:`1.5px solid ${C.border}`,borderRadius:12,padding:"13px 16px",fontSize:14,fontWeight:900,color:C.text,display:"flex",alignItems:"center",justifyContent:"center",gap:10,...style}}>
-    <BrandIcon name={provider} size={18}/>{children}
-  </button>
-);
-
 const ThemeToggle=({themeMode,setThemeMode,compact=false,style={}})=>{
   const dark=themeMode==="dark";
   const next=dark?"light":"dark";
@@ -404,11 +383,11 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   const readinessRows=[
     ["Email Capture","Waitlist, account signup, and verification emails are wired through the backend so new demand is recorded immediately.","check"],
-    ["Account System","Email verification, passwords, Google and Apple sign-in routes, sessions, profiles, and privacy controls are in place.","user"],
+    ["Account System","Email verification, passwords, sessions, profiles, and privacy controls are in place.","user"],
     ["Growth Engine","Free access brings future founders and business starters in; Pro converts the most active members into a paid plan with clear upgrade value.","zap"],
   ];
   const pricingRows=[
-    {name:"Free",price:"$0",period:"forever",note:"For anyone taking the first real step into business.",features:["Public profile and builder directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and social sign-in"],grad:false,button:"Join free"},
+    {name:"Free",price:"$0",period:"forever",note:"For anyone taking the first real step into business.",features:["Public profile and builder directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and password login"],grad:false,button:"Join free"},
     {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced builder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
   ];
   return(
@@ -572,14 +551,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
       notify(err.message||"Could not sign in","error");
     }
   };
-  const startOAuth=async(provider)=>{
-    try{
-      const data=await api(`/auth/${provider}/start`,{method:"GET"});
-      if(data.redirectUrl) window.location.href=data.redirectUrl;
-    }catch(err){
-      notify(err.message||`${provider==="apple"?"Apple":"Google"} sign-in is not configured yet`,"error");
-    }
-  };
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
@@ -639,10 +610,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
           {mode==="signup"?<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Sign up</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Create your fear.social account.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
-            <OAuthButton provider="google" onClick={()=>startOAuth("google")}>Sign up with Google</OAuthButton>
-            <OAuthButton provider="apple" onClick={()=>startOAuth("apple")}>Sign up with Apple</OAuthButton>
-          </div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
@@ -657,10 +624,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
           </>:<>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Log in</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Access your existing fear.social account.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:18}}>
-            <OAuthButton provider="google" onClick={()=>startOAuth("google")}>Continue with Google</OAuthButton>
-            <OAuthButton provider="apple" onClick={()=>startOAuth("apple")}>Continue with Apple</OAuthButton>
-          </div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             <div>
               <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
