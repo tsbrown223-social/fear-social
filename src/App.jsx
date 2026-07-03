@@ -626,13 +626,16 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   const [login,setLogin]=useState({identifier:"",password:""});
   const [passwordSetup,setPasswordSetup]=useState({identifier:"",code:"",password:"",confirmPassword:""});
   const [passwordStep,setPasswordStep]=useState(0);
+  const [acceptedTerms,setAcceptedTerms]=useState(false);
+  const [showTerms,setShowTerms]=useState(false);
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const passwordReady=form.password.length>=8&&form.password===form.confirmPassword;
-  const valid=form.name&&form.username&&form.email&&passwordReady;
+  const valid=form.name&&form.username&&form.email&&passwordReady&&acceptedTerms;
   const loginValid=login.identifier&&login.password;
   const passwordSetupReady=passwordSetup.password.length>=8&&passwordSetup.password===passwordSetup.confirmPassword;
   const requestCode=async()=>{
+    if(!acceptedTerms)return notify("Accept the Terms and Conditions to continue","error");
     if(!valid)return;
     try{
       await api("/auth/request-code",{method:"POST",body:JSON.stringify({email:form.email,username:form.username})});
@@ -678,7 +681,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
-      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password})});
+      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-03"})});
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       notify(err.message||"Could not verify email","error");
@@ -776,6 +779,10 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
               <input type="password" value={form.confirmPassword} onChange={e=>setForm(f=>({...f,confirmPassword:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&requestCode()} placeholder="Confirm your password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form.confirmPassword&&form.confirmPassword===form.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
               {form.confirmPassword&&form.confirmPassword!==form.password&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Passwords need to match.</div>}
             </div>
+            <label style={{display:"flex",alignItems:"flex-start",gap:10,border:`1px solid ${acceptedTerms?C.aSoft:C.border}`,background:acceptedTerms?C.aLight:C.bg,borderRadius:12,padding:13,cursor:"pointer"}}>
+              <input type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)} style={{marginTop:2,accentColor:C.accent,flexShrink:0}}/>
+              <span style={{fontSize:12,color:C.muted,lineHeight:1.55}}>I agree to the <button type="button" onClick={e=>{e.preventDefault();setShowTerms(true);}} style={{background:"none",border:"none",padding:0,color:C.accent,fontWeight:900,textDecoration:"underline",cursor:"pointer"}}>Terms and Conditions</button> and understand fear.social's privacy and community rules.</span>
+            </label>
             <GBtn full onClick={requestCode} style={{opacity:valid?1:0.45,pointerEvents:valid?"auto":"none"}}>Send verification code →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
@@ -828,6 +835,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
           </>}
         </div>
       </div>
+      {showTerms&&<TermsConditionsPanel onClose={()=>setShowTerms(false)}/>}
     </div>
   );
 }
@@ -1293,6 +1301,26 @@ function ModalShell({title,eyebrow,onClose,children}){
         {children}
       </div>
     </div>
+  );
+}
+
+function TermsConditionsPanel({onClose}){
+  const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
+  return (
+    <ModalShell title="Terms and Conditions" eyebrow="Legal" onClose={onClose}>
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 3, 2026. These terms are a practical operating baseline for fear.social and should be reviewed by legal counsel before a broad public launch.</p>
+      {section("Using fear.social","By creating an account, you agree to use fear.social respectfully, lawfully, and in a way that helps people take practical first steps into business, entrepreneurship, projects, and professional relationships.")}
+      {section("Accounts","You are responsible for the accuracy of your profile information, the security of your password, and activity that happens through your account. Do not impersonate others, create misleading accounts, or share access in a way that harms the platform or other users.")}
+      {section("Community Conduct","Do not harass, threaten, spam, exploit, discriminate against, or deceive other users. Content that is abusive, illegal, sexually exploitative, hateful, or designed to manipulate people may be removed, and accounts may be limited or terminated.")}
+      {section("User Content","You keep ownership of the content you post, but you grant fear.social permission to host, display, process, and distribute that content as needed to operate the service. Only post content you have the right to share.")}
+      {section("No Professional Advice","fear.social may help users find ideas, collaborators, mentors, opportunities, and business conversations, but the platform does not provide legal, financial, tax, investment, medical, or other professional advice. Users should verify important decisions independently.")}
+      {section("Email and Notifications","By signing up, you agree that fear.social may send account, verification, security, signup, and service-related emails to the email address on your account, including from contact@fear.social.")}
+      {section("Changes and Availability","fear.social may change features, pricing, access, policies, or availability over time. Beta features may break, change, or be removed as the product develops.")}
+      {section("Contact","Questions, account requests, or legal/privacy concerns can be sent to contact@fear.social.")}
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:24}}>
+        <GBtn onClick={onClose}>I understand</GBtn>
+      </div>
+    </ModalShell>
   );
 }
 

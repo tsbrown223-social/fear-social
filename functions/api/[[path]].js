@@ -30,6 +30,7 @@ const CONTACT_EMAIL = "contact@fear.social";
 const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
 const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
+const TERMS_VERSION = "2026-07-03";
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
@@ -1064,10 +1065,13 @@ async function handleRequest({ request, env, params }) {
     const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
     const password = String(body.password || "");
     if (password && password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    if (!user && body.acceptedTerms !== true) {
+      return json({ error: "You must accept the Terms and Conditions to create an account" }, { status: 400 });
+    }
     const passwordHash = password ? await hashPassword(password) : "";
     const verification = await completeVerification(db, email, body.code, body.purpose || "");
     if (!verification) return json({ error: "Invalid or expired verification code" }, { status: 400 });
-    let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
     const profile = normalizeProfile({
       ...(body.profile || {}),
       email,
@@ -1078,10 +1082,10 @@ async function handleRequest({ request, env, params }) {
       const sessionToken = crypto.randomUUID();
       await db
         .prepare(
-          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, email_verified_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, email_verified_at, terms_accepted_at, terms_version)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`
         )
-        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash)
+        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
         .run();
       await recordRegistrationEmail(db, "verified_account_created", email, {
         userId: id,
@@ -1100,6 +1104,10 @@ async function handleRequest({ request, env, params }) {
       if (passwordHash) {
         await safeRun(db, "UPDATE users SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP) WHERE id = ?", [passwordHash, user.id]);
         user = { ...user, password_hash: passwordHash, email_verified_at: user.email_verified_at || new Date().toISOString() };
+      }
+      if (body.acceptedTerms === true && !user.terms_accepted_at) {
+        await safeRun(db, "UPDATE users SET terms_accepted_at = CURRENT_TIMESTAMP, terms_version = ? WHERE id = ?", [TERMS_VERSION, user.id]);
+        user = { ...user, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION };
       }
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
