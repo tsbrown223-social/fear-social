@@ -861,6 +861,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [editProfile,setEditProfile]=useState(false);
   const [selectedProfile,setSelectedProfile]=useState(null);
   const [profileReturnView,setProfileReturnView]=useState("discover");
+  const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
   const applyBackendState=useCallback((data)=>{
     if(data.profile){
@@ -990,7 +991,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const startMessage=async person=>{
     if(!person?.id)return;
     try{
-      await callBackend(`/people/${person.id}/message`,{method:"POST",body:JSON.stringify({})});
+      const data=await callBackend(`/people/${person.id}/message`,{method:"POST",body:JSON.stringify({})});
+      const conversation=data.messages?.find(message=>message.userId===person.id);
+      setActiveConversationId(conversation?.id||null);
       setView("messages");
       notify(`Message ${person.name}`);
     }catch(err){
@@ -1063,12 +1066,20 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     const thread=messages.find(m=>m.id===id);
     const text=thread?.draft?.trim();
     if(!text)return;
+    const optimisticId=`local-message-${Date.now()}`;
     setMessages(ms=>ms.map(m=>{
       if(m.id!==id||!m.draft.trim())return m;
       notify(`Message sent to ${m.name}`);
-      return {...m,thread:[...m.thread,{id:Date.now(),text:m.draft.trim(),author:"you",time:"Just now"}],draft:""};
+      return {...m,thread:[...m.thread,{id:optimisticId,text:m.draft.trim(),author:"you",time:"Just now"}],draft:""};
     }));
-    try{await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});}catch{}
+    try{
+      const data=await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});
+      setActiveConversationId(id);
+      if(data.messages)setMessages(data.messages.map(message=>message.id===id?{...message,draft:""}:message));
+    }catch(err){
+      setMessages(ms=>ms.map(m=>m.id===id?{...m,draft:text,thread:m.thread.filter(message=>message.id!==optimisticId)}:m));
+      notify(err.message||"Could not send message","error");
+    }
   };
   const saveProfile=async()=>{
     const username=cleanUsername(profileDraft.username||profileDraft.handle||profileDraft.name);
@@ -1204,7 +1215,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}>{p.name}</b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
-        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage}/>}
+        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<Directory title="Founder groups" eyebrow="Rooms" items={GROUPS} render={g=><div key={g.id} className="ch" style={cardStyle}><b>{g.name}</b><p style={bodyCopy}>{g.desc}</p><div style={{fontSize:13,color:C.muted,margin:"14px 0"}}>{g.active}</div><GBtn sm onClick={()=>notify(`Joined ${g.name}`)}>Join room</GBtn></div>}/>}
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}
@@ -1262,8 +1273,9 @@ function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
   return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
-function MessagesView({messages,setMessages,sendMessage}){
+function MessagesView({messages,setMessages,sendMessage,activeConversationId}){
   const [active,setActive]=useState(messages[0]?.id);
+  useEffect(()=>{if(activeConversationId&&messages.some(m=>m.id===activeConversationId))setActive(activeConversationId);},[activeConversationId,messages]);
   useEffect(()=>{if(!messages.some(m=>m.id===active))setActive(messages[0]?.id);},[active,messages]);
   const thread=messages.find(m=>m.id===active)||messages[0];
   const messageText=msg=>typeof msg==="string"?msg:msg.text;

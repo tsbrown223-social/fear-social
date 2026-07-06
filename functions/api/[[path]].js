@@ -838,14 +838,23 @@ async function getBootstrap(db, userId) {
     getNotifications(db, userId),
   ]);
 
-  const messages = await db.prepare("SELECT * FROM messages ORDER BY datetime(created_at), id").all();
+  const messages = await db
+    .prepare(
+      `SELECT m.*
+       FROM messages m
+       JOIN conversations c ON c.id = m.conversation_id
+       WHERE c.user_a_id IS NULL OR c.user_b_id IS NULL OR c.user_a_id = ? OR c.user_b_id = ?
+       ORDER BY datetime(m.created_at), m.id`
+    )
+    .bind(userId, userId)
+    .all();
   const messageGroups = new Map();
   for (const message of messages.results || []) {
     const list = messageGroups.get(message.conversation_id) || [];
     list.push({
       id: message.id,
       text: message.text,
-      author: message.author,
+      author: message.user_id === userId ? "you" : message.user_id ? "them" : message.author,
       time: timeAgo(message.created_at),
     });
     messageGroups.set(message.conversation_id, list);
