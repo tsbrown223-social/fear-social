@@ -131,6 +131,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .post-card>div:first-child{padding:16px!important;}
   .post-media-grid{grid-template-columns:1fr!important;}
   .post-media-grid>div{min-height:220px!important;}
+  .groups-create-grid{grid-template-columns:1fr!important;}
   .post-actions{padding:10px 14px!important;gap:8px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
   .post-actions button{font-size:13px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;}
   .comment-row{display:grid!important;grid-template-columns:1fr!important;}
@@ -394,7 +395,7 @@ function consumeOAuthToken(){
 try{
   const version="real-users-v1";
   if(localStorage.getItem("fear-data-version")!==version){
-    ["fear-posts","fear-people","fear-events","fear-mentors","fear-messages","fear-stats"].forEach(key=>localStorage.removeItem(key));
+    ["fear-posts","fear-people","fear-events","fear-mentors","fear-messages","fear-groups","fear-stats"].forEach(key=>localStorage.removeItem(key));
     localStorage.setItem("fear-data-version",version);
   }
   const savedProfile=JSON.parse(localStorage.getItem("fear-profile")||"null");
@@ -448,7 +449,23 @@ const PEOPLE=[];
 const MENTORS=[];
 const EVENTS=[];
 const DEALS=[];
-const GROUPS=[];
+const GROUPS=[{
+  id:"fear-official",
+  name:"fear.",
+  slug:"fear",
+  desc:"Official fear.social updates, feature drops, founder notes, and internal announcements from the team.",
+  kind:"official",
+  member:true,
+  invited:false,
+  role:"member",
+  memberCount:1,
+  inviteCount:0,
+  canInvite:false,
+  canAnnounce:false,
+  official:true,
+  active:"Everyone starts here",
+  announcements:[],
+}];
 const INITIAL_MESSAGES=[];
 
 function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
@@ -876,6 +893,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [events,setEvents]=useLocalState("fear-events",EVENTS);
   const [mentors,setMentors]=useLocalState("fear-mentors",MENTORS);
   const [messages,setMessages]=useLocalState("fear-messages",INITIAL_MESSAGES);
+  const [groups,setGroups]=useLocalState("fear-groups",GROUPS);
   const [notifications,setNotifications]=useLocalState("fear-notifications",[]);
   const [unreadNotifications,setUnreadNotifications]=useLocalState("fear-unread-notifications",0);
   const [stats,setStats]=useLocalState("fear-stats",REAL_STATS);
@@ -903,10 +921,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if(data.events)setEvents(data.events);
     if(data.mentors)setMentors(data.mentors);
     if(data.messages)setMessages(data.messages);
+    if(data.groups)setGroups(data.groups);
     if(data.notifications)setNotifications(data.notifications);
     if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[setEvents,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications]);
+  },[setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     applyBackendState(data);
@@ -1058,6 +1077,52 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     setMentors(ms=>ms.map(m=>(m.id||m.name)===id?{...m,requested:!m.requested,sessions:m.requested?m.sessions:m.sessions+1}:m));
     try{await callBackend(`/mentors/${id}/request`,{method:"POST"});}catch{}
   };
+  const createGroup=async draft=>{
+    const name=String(draft.name||"").trim();
+    const description=String(draft.description||"").trim();
+    if(name.length<2)return notify("Give the group a name","error");
+    const localGroup={id:`local-group-${Date.now()}`,name,slug:cleanUsername(name),desc:description||`A focused room for ${name}.`,kind:"member",member:true,role:"admin",memberCount:1,inviteCount:0,canInvite:true,canAnnounce:true,official:false,active:"1 member · 0 pending invites",announcements:[]};
+    setGroups(gs=>[localGroup,...gs]);
+    try{
+      await callBackend("/groups",{method:"POST",body:JSON.stringify({name,description})});
+      notify(`${name} created`);
+    }catch(err){
+      notify(err.message||"Group saved locally. Cloud sync failed.","error");
+    }
+  };
+  const joinGroup=async id=>{
+    setGroups(gs=>gs.map(g=>g.id===id?{...g,member:true,invited:false,role:g.role==="invited"?"member":g.role||"member",memberCount:Number(g.memberCount||0)+1}:g));
+    try{
+      await callBackend(`/groups/${id}/join`,{method:"POST"});
+      notify("Group joined");
+    }catch(err){
+      notify(err.message||"Could not join group","error");
+    }
+  };
+  const inviteToGroup=async(groupId,userIds)=>{
+    const ids=[...new Set((Array.isArray(userIds)?userIds:[userIds]).filter(Boolean))];
+    if(ids.length===0)return notify("Choose someone to invite","error");
+    setGroups(gs=>gs.map(g=>g.id===groupId?{...g,inviteCount:Number(g.inviteCount||0)+ids.length}:g));
+    try{
+      await callBackend(`/groups/${groupId}/invite`,{method:"POST",body:JSON.stringify({userIds:ids})});
+      notify(ids.length===1?"Invite sent":"Invites sent");
+    }catch(err){
+      notify(err.message||"Could not send invite","error");
+    }
+  };
+  const postGroupAnnouncement=async(groupId,draft)=>{
+    const title=String(draft.title||"").trim();
+    const body=String(draft.body||"").trim();
+    if(!title||!body)return notify("Announcement title and body required","error");
+    const localAnnouncement={id:`local-announcement-${Date.now()}`,title,body,author:profile.name||"You",handle:profile.handle||"",time:"Just now"};
+    setGroups(gs=>gs.map(g=>g.id===groupId?{...g,announcements:[localAnnouncement,...(g.announcements||[])]}:g));
+    try{
+      await callBackend(`/groups/${groupId}/announcements`,{method:"POST",body:JSON.stringify({title,body})});
+      notify("Announcement posted");
+    }catch(err){
+      notify(err.message||"Announcement saved locally. Cloud sync failed.","error");
+    }
+  };
   const togglePostAction=async(id,action)=>{
     setPosts(ps=>ps.map(p=>{
       if(p.id!==id)return p;
@@ -1190,7 +1255,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
               </div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
                 <div style={{fontWeight:900,fontSize:14,marginBottom:12}}>Live rooms</div>
-                {GROUPS.map(g=><div key={g.id} className="uh" onClick={()=>notify(`Joined ${g.name}`)} style={{padding:"9px 6px",cursor:"pointer"}}><div style={{fontSize:13,fontWeight:800,color:C.text}}>{g.name}</div><div style={{fontSize:11,color:C.dim}}>{g.active}</div></div>)}
+                {groups.slice(0,4).map(g=><div key={g.id} className="uh" onClick={()=>setView("groups")} style={{padding:"9px 6px",cursor:"pointer"}}><div style={{fontSize:13,fontWeight:800,color:C.text}}>{g.name}</div><div style={{fontSize:11,color:C.dim}}>{g.active}</div></div>)}
               </div>
             </aside>
             <main>
@@ -1267,7 +1332,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
-        {view==="groups"&&<Directory title="Founder groups" eyebrow="Rooms" items={GROUPS} render={g=><div key={g.id} className="ch" style={cardStyle}><b>{g.name}</b><p style={bodyCopy}>{g.desc}</p><div style={{fontSize:13,color:C.muted,margin:"14px 0"}}>{g.active}</div><GBtn sm onClick={()=>notify(`Joined ${g.name}`)}>Join room</GBtn></div>}/>}
+        {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement}/>}
         {view==="opportunities"&&<Directory title="Opportunities" eyebrow="Market" items={DEALS} render={d=><div key={d.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{d.title}</b><IT label={d.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:4}}>{d.company} · {d.budget}</div><p style={bodyCopy}>{d.desc}</p><GBtn sm onClick={()=>notify(`Saved ${d.title}`)}>Save opportunity</GBtn></div>}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)}/>}
@@ -1323,6 +1388,19 @@ function MiniEmpty({text}){
 }
 function Directory({eyebrow,title,items,render}){
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
+}
+function GroupsView({groups,people,createGroup,joinGroup,inviteToGroup,postAnnouncement}){
+  const [draft,setDraft]=useState({name:"",description:""});
+  const [inviteDraft,setInviteDraft]=useState({});
+  const [announcementDraft,setAnnouncementDraft]=useState({});
+  const resetDraft=()=>setDraft({name:"",description:""});
+  const submitGroup=()=>{
+    createGroup(draft);
+    resetDraft();
+  };
+  const usableGroups=Array.isArray(groups)&&groups.length?groups:GROUPS;
+  const invitePeople=(Array.isArray(people)?people:[]).slice(0,24);
+  return <div className="directory-wrap"><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,marginBottom:22,flexWrap:"wrap"}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Rooms</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Founder groups</h1></div><div style={{fontSize:13,color:C.muted,maxWidth:430,lineHeight:1.6}}>Create focused rooms, invite members, and keep everyone aligned with announcements.</div></div><div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:18,marginBottom:18}}><div className="groups-create-grid" style={{display:"grid",gridTemplateColumns:"minmax(180px,0.8fr) minmax(220px,1.2fr) auto",gap:10,alignItems:"end"}}><label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>Group name<input value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))} placeholder="NYC builders, Fashion founders..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/></label><label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>Purpose<input value={draft.description} onChange={e=>setDraft(d=>({...d,description:e.target.value}))} placeholder="What should people use this group for?" className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/></label><GBtn onClick={submitGroup} style={{height:42,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="network" size={16} color="#fff"/> Create group</GBtn></div></div><div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>{usableGroups.map(group=>{const selectedInvite=inviteDraft[group.id]||"";const announce=announcementDraft[group.id]||{title:"",body:""};return <article key={group.id} className="ch" style={{...cardStyle,padding:0,borderColor:group.official?C.aSoft:C.border}}><div style={{padding:20,background:group.official?GR:"transparent",color:group.official?"#fff":C.text}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><b style={{fontSize:22,overflowWrap:"anywhere"}}>{group.name}</b>{group.official&&<Tag label="Official" style={{background:"rgba(255,255,255,0.18)",color:"#fff"}}/>}{group.invited&&<Tag label="Invited" style={{background:"#fff",color:C.accent}}/>}</div><div style={{fontSize:12,opacity:group.official?0.82:1,color:group.official?"rgba(255,255,255,0.78)":C.muted,marginTop:5}}>{group.active}</div></div><div style={{width:44,height:44,borderRadius:14,background:group.official?"rgba(255,255,255,0.14)":C.aLight,color:group.official?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={group.official?"sparkle":"network"} size={22} color="currentColor"/></div></div><p style={{fontSize:14,lineHeight:1.65,marginTop:14,color:group.official?"rgba(255,255,255,0.82)":C.tSoft}}>{group.desc}</p></div><div style={{padding:20,display:"grid",gap:16}}>{!group.member&&<GBtn onClick={()=>joinGroup(group.id)} full>{group.invited?"Accept invite":"Join group"}</GBtn>}{group.canInvite&&<div style={{display:"grid",gap:9}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Invite users</div><div style={{display:"flex",gap:8}}><select value={selectedInvite} onChange={e=>setInviteDraft(d=>({...d,[group.id]:e.target.value}))} className="if" style={{flex:1,minWidth:0,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,background:"#fff"}}><option value="">Choose a person</option>{invitePeople.map(person=><option key={person.id} value={person.id}>{person.name} · {person.industry||"Exploring"}</option>)}</select><button onClick={()=>selectedInvite&&inviteToGroup(group.id,[selectedInvite])} className="bs" style={{border:"none",background:C.aLight,color:C.accent,borderRadius:10,padding:"10px 13px",fontSize:12,fontWeight:900,whiteSpace:"nowrap"}}>Invite</button></div>{invitePeople.length===0&&<MiniEmpty text="More invite options will appear as real users join."/>}</div>}{group.canAnnounce&&<div style={{display:"grid",gap:9}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Announcement</div><input value={announce.title} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,title:e.target.value}}))} placeholder={group.official?"New fear feature, launch note...":"Announcement title"} className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text}}/><textarea value={announce.body} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,body:e.target.value}}))} placeholder="Share the update with this group..." className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,minHeight:86,resize:"vertical",lineHeight:1.5}}/><GBtn sm onClick={()=>{postAnnouncement(group.id,announce);setAnnouncementDraft(d=>({...d,[group.id]:{title:"",body:""}}));}}>Post announcement</GBtn></div>}<div><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:9}}>Latest announcements</div>{(group.announcements||[]).length===0?<MiniEmpty text={group.official?"Admin feature updates will appear here.":"No announcements yet."}/>:<div style={{display:"grid",gap:8}}>{group.announcements.map(a=><div key={a.id} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:12,background:C.bg}}><div style={{fontWeight:900,color:C.text,marginBottom:5,overflowWrap:"anywhere"}}>{a.title}</div><p style={{fontSize:13,lineHeight:1.55,color:C.tSoft,overflowWrap:"anywhere"}}>{a.body}</p><div style={{fontSize:11,color:C.dim,marginTop:8}}>{a.author} · {a.time} ago</div></div>)}</div>}</div></div></article>;})}</div></div>;
 }
 function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;

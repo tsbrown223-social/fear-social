@@ -31,6 +31,7 @@ const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
 const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
 const TERMS_VERSION = "2026-07-06";
+const FEAR_GROUP_ID = "fear-official";
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
@@ -743,6 +744,94 @@ async function profileWithFollowerCount(db, user) {
   return { ...normalizeProfile(user), followers: Number(row?.followers || 0) };
 }
 
+const isAdminUser = (user = {}) =>
+  String(user.role || "").toLowerCase() === "admin" ||
+  ["tsbrown223@gmail.com", CONTACT_EMAIL].includes(String(user.email || "").toLowerCase());
+
+async function ensureFearGroupMembership(db, user) {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO groups (id, name, slug, description, kind, visibility, owner_user_id)
+       VALUES (?, 'fear.', 'fear', 'Official fear.social updates, feature drops, founder notes, and internal announcements from the team.', 'official', 'public', NULL)`
+    )
+    .bind(FEAR_GROUP_ID)
+    .run();
+  await db
+    .prepare("INSERT OR IGNORE INTO group_members (group_id, user_id, role, status) VALUES (?, ?, ?, 'active')")
+    .bind(FEAR_GROUP_ID, user.id, isAdminUser(user) ? "admin" : "member")
+    .run();
+}
+
+async function getGroups(db, user) {
+  await ensureFearGroupMembership(db, user);
+  const groups = await db
+    .prepare(
+      `SELECT g.*,
+        gm.role AS member_role,
+        gm.status AS member_status,
+        EXISTS(SELECT 1 FROM group_invites gi WHERE gi.group_id = g.id AND gi.invitee_user_id = ? AND gi.status = 'pending') AS invited,
+        (SELECT COUNT(*) FROM group_members gm2 WHERE gm2.group_id = g.id AND gm2.status = 'active') AS member_count,
+        (SELECT COUNT(*) FROM group_invites gi2 WHERE gi2.group_id = g.id AND gi2.status = 'pending') AS invite_count
+       FROM groups g
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = ?
+       WHERE g.visibility = 'public' OR gm.user_id IS NOT NULL OR EXISTS(SELECT 1 FROM group_invites gi3 WHERE gi3.group_id = g.id AND gi3.invitee_user_id = ? AND gi3.status = 'pending')
+       ORDER BY CASE WHEN g.id = ? THEN 0 ELSE 1 END, datetime(g.created_at) DESC`
+    )
+    .bind(user.id, user.id, user.id, FEAR_GROUP_ID)
+    .all();
+  const announcements = await db
+    .prepare(
+      `SELECT ga.*, u.name AS author_name, u.handle AS author_handle
+       FROM group_announcements ga
+       JOIN groups g ON g.id = ga.group_id
+       LEFT JOIN users u ON u.id = ga.user_id
+       LEFT JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = ?
+       WHERE g.visibility = 'public' OR gm.user_id IS NOT NULL
+       ORDER BY datetime(ga.created_at) DESC
+       LIMIT 120`
+    )
+    .bind(user.id)
+    .all();
+  const byGroup = new Map();
+  for (const row of announcements.results || []) {
+    const list = byGroup.get(row.group_id) || [];
+    if (list.length < 5) {
+      list.push({
+        id: row.id,
+        title: row.title,
+        body: row.body,
+        author: row.author_name || "fear.social",
+        handle: row.author_handle || "",
+        time: timeAgo(row.created_at),
+      });
+    }
+    byGroup.set(row.group_id, list);
+  }
+  return (groups.results || []).map((group) => {
+    const role = group.member_role || "";
+    const member = group.member_status === "active";
+    const admin = role === "admin" || group.owner_user_id === user.id || isAdminUser(user);
+    const official = group.id === FEAR_GROUP_ID || group.kind === "official";
+    return {
+      id: group.id,
+      name: group.name,
+      slug: group.slug,
+      desc: group.description,
+      kind: group.kind,
+      member,
+      invited: Boolean(group.invited),
+      role: role || (Boolean(group.invited) ? "invited" : ""),
+      memberCount: Number(group.member_count || 0),
+      inviteCount: Number(group.invite_count || 0),
+      canInvite: member && (admin || group.owner_user_id === user.id),
+      canAnnounce: member && (official ? isAdminUser(user) : admin),
+      official,
+      active: `${Number(group.member_count || 0).toLocaleString()} members · ${Number(group.invite_count || 0).toLocaleString()} pending invites`,
+      announcements: byGroup.get(group.id) || [],
+    };
+  });
+}
+
 async function getStats(db) {
   const count = async (sql) => {
     const row = await db.prepare(sql).first();
@@ -799,8 +888,9 @@ async function getNotifications(db, userId) {
   }));
 }
 
-async function getBootstrap(db, userId) {
-  const [posts, people, events, mentors, conversations, stats, notifications] = await Promise.all([
+async function getBootstrap(db, user) {
+  const userId = user.id;
+  const [posts, people, events, mentors, conversations, stats, notifications, groups] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
@@ -855,6 +945,7 @@ async function getBootstrap(db, userId) {
       .all(),
     getStats(db),
     getNotifications(db, userId),
+    getGroups(db, user),
   ]);
 
   const messages = await db
@@ -915,6 +1006,7 @@ async function getBootstrap(db, userId) {
     })),
     stats,
     notifications,
+    groups,
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
   };
 }
@@ -1082,7 +1174,7 @@ async function handleRequest({ request, env, params }) {
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json(
-      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
+      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1140,7 +1232,7 @@ async function handleRequest({ request, env, params }) {
     }
     const token = await createSession(db, user.id, crypto.randomUUID(), request);
     return json(
-      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
+      { ok: true, token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1403,7 +1495,7 @@ async function handleRequest({ request, env, params }) {
 
   if (method === "GET" && path === "/bootstrap") {
     return json(
-      { token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user.id)) },
+      { token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user)) },
       { headers: { "set-cookie": sessionCookie(token) } }
     );
   }
@@ -1519,6 +1611,81 @@ async function handleRequest({ request, env, params }) {
   }
 
   const segments = path.split("/").filter(Boolean);
+
+  if (method === "POST" && path === "/groups") {
+    const limited = await enforceRateLimit(db, request, "groups", 10, 600);
+    if (limited) return limited;
+    const name = String(body.name || "").trim().slice(0, 80);
+    const description = String(body.description || "").trim().slice(0, 500);
+    if (name.length < 2) return json({ error: "Group name required" }, { status: 400 });
+    const baseSlug = normalizeUsername(name, "group");
+    const existing = await db.prepare("SELECT id FROM groups WHERE slug = ?").bind(baseSlug).first();
+    const slug = existing ? `${baseSlug}-${crypto.randomUUID().slice(0, 6)}` : baseSlug;
+    const id = createId("group");
+    await db
+      .prepare("INSERT INTO groups (id, name, slug, description, kind, visibility, owner_user_id) VALUES (?, ?, ?, ?, 'member', 'public', ?)")
+      .bind(id, name, slug, description || `A focused room for ${name}.`, user.id)
+      .run();
+    await db.prepare("INSERT INTO group_members (group_id, user_id, role, status) VALUES (?, ?, 'admin', 'active')").bind(id, user.id).run();
+    return json({ groups: await getGroups(db, user) }, { status: 201 });
+  }
+
+  if (method === "POST" && segments[0] === "groups" && segments[2] === "join") {
+    const groupId = segments[1];
+    const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
+    if (!group) return json({ error: "Group not found" }, { status: 404 });
+    await db.prepare("INSERT OR REPLACE INTO group_members (group_id, user_id, role, status) VALUES (?, ?, COALESCE((SELECT role FROM group_members WHERE group_id = ? AND user_id = ?), 'member'), 'active')").bind(groupId, user.id, groupId, user.id).run();
+    await safeRun(db, "UPDATE group_invites SET status = 'accepted', responded_at = CURRENT_TIMESTAMP WHERE group_id = ? AND invitee_user_id = ?", [groupId, user.id]);
+    return json({ groups: await getGroups(db, user) });
+  }
+
+  if (method === "POST" && segments[0] === "groups" && segments[2] === "invite") {
+    const groupId = segments[1];
+    const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
+    if (!group) return json({ error: "Group not found" }, { status: 404 });
+    const membership = await db.prepare("SELECT role, status FROM group_members WHERE group_id = ? AND user_id = ?").bind(groupId, user.id).first();
+    const canInvite = membership?.status === "active" && (membership.role === "admin" || group.owner_user_id === user.id || isAdminUser(user));
+    if (!canInvite) return json({ error: "Only group admins can invite members" }, { status: 403 });
+    const userIds = Array.isArray(body.userIds) ? body.userIds : [body.userId].filter(Boolean);
+    const uniqueIds = [...new Set(userIds.map((id) => String(id || "").trim()).filter((id) => id && id !== user.id))].slice(0, 12);
+    if (uniqueIds.length === 0) return json({ error: "Choose at least one person to invite" }, { status: 400 });
+    for (const inviteeId of uniqueIds) {
+      const invitee = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND id = ?").bind(inviteeId).first();
+      if (!invitee) continue;
+      await safeRun(db, "INSERT OR IGNORE INTO group_invites (id, group_id, inviter_user_id, invitee_user_id, status) VALUES (?, ?, ?, ?, 'pending')", [createId("group_invite"), groupId, user.id, inviteeId]);
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), inviteeId, user.id, "group_invite", `${user.name} invited you to ${group.name}.`, "group", groupId]
+      );
+    }
+    return json({ groups: await getGroups(db, user), notifications: await getNotifications(db, user.id) });
+  }
+
+  if (method === "POST" && segments[0] === "groups" && segments[2] === "announcements") {
+    const groupId = segments[1];
+    const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
+    if (!group) return json({ error: "Group not found" }, { status: 404 });
+    const membership = await db.prepare("SELECT role, status FROM group_members WHERE group_id = ? AND user_id = ?").bind(groupId, user.id).first();
+    const member = membership?.status === "active";
+    const official = group.id === FEAR_GROUP_ID || group.kind === "official";
+    const canAnnounce = member && (official ? isAdminUser(user) : membership.role === "admin" || group.owner_user_id === user.id || isAdminUser(user));
+    if (!canAnnounce) return json({ error: "Only group admins can post announcements" }, { status: 403 });
+    const title = String(body.title || "").trim().slice(0, 100);
+    const text = String(body.body || body.text || "").trim().slice(0, 1200);
+    if (!title || !text) return json({ error: "Announcement title and body required" }, { status: 400 });
+    await db.prepare("INSERT INTO group_announcements (id, group_id, user_id, title, body) VALUES (?, ?, ?, ?, ?)").bind(createId("group_announcement"), groupId, user.id, title, text).run();
+    const members = await db.prepare("SELECT user_id FROM group_members WHERE group_id = ? AND status = 'active' AND user_id <> ? LIMIT 200").bind(groupId, user.id).all();
+    for (const memberRow of members.results || []) {
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), memberRow.user_id, user.id, "group_announcement", `${group.name}: ${title}`, "group", groupId]
+      );
+    }
+    return json({ groups: await getGroups(db, user), notifications: await getNotifications(db, user.id) });
+  }
+
   if (method === "POST" && segments[0] === "posts" && segments[2] === "comments") {
     const limited = await enforceRateLimit(db, request, "comments", 30, 600);
     if (limited) return limited;
@@ -1594,7 +1761,7 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), targetUserId, user.id, "follow", `${user.name} followed you.`, "user", user.id]
       );
     }
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "block") {
@@ -1607,7 +1774,7 @@ async function handleRequest({ request, env, params }) {
       targetUserId,
       user.id,
     ]);
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "message") {
@@ -1651,7 +1818,7 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(conversation.id)]
       );
     }
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && path === "/reports") {
@@ -1689,17 +1856,17 @@ async function handleRequest({ request, env, params }) {
     } else {
       await safeRun(db, "UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL", [user.id]);
     }
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
     await toggleRow(db, "event_rsvps", user.id, "event_id", Number(segments[1]));
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "mentors" && segments[2] === "request") {
     await toggleRow(db, "mentor_requests", user.id, "mentor_id", segments[1]);
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "messages" && segments[2] === "send") {
@@ -1723,7 +1890,7 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(segments[1])]
       );
     }
-    return json(await getBootstrap(db, user.id));
+    return json(await getBootstrap(db, user));
   }
 
   return json({ error: "Not found" }, { status: 404 });
