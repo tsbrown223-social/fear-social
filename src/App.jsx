@@ -99,6 +99,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
 .app-view button,.app-view input,.app-view textarea{max-width:100%;}
 .post-card,.composer-card,.directory-grid .ch,.message-panel,.message-list,.profile-hero,.edit-sheet{overflow-wrap:anywhere;}
+.post-media-grid img,.post-media-grid video{max-width:100%;}
 .filter-row{flex-wrap:wrap;overflow:visible!important;}
 .filter-row::-webkit-scrollbar{display:none;}
 @media(max-width:980px){
@@ -128,6 +129,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .composer-actions button:last-child{grid-column:1/-1;margin-left:0!important;width:100%!important;}
   .post-card{border-radius:18px!important;margin-bottom:12px!important;}
   .post-card>div:first-child{padding:16px!important;}
+  .post-media-grid{grid-template-columns:1fr!important;}
+  .post-media-grid>div{min-height:220px!important;}
   .post-actions{padding:10px 14px!important;gap:8px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
   .post-actions button{font-size:13px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;}
   .comment-row{display:grid!important;grid-template-columns:1fr!important;}
@@ -208,6 +211,16 @@ const safeImageUrl=url=>{
     return parsed.protocol==="https:"?value:"";
   }catch{return "";}
 };
+const safeMediaUrl=(url,kind="image")=>{
+  const value=String(url||"").trim();
+  if(!value)return "";
+  if(kind==="video"&&value.startsWith("data:video/"))return value;
+  if(kind!=="video"&&value.startsWith("data:image/"))return value;
+  try{
+    const parsed=new URL(value);
+    return parsed.protocol==="https:"?value:"";
+  }catch{return "";}
+};
 const readImageFile=(file,maxSize=720)=>new Promise((resolve,reject)=>{
   if(!file?.type?.startsWith("image/"))return reject(new Error("Choose an image file"));
   const reader=new FileReader();
@@ -228,6 +241,18 @@ const readImageFile=(file,maxSize=720)=>new Promise((resolve,reject)=>{
     };
     img.src=reader.result;
   };
+  reader.readAsDataURL(file);
+});
+const readPostMediaFile=file=>new Promise((resolve,reject)=>{
+  if(!file)return reject(new Error("Choose a photo or video"));
+  const isImage=file.type?.startsWith("image/");
+  const isVideo=file.type?.startsWith("video/");
+  if(!isImage&&!isVideo)return reject(new Error("Only photos and videos can be posted"));
+  if(isVideo&&file.size>4*1024*1024)return reject(new Error("Videos need to be under 4 MB for now"));
+  if(isImage)return readImageFile(file,1280).then(url=>resolve({id:`media_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"image",url,alt:file.name||"Post photo"})).catch(reject);
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error("Could not read video"));
+  reader.onload=()=>resolve({id:`media_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"video",url:String(reader.result||""),alt:file.name||"Post video"});
   reader.readAsDataURL(file);
 });
 const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
@@ -857,6 +882,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [filter,setFilter]=useState("All");
   const [feedMode,setFeedMode]=useLocalState("fear-feed-mode","forYou");
   const [composer,setComposer]=useState("");
+  const [composerMedia,setComposerMedia]=useState([]);
   const [postType,setPostType]=useState("Update");
   const [commentInputs,setCommentInputs]=useState({});
   const [openComments,setOpenComments]=useState({});
@@ -972,17 +998,32 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   };
   const activePublicProfile=selectedProfile&&(people.find(p=>p.id===selectedProfile.id)||selectedProfile);
   const publicProfile=activePublicProfile?toPublicProfile(activePublicProfile):null;
+  const addComposerMedia=async event=>{
+    const files=Array.from(event.target.files||[]).slice(0,4-composerMedia.length);
+    event.target.value="";
+    if(files.length===0)return;
+    try{
+      const next=await Promise.all(files.map(readPostMediaFile));
+      setComposerMedia(media=>[...media,...next].slice(0,4));
+      notify(next.length===1?"Media attached":`${next.length} files attached`);
+    }catch(err){
+      notify(err.message||"Could not attach that file","error");
+    }
+  };
+  const removeComposerMedia=id=>setComposerMedia(media=>media.filter(item=>item.id!==id));
   const publish=async()=>{
-    if(!composer.trim())return notify("Write something before publishing","error");
+    const media=composerMedia.filter(item=>safeMediaUrl(item.url,item.kind));
+    if(!composer.trim()&&media.length===0)return notify("Write something or attach media before publishing","error");
     const optimistic={
       id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",
       tag:profile.industry||"Exploring",
-      time:"Just now",type:postType,content:composer.trim(),likes:0,comments:[],saved:false,liked:false,followingAuthor:false,isNew:true
+      time:"Just now",type:postType,content:composer.trim(),media,likes:0,comments:[],saved:false,liked:false,followingAuthor:false,isNew:true
     };
     setPosts(ps=>[optimistic,...ps]);
     setComposer("");
+    setComposerMedia([]);
     try{
-      await callBackend("/posts",{method:"POST",body:JSON.stringify({content:optimistic.content,type:postType,tag:optimistic.tag})});
+      await callBackend("/posts",{method:"POST",body:JSON.stringify({content:optimistic.content,type:postType,tag:optimistic.tag,media})});
       notify(`${postType} published`);
     }catch(err){
       notify("Published locally. Cloud sync failed.","error");
@@ -1171,9 +1212,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   <Av i={initials} src={profile.avatarUrl} size={44} grad/>
                   <div style={{flex:1}}>
                     <textarea value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
+                    <MediaPreviewGrid media={composerMedia} onRemove={removeComposerMedia}/>
                     <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
                       {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} onClick={()=>setPostType(t)} className="bs" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted}}>{t}</button>)}
-                      <GBtn sm onClick={publish} style={{marginLeft:"auto",opacity:composer.trim()?1:.55}}>Publish</GBtn>
+                      <label className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer"}}><Icon name="camera" size={15}/> Photo/video<input type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
+                      <GBtn sm onClick={publish} style={{marginLeft:"auto",opacity:composer.trim()||composerMedia.length?1:.55}}>Publish</GBtn>
                     </div>
                   </div>
                 </div>
@@ -1199,7 +1242,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                           <GBtn sm onClick={()=>savePostEdit(p.id)}>Save changes</GBtn>
                         </div>
                       </div>
-                    ):<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>}
+                    ):<>
+                      {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>}
+                      <MediaPreviewGrid media={p.media}/>
+                    </>}
                   </div>
                   <div className="post-actions" style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
                     <button className="bs" onClick={()=>togglePostAction(p.id,"like")} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="heart" size={17} color="currentColor" filled={p.liked}/> {p.likes}</button>
@@ -1264,6 +1310,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22,overflow:"hidden",minWidth:0};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
+function MediaPreviewGrid({media=[],onRemove}){
+  const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
+  if(safe.length===0)return null;
+  return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><div key={item.id||item.url} style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:C.bg,minHeight:safe.length===1?260:170}}>{item.kind==="video"?<video src={item.url} controls playsInline style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}{onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}</div>)}</div>;
+}
 function EmptyState({title,text}){
   return <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:28,textAlign:"center",color:C.muted}}><div style={{fontWeight:900,fontSize:18,color:C.text,marginBottom:8}}>{title}</div><div style={{fontSize:14,lineHeight:1.65}}>{text}</div></div>;
 }

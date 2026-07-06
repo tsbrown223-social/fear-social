@@ -655,6 +655,24 @@ const initials = (name) =>
     .slice(0, 2)
     .toUpperCase() || "YO";
 
+const parseMediaList = (value) => {
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value || "[]") : value;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => ({
+        id: String(item?.id || createId("media")),
+        kind: item?.kind === "video" ? "video" : "image",
+        url: String(item?.url || "").trim(),
+        alt: String(item?.alt || "").slice(0, 160),
+      }))
+      .filter((item) => item.url && item.url.length <= 5500000 && (/^https:\/\//.test(item.url) || /^data:(image|video)\//.test(item.url)))
+      .slice(0, 4);
+  } catch {
+    return [];
+  }
+};
+
 async function getPosts(db, userId) {
   const posts = await db
     .prepare(
@@ -707,6 +725,7 @@ async function getPosts(db, userId) {
     type: post.type,
     time: timeAgo(post.created_at),
     content: post.content,
+    media: parseMediaList(post.media),
     edited: Boolean(post.updated_at && post.created_at && post.updated_at !== post.created_at),
     likes: post.likes,
     comments: grouped.get(post.id) || [],
@@ -1486,14 +1505,15 @@ async function handleRequest({ request, env, params }) {
     const limited = await enforceRateLimit(db, request, "posts", 20, 600);
     if (limited) return limited;
     const content = String(body.content || "").trim().slice(0, 1200);
-    if (!content) return json({ error: "Post content required" }, { status: 400 });
+    const media = parseMediaList(body.media);
+    if (!content && media.length === 0) return json({ error: "Write something or attach media before posting" }, { status: 400 });
     const id = createId("post");
     const tag = String(body.tag || user.industry || "Exploring").slice(0, 40);
     const type = String(body.type || "Update").slice(0, 40);
     const stage = String(body.stage || "Building").slice(0, 40);
     await db
-      .prepare("INSERT INTO posts (id, user_id, type, tag, stage, content) VALUES (?, ?, ?, ?, ?, ?)")
-      .bind(id, user.id, type, tag, stage, content)
+      .prepare("INSERT INTO posts (id, user_id, type, tag, stage, content, media) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .bind(id, user.id, type, tag, stage, content, JSON.stringify(media))
       .run();
     return json({ posts: await getPosts(db, user.id) }, { status: 201 });
   }
@@ -1525,13 +1545,14 @@ async function handleRequest({ request, env, params }) {
     if (!post) return json({ error: "Post not found" }, { status: 404 });
     if (post.user_id !== user.id) return json({ error: "You can only edit your own posts" }, { status: 403 });
     const content = String(body.content || "").trim().slice(0, 1200);
-    if (!content) return json({ error: "Post content required" }, { status: 400 });
+    const media = body.media === undefined ? parseMediaList(post.media) : parseMediaList(body.media);
+    if (!content && media.length === 0) return json({ error: "Post needs text or media" }, { status: 400 });
     const type = String(body.type || post.type || "Update").slice(0, 40);
     const tag = String(body.tag || post.tag || user.industry || "Exploring").slice(0, 40);
     const stage = String(body.stage || post.stage || "Building").slice(0, 40);
     await db
-      .prepare("UPDATE posts SET content = ?, type = ?, tag = ?, stage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
-      .bind(content, type, tag, stage, postId, user.id)
+      .prepare("UPDATE posts SET content = ?, type = ?, tag = ?, stage = ?, media = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+      .bind(content, type, tag, stage, JSON.stringify(media), postId, user.id)
       .run();
     return json({ posts: await getPosts(db, user.id) });
   }
