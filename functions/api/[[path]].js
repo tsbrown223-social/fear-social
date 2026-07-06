@@ -30,7 +30,7 @@ const CONTACT_EMAIL = "contact@fear.social";
 const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
 const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
-const TERMS_VERSION = "2026-07-03";
+const TERMS_VERSION = "2026-07-06";
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
