@@ -62,6 +62,9 @@ const SESSION_TTL_DAYS = 30;
 const TERMS_VERSION = "2026-07-06";
 const FEAR_GROUP_ID = "fear-official";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+const VERIFIED_HANDLES = new Set(["@taylorbrown"]);
+const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com"]);
+const VERIFIED_NAMES = new Set(["taylor brown"]);
 
 const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim()) && String(value || "").length <= 120;
 
@@ -70,6 +73,12 @@ const cleanText = (value, max = 120) =>
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .trim()
     .slice(0, max);
+
+const isVerifiedAccount = (user = {}) =>
+  Boolean(user.verified || user.verified_badge) ||
+  VERIFIED_HANDLES.has(String(user.handle || "").toLowerCase()) ||
+  VERIFIED_EMAILS.has(String(user.email || "").toLowerCase()) ||
+  VERIFIED_NAMES.has(String(user.name || "").trim().toLowerCase());
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
@@ -724,7 +733,7 @@ const parseMediaList = (value) => {
 async function getPosts(db, userId) {
   const posts = await db
     .prepare(
-      `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
+      `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url, u.verified_badge AS user_verified_badge,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved,
@@ -738,7 +747,7 @@ async function getPosts(db, userId) {
 
   const comments = await db
     .prepare(
-      `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url
+      `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url, u.verified_badge AS user_verified_badge
        FROM comments c
        JOIN users u ON u.id = c.user_id
        ORDER BY datetime(c.created_at) ASC`
@@ -751,12 +760,13 @@ async function getPosts(db, userId) {
     list.push({
       id: comment.id,
       userId: comment.user_id,
-      user: comment.user_name,
-      handle: comment.handle,
-      av: initials(comment.user_name),
-      avatarUrl: comment.user_avatar_url || "",
-      text: comment.text,
-      time: timeAgo(comment.created_at),
+    user: comment.user_name,
+    handle: comment.handle,
+    av: initials(comment.user_name),
+    avatarUrl: comment.user_avatar_url || "",
+    verified: isVerifiedAccount({ name: comment.user_name, handle: comment.handle, verified_badge: comment.user_verified_badge }),
+    text: comment.text,
+    time: timeAgo(comment.created_at),
     });
     grouped.set(comment.post_id, list);
   }
@@ -768,6 +778,7 @@ async function getPosts(db, userId) {
     handle: post.handle,
     av: initials(post.user_name),
     avatarUrl: post.user_avatar_url || "",
+    verified: isVerifiedAccount({ name: post.user_name, handle: post.handle, verified_badge: post.user_verified_badge }),
     tag: post.tag,
     stage: post.stage,
     type: post.type,
@@ -788,7 +799,7 @@ async function profileWithFollowerCount(db, user) {
     .prepare("SELECT COUNT(*) AS followers FROM user_connections WHERE target_user_id = ?")
     .bind(user.id)
     .first();
-  return { ...normalizeProfile(user), followers: Number(row?.followers || 0) };
+  return { ...normalizeProfile(user), followers: Number(row?.followers || 0), verified: isVerifiedAccount(user) };
 }
 
 const isAdminUser = (user = {}) =>
@@ -906,7 +917,7 @@ async function getStats(db) {
 async function getNotifications(db, userId) {
   const rows = await db
     .prepare(
-      `SELECT n.*, u.name AS actor_name, u.handle AS actor_handle, u.avatar_url AS actor_avatar_url
+      `SELECT n.*, u.name AS actor_name, u.handle AS actor_handle, u.avatar_url AS actor_avatar_url, u.verified_badge AS actor_verified_badge
        FROM user_notifications n
        LEFT JOIN users u ON u.id = n.actor_user_id
        WHERE n.user_id = ?
@@ -930,6 +941,7 @@ async function getNotifications(db, userId) {
           handle: notification.actor_handle || "",
           av: initials(notification.actor_name),
           avatarUrl: notification.actor_avatar_url || "",
+          verified: isVerifiedAccount({ name: notification.actor_name, handle: notification.actor_handle, verified_badge: notification.actor_verified_badge }),
         }
       : null,
   }));
@@ -941,7 +953,7 @@ async function getBootstrap(db, user) {
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url, u.verified_badge,
           u.headline, u.website, u.looking_for, u.goal,
           0 AS mutual,
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
@@ -978,7 +990,7 @@ async function getBootstrap(db, user) {
     db
       .prepare(
         `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle,
-          other.avatar_url AS other_avatar_url, other.last_seen_at AS other_last_seen_at
+          other.avatar_url AS other_avatar_url, other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
          FROM conversations c
          LEFT JOIN users other ON other.id = CASE
            WHEN c.user_a_id = ? THEN c.user_b_id
@@ -1028,6 +1040,7 @@ async function getBootstrap(db, user) {
       website: person.website || "",
       lookingFor: person.looking_for || "",
       goal: person.goal || "",
+      verified: isVerifiedAccount(person),
       online: Boolean(person.online),
       connected: Boolean(person.connected),
     })),
@@ -1047,6 +1060,7 @@ async function getBootstrap(db, user) {
       handle: conversation.other_handle || "",
       av: initials(conversation.other_name || conversation.name || conversation.av),
       avatarUrl: conversation.other_avatar_url || "",
+      verified: isVerifiedAccount({ name: conversation.other_name || conversation.name, handle: conversation.other_handle, verified_badge: conversation.other_verified_badge }),
       online: Boolean(conversation.online),
       thread: messageGroups.get(conversation.id) || [],
       draft: "",
