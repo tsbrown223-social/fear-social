@@ -99,9 +99,18 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
 .app-view button,.app-view input,.app-view textarea{max-width:100%;}
+.app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
+.app-view button{white-space:nowrap;}
 .post-card,.composer-card,.directory-grid .ch,.message-panel,.message-list,.profile-hero,.edit-sheet{overflow-wrap:anywhere;}
 .post-media-grid img,.post-media-grid video{max-width:100%;}
+.composer-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow:visible!important;}
+.composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{min-height:38px;white-space:nowrap!important;word-break:keep-all!important;overflow:hidden;text-overflow:ellipsis;display:inline-flex!important;align-items:center;justify-content:center;line-height:1.1;}
+.composer-actions .post-type-btn{min-width:82px;flex:0 0 auto;}
+.composer-actions .post-type-btn[data-label="Milestone"]{min-width:112px;}
+.composer-actions .composer-media-btn{min-width:142px;flex:0 0 auto;}
+.composer-actions .composer-publish-btn{min-width:118px;flex:0 0 auto;}
 .filter-row{flex-wrap:wrap;overflow:visible!important;}
+.filter-row button{white-space:nowrap!important;word-break:keep-all!important;overflow:hidden;text-overflow:ellipsis;}
 .filter-row::-webkit-scrollbar{display:none;}
 .market-hero{background:linear-gradient(135deg, rgba(13,15,20,0.98), rgba(22,199,78,0.88));}
 .match-meter{height:7px;border-radius:999px;background:rgba(22,199,78,0.13);overflow:hidden;}
@@ -109,6 +118,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
   [style*="position: sticky"]{position:static!important;}
+}
+@media(max-width:1180px){
+  .composer-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;}
+  .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{width:100%!important;min-width:0!important;margin-left:0!important;padding-left:10px!important;padding-right:10px!important;}
+  .composer-actions .composer-media-btn{grid-column:span 2;}
+  .composer-actions .composer-publish-btn{grid-column:3 / span 1;}
 }
 @media(max-width:760px){
   body{background:${C.bg};}
@@ -128,9 +143,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .composer-card{border-radius:18px!important;padding:14px!important;}
   .composer-card>div{gap:10px!important;}
   .composer-card textarea{min-height:92px!important;font-size:16px!important;}
-  .composer-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;overflow:visible!important;padding-bottom:2px;}
-  .composer-actions button{flex-shrink:0;min-width:0!important;padding:9px 8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .composer-actions button:last-child{grid-column:1/-1;margin-left:0!important;width:100%!important;}
+  .composer-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;overflow:visible!important;padding-bottom:2px;}
+  .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{min-width:0!important;width:100%!important;padding:10px 8px!important;}
+  .composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{grid-column:1/-1!important;margin-left:0!important;}
   .post-card{border-radius:18px!important;margin-bottom:12px!important;}
   .post-card>div:first-child{padding:16px!important;}
   .post-media-grid{grid-template-columns:1fr!important;}
@@ -140,8 +155,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .post-actions button{font-size:13px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;}
   .comment-row{display:grid!important;grid-template-columns:1fr!important;}
   .comment-row button{width:100%!important;}
-  .filter-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;overflow:visible!important;gap:7px!important;}
-  .filter-row button{min-width:0!important;padding:9px 8px!important;overflow:hidden;text-overflow:ellipsis;}
+  .filter-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;overflow:visible!important;gap:7px!important;}
+  .filter-row button{min-width:0!important;padding:10px 8px!important;overflow:hidden;text-overflow:ellipsis;}
   .directory-grid{grid-template-columns:1fr!important;}
   .directory-wrap{padding-bottom:86px!important;}
   .directory-title{font-size:32px!important;}
@@ -195,7 +210,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .verify-card .verify-actions{grid-template-columns:1fr!important;}
   .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
   .toast-stack>div{min-width:0!important;width:100%!important;}
-  .app-view>[aria-label="Open accessibility settings"]{bottom:82px!important;left:12px!important;width:44px!important;height:44px!important;}
+  [aria-label="Open accessibility settings"]{bottom:82px!important;left:12px!important;width:44px!important;height:44px!important;}
   [style*="grid-template-columns: 310px 1fr"]{grid-template-columns:1fr!important;}
   [style*="grid-template-columns: repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
   [style*="grid-template-columns: repeat(5,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
@@ -205,7 +220,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 }
 `;
 
-const Tag=({label,style={}})=><span style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:4,padding:"2px 8px",whiteSpace:"nowrap",verticalAlign:"middle",...style}}>{label}</span>;
+const Tag=({label,style={}})=><span style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:4,padding:"2px 8px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
 const IT=({label,style={}})=>{const s=C.ind[label]||C.ind.Other;return <Tag label={label} style={{background:s.bg,color:s.color,...style}}/>;};
 const safeImageUrl=url=>{
   const value=String(url||"").trim();
@@ -269,8 +284,8 @@ const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
   </div>
   );
 };
-const GBtn=({children,onClick,sm=false,lg=false,full=false,style={}})=>(
-  <button onClick={onClick} className="bs" style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",...style}}>{children}</button>
+const GBtn=({children,onClick,sm=false,lg=false,full=false,className="",style={}})=>(
+  <button onClick={onClick} className={`bs ${className}`.trim()} style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",...style}}>{children}</button>
 );
 const GhostBtn=({children,onClick,style={}})=>(
   <button onClick={onClick} className="bs" style={{background:"transparent",color:C.accent,border:`1.5px solid ${C.accent}`,borderRadius:9,fontWeight:700,padding:"10px 22px",fontSize:14,cursor:"pointer",...style}}>{children}</button>
@@ -1313,9 +1328,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <textarea value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
                     <MediaPreviewGrid media={composerMedia} onRemove={removeComposerMedia}/>
                     <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
-                      {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} onClick={()=>setPostType(t)} className="bs" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted}}>{t}</button>)}
-                      <label className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer"}}><Icon name="camera" size={15}/> Photo/video<input type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
-                      <GBtn sm onClick={publish} style={{marginLeft:"auto",opacity:composer.trim()||composerMedia.length?1:.55}}>Publish</GBtn>
+                      {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} data-label={t} onClick={()=>setPostType(t)} className="bs post-type-btn" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.1}}>{t}</button>)}
+                      <label className="bs composer-media-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Photo/video<input type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
+                      <GBtn sm className="composer-publish-btn" onClick={publish} style={{marginLeft:"auto",opacity:composer.trim()||composerMedia.length?1:.55}}>Publish</GBtn>
                     </div>
                   </div>
                 </div>
