@@ -53,6 +53,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .if:focus{border-color:#16C74E!important;box-shadow:0 0 0 3px rgba(22,199,78,0.18)!important;}
 input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-results-button,input[type="search"]::-webkit-search-results-decoration{display:none;}
 .desktop-app-search{background-image:none!important;}
+.mobile-app-search{display:none;}
 .uh:hover{background:rgba(22,199,78,0.06);border-radius:10px;}
 .profile-link{cursor:pointer;border-radius:12px;}
 .profile-link:focus-visible{outline:3px solid rgba(22,199,78,0.35);outline-offset:3px;}
@@ -136,6 +137,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-view{overflow-x:hidden!important;}
   .ch:hover{transform:none;box-shadow:none;}
   .desktop-app-tabs,.desktop-app-search,.desktop-signout,.desktop-feed-side{display:none!important;}
+  .mobile-app-search{display:block;margin-bottom:14px;}
   .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:10px;right:10px;bottom:10px;z-index:500;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);border:1px solid ${C.border};border-radius:18px;padding:7px;box-shadow:0 18px 60px rgba(13,15,20,.18);}
   .mobile-bottom-nav button{min-width:0;height:52px;border:none;background:transparent;border-radius:12px;padding:7px 2px;color:${C.muted};font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;}
   .mobile-bottom-nav button.active{background:${C.aLight};color:${C.accent};}
@@ -1016,6 +1018,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const followedIds=new Set(people.filter(p=>p.connected).map(p=>p.id));
   const ownPost=p=>(profile.id&&p.userId===profile.id)||(profile.handle&&p.handle===profile.handle);
   const algorithmTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3);
+  const searchTerm=query.trim().toLowerCase();
+  const matchesSearch=(parts=[])=>!searchTerm||parts.filter(Boolean).join(" ").toLowerCase().includes(searchTerm);
   const postScore=p=>{
     const haystack=`${p.user} ${p.handle} ${p.content} ${p.tag} ${p.type}`.toLowerCase();
     let score=Number(p.likes||0)*2+(p.comments?.length||0)*3+(p.saved?4:0);
@@ -1026,7 +1030,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     return score;
   };
   const visiblePosts=posts
-    .filter(p=>(filter==="All"||p.tag===filter)&&(query.trim()===""||`${p.user} ${p.content} ${p.tag}`.toLowerCase().includes(query.toLowerCase())))
+    .filter(p=>(filter==="All"||p.tag===filter)&&matchesSearch([p.user,p.handle,p.content,p.tag,p.type,...(p.comments||[]).map(c=>`${c.user} ${c.text}`)]))
     .filter(p=>feedMode==="forYou"||p.followingAuthor||followedIds.has(p.userId)||ownPost(p))
     .map((p,index)=>({...p,_score:postScore(p),_index:index}))
     .sort((a,b)=>feedMode==="forYou"?(b._score-a._score)||(a._index-b._index):a._index-b._index);
@@ -1266,6 +1270,72 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify(err.message||"Could not send message","error");
     }
   };
+  const closeSearch=()=>setQuery("");
+  const searchResults=searchTerm?[
+    ...people.filter(p=>matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location])).slice(0,6).map(p=>({
+      id:`person-${p.id}`,
+      kind:"Founder",
+      icon:"user",
+      title:p.name,
+      subtitle:[p.handle,p.industry||"Exploring",p.loc||p.location].filter(Boolean).join(" · "),
+      meta:p.bio,
+      action:()=>{openProfile(p,"discover");closeSearch();}
+    })),
+    ...posts.filter(p=>matchesSearch([p.user,p.handle,p.content,p.tag,p.type,...(p.comments||[]).map(c=>`${c.user} ${c.text}`)])).slice(0,6).map(p=>({
+      id:`post-${p.id}`,
+      kind:"Post",
+      icon:"comment",
+      title:p.user,
+      subtitle:[p.type||"Update",p.tag,p.time&&`${p.time} ago`].filter(Boolean).join(" · "),
+      meta:p.content||"Photo/video post",
+      action:()=>{setView("feed");setFilter("All");closeSearch();}
+    })),
+    ...events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type])).slice(0,4).map(e=>({
+      id:`event-${e.id}`,
+      kind:"Event",
+      icon:"calendar",
+      title:e.title,
+      subtitle:[e.date,e.time,e.type].filter(Boolean).join(" · "),
+      meta:e.desc,
+      action:()=>{setView("events");closeSearch();}
+    })),
+    ...mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])])).slice(0,4).map(m=>({
+      id:`mentor-${m.id||m.name}`,
+      kind:"Mentor",
+      icon:"brain",
+      title:m.name,
+      subtitle:m.role,
+      meta:m.bio,
+      action:()=>{setView("mentors");closeSearch();}
+    })),
+    ...groups.filter(g=>matchesSearch([g.name,g.desc,g.kind,g.active,...(g.announcements||[]).map(a=>`${a.title} ${a.body}`)])).slice(0,4).map(g=>({
+      id:`group-${g.id}`,
+      kind:"Group",
+      icon:"network",
+      title:g.name,
+      subtitle:g.active,
+      meta:g.desc,
+      action:()=>{setView("groups");closeSearch();}
+    })),
+    ...rankedDeals.filter(d=>matchesSearch([d.title,d.company,d.type,d.tag,d.location,d.level,d.desc,...(d.skills||[]),...(d.fit||[])])).slice(0,4).map(d=>({
+      id:`deal-${d.id}`,
+      kind:"Deal",
+      icon:"briefcase",
+      title:d.title,
+      subtitle:[d.company,`${d.score}% match`,d.location].filter(Boolean).join(" · "),
+      meta:d.desc,
+      action:()=>{setView("opportunities");closeSearch();}
+    })),
+    ...messages.filter(m=>matchesSearch([m.name,m.handle,...(m.thread||[]).map(message=>typeof message==="string"?message:message?.text),m.draft])).slice(0,4).map(m=>({
+      id:`message-${m.id}`,
+      kind:"Message",
+      icon:"mail",
+      title:m.name,
+      subtitle:m.handle||"Direct message",
+      meta:(m.thread||[]).length?String(typeof m.thread[m.thread.length-1]==="string"?m.thread[m.thread.length-1]:m.thread[m.thread.length-1]?.text||""):"Start the conversation",
+      action:()=>{setActiveConversationId(m.id);setView("messages");closeSearch();}
+    })),
+  ]:[];
   const saveProfile=async()=>{
     const username=cleanUsername(profileDraft.username||profileDraft.handle||profileDraft.name);
     const nextDraft={...profileDraft,username,handle:`@${username}`};
@@ -1309,13 +1379,17 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         <div className="desktop-app-tabs" role="navigation" aria-label="Main app navigation" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
-        <input type="search" aria-label="Search founders, posts, and tags" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
+        <input type="search" aria-label="Search founders, posts, tags, groups, and deals" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search founders, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
       <main id="app-main" className="app-shell" tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
+        <div className="mobile-app-search">
+          <input type="search" aria-label="Search fear.social" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search founders, posts, groups..." className="if" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"13px 14px",fontSize:16,color:C.text,boxShadow:"0 10px 30px rgba(13,15,20,0.04)"}}/>
+        </div>
+        {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
         {view==="feed"&&(
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:"270px minmax(0,1fr) 310px",gap:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
@@ -1403,9 +1477,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>`${p.name} ${p.industry} ${p.bio}`.toLowerCase().includes(query.toLowerCase()))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
-        {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
-        {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover founders" eyebrow="Network" items={people.filter(p=>matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}</div><p style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
+        {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement}/>}
@@ -1464,6 +1538,10 @@ function MiniEmpty({text}){
 }
 function Directory({eyebrow,title,items,render}){
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
+}
+function SearchResultsPanel({term,results,onClear}){
+  const visible=results.slice(0,12);
+  return <section aria-label={`Search results for ${term}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:18,marginBottom:20,boxShadow:"0 18px 54px rgba(13,15,20,0.06)"}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}><div style={{minWidth:0}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:5}}>Search</div><h2 style={{fontFamily:"Georgia,serif",fontSize:28,lineHeight:1.05,letterSpacing:0,color:C.text,overflowWrap:"anywhere"}}>{visible.length?`${visible.length} results for "${term}"`:`No results for "${term}"`}</h2></div><button onClick={onClear} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7}}><Icon name="close" size={14}/> Clear</button></div>{visible.length===0?<EmptyState title="Nothing matched yet" text="Try a founder name, field, tag, post topic, group, event, message, or opportunity."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>{visible.map(result=><button key={result.id} onClick={result.action} className="ch" style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,textAlign:"left",display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:12,color:C.text,minWidth:0}}><span style={{width:38,height:38,borderRadius:12,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={result.icon} size={18}/></span><span style={{minWidth:0}}><span style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1,color:C.accent}}>{result.kind}</span><span style={{fontSize:12,color:C.dim,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{result.subtitle}</span></span><span style={{display:"block",fontSize:15,fontWeight:950,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{result.title}</span><span style={{fontSize:13,color:C.muted,lineHeight:1.45,marginTop:4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{result.meta}</span></span></button>)}</div>}</section>;
 }
 function GroupsView({groups,people,createGroup,joinGroup,inviteToGroup,postAnnouncement}){
   const [draft,setDraft]=useState({name:"",description:""});
