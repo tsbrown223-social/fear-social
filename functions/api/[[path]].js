@@ -1,26 +1,55 @@
+const SECURITY_RESPONSE_HEADERS = {
+  "cache-control": "no-store",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+  "cross-origin-resource-policy": "same-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+};
+
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
     ...init,
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
+      ...SECURITY_RESPONSE_HEADERS,
       ...(init.headers || {}),
     },
   });
 
+const MAX_JSON_BODY_BYTES = 8 * 1024 * 1024;
+const MAX_FORM_BODY_BYTES = 64 * 1024;
+
+const assertBodySize = (request, maxBytes) => {
+  const length = Number(request.headers.get("content-length") || 0);
+  if (length && length > maxBytes) {
+    throw json({ error: "Request body is too large" }, { status: 413 });
+  }
+};
+
 const readJson = async (request) => {
   try {
-    return await request.json();
-  } catch {
+    assertBodySize(request, MAX_JSON_BODY_BYTES);
+    const text = await request.text();
+    if (text.length > MAX_JSON_BODY_BYTES) {
+      throw json({ error: "Request body is too large" }, { status: 413 });
+    }
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    if (err instanceof Response) throw err;
     return {};
   }
 };
 
 const readForm = async (request) => {
   try {
+    assertBodySize(request, MAX_FORM_BODY_BYTES);
     const text = await request.text();
+    if (text.length > MAX_FORM_BODY_BYTES) {
+      throw json({ error: "Request body is too large" }, { status: 413 });
+    }
     return Object.fromEntries(new URLSearchParams(text));
-  } catch {
+  } catch (err) {
+    if (err instanceof Response) throw err;
     return {};
   }
 };
@@ -32,6 +61,15 @@ const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
 const TERMS_VERSION = "2026-07-06";
 const FEAR_GROUP_ID = "fear-official";
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
+const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim()) && String(value || "").length <= 120;
+
+const cleanText = (value, max = 120) =>
+  String(value || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, max);
 
 const createVerificationCode = () => {
   const values = new Uint32Array(1);
@@ -153,36 +191,34 @@ const normalizeUsername = (value, fallback = "founder") => {
 
 const requireDb = (env) => {
   if (!env.DB) {
-    throw new Response(JSON.stringify({ error: "D1 database binding DB is missing" }), {
-      status: 500,
-      headers: { "content-type": "application/json; charset=utf-8" },
-    });
+    throw json({ error: "D1 database binding DB is missing" }, { status: 500 });
   }
   return env.DB;
 };
 
 const normalizeProfile = (profile = {}) => {
-  const name = String(profile.name || "Your Name").trim().slice(0, 80) || "Your Name";
+  const name = cleanText(profile.name || "Your Name", 80) || "Your Name";
   const username = normalizeUsername(profile.username || profile.handle, name);
   const handle = `@${username}`;
-  const website = String(profile.website || "").trim().slice(0, 180);
+  const website = cleanText(profile.website || "", 180);
+  const email = cleanText(profile.email || "", 120).toLowerCase();
   return {
-    id: String(profile.id || "").trim(),
+    id: cleanText(profile.id || "", 120),
     name,
     username,
     handle,
-    email: String(profile.email || "").trim().slice(0, 120),
-    location: String(profile.location || "").trim().slice(0, 80),
-    industry: String(profile.industry || "Exploring").trim().slice(0, 40),
-    stage: String(profile.stage || "I'm actively building").trim().slice(0, 80),
-    bio: String(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.").trim().slice(0, 400),
+    email: isValidEmail(email) ? email : "",
+    location: cleanText(profile.location || "", 80),
+    industry: cleanText(profile.industry || "Exploring", 40),
+    stage: cleanText(profile.stage || "I'm actively building", 80),
+    bio: cleanText(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.", 400),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
-    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 250000),
-    coverUrl: String(profile.coverUrl || profile.cover_url || "").trim().slice(0, 250000),
-    headline: String(profile.headline || "").trim().slice(0, 140),
+    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 750000),
+    coverUrl: String(profile.coverUrl || profile.cover_url || "").trim().slice(0, 1500000),
+    headline: cleanText(profile.headline || "", 140),
     website: /^https?:\/\//i.test(website) ? website : website ? `https://${website}` : "",
-    lookingFor: String(profile.lookingFor || profile.looking_for || "").trim().slice(0, 160),
-    goal: String(profile.goal || "").trim().slice(0, 160),
+    lookingFor: cleanText(profile.lookingFor || profile.looking_for || "", 160),
+    goal: cleanText(profile.goal || "", 160),
   };
 };
 
@@ -242,8 +278,8 @@ async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 30
 }
 
 async function recordRegistrationEmail(db, source, email, details = {}) {
-  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
-  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+  const normalizedEmail = cleanText(email, 120).toLowerCase();
+  if (!isValidEmail(normalizedEmail)) return null;
 
   const id = createId("registration_email");
   try {
@@ -345,8 +381,8 @@ async function sendOwnerNotification(db, env, type, subject, payload) {
 }
 
 async function sendSignupReceivedEmail(db, env, email, details = {}) {
-  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
-  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+  const normalizedEmail = cleanText(email, 120).toLowerCase();
+  if (!isValidEmail(normalizedEmail)) return null;
   const username = details.handle || (details.username ? `@${details.username}` : "");
   return sendEmailNotification(db, env, "signup_received", normalizedEmail, "We received your fear.social signup", {
     message: "Your fear.social signup was received.",
@@ -359,8 +395,8 @@ async function sendSignupReceivedEmail(db, env, email, details = {}) {
 }
 
 async function createEmailVerification(db, env, purpose, email, details = {}) {
-  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
-  if (!normalizedEmail || !normalizedEmail.includes("@")) return null;
+  const normalizedEmail = cleanText(email, 120).toLowerCase();
+  if (!isValidEmail(normalizedEmail)) return null;
 
   const username = normalizeUsername(details.username || details.handle || normalizedEmail.split("@")[0], "founder");
   const handle = details.handle || `@${username}`;
@@ -592,8 +628,8 @@ async function verifyAppleIdentityToken(idToken, clientId) {
 async function createOrLinkOAuthUser(db, request, profile) {
   const provider = String(profile.provider || "oauth").trim().toLowerCase();
   const providerLabel = provider === "apple" ? "Apple" : provider === "google" ? "Google" : "OAuth";
-  const email = String(profile.email || "").trim().toLowerCase().slice(0, 120);
-  if (!email || !email.includes("@")) return { error: `${providerLabel} account did not provide a valid email`, status: 400 };
+  const email = cleanText(profile.email || "", 120).toLowerCase();
+  if (!isValidEmail(email)) return { error: `${providerLabel} account did not provide a valid email`, status: 400 };
   let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
   if (!user) {
     const username = normalizeUsername(profile.username || email.split("@")[0], "founder");
@@ -660,14 +696,25 @@ const parseMediaList = (value) => {
   try {
     const parsed = typeof value === "string" ? JSON.parse(value || "[]") : value;
     if (!Array.isArray(parsed)) return [];
+    let totalUrlBytes = 0;
     return parsed
-      .map((item) => ({
-        id: String(item?.id || createId("media")),
-        kind: item?.kind === "video" ? "video" : "image",
-        url: String(item?.url || "").trim(),
-        alt: String(item?.alt || "").slice(0, 160),
-      }))
-      .filter((item) => item.url && item.url.length <= 5500000 && (/^https:\/\//.test(item.url) || /^data:(image|video)\//.test(item.url)))
+      .map((item) => {
+        const url = String(item?.url || "").trim();
+        totalUrlBytes += url.length;
+        return {
+          id: cleanText(item?.id || createId("media"), 80),
+          kind: item?.kind === "video" ? "video" : "image",
+          url,
+          alt: cleanText(item?.alt || "", 160),
+        };
+      })
+      .filter(
+        (item) =>
+          item.url &&
+          totalUrlBytes <= 6500000 &&
+          item.url.length <= (item.kind === "video" ? 5500000 : 1800000) &&
+          (/^https:\/\//.test(item.url) || /^data:(image|video)\//.test(item.url))
+      )
       .slice(0, 4);
   } catch {
     return [];
@@ -1012,9 +1059,9 @@ async function getBootstrap(db, user) {
 }
 
 async function completeVerification(db, email, code, purpose = "") {
-  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  const normalizedEmail = cleanText(email, 120).toLowerCase();
   const normalizedCode = String(code || "").trim();
-  if (!normalizedEmail || !normalizedEmail.includes("@") || !/^\d{6}$/.test(normalizedCode)) return null;
+  if (!isValidEmail(normalizedEmail) || !/^\d{6}$/.test(normalizedCode)) return null;
   const verification = await db
     .prepare(
       `SELECT * FROM email_verifications
@@ -1034,9 +1081,9 @@ async function completeVerification(db, email, code, purpose = "") {
 }
 
 async function findPasswordVerification(db, email, code) {
-  const normalizedEmail = String(email || "").trim().toLowerCase().slice(0, 120);
+  const normalizedEmail = cleanText(email, 120).toLowerCase();
   const normalizedCode = String(code || "").trim();
-  if (!normalizedEmail || !normalizedEmail.includes("@") || !/^\d{6}$/.test(normalizedCode)) return null;
+  if (!isValidEmail(normalizedEmail) || !/^\d{6}$/.test(normalizedCode)) return null;
   return db
     .prepare(
       `SELECT * FROM email_verifications
@@ -1053,7 +1100,7 @@ async function findPasswordVerification(db, email, code) {
 }
 
 async function findUserByIdentifier(db, identifier = "") {
-  const clean = String(identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+  const clean = cleanText(identifier, 120).toLowerCase().replace(/^@/, "");
   if (!clean) return null;
   return db
     .prepare(
@@ -1083,6 +1130,14 @@ async function handleRequest({ request, env, params }) {
   const path = `/${rawPath}`;
 
   if (method === "OPTIONS") return new Response(null, { status: 204 });
+  if (!["GET", "POST", "PUT", "DELETE"].includes(method)) {
+    return json({ error: "Method not allowed" }, { status: 405, headers: { allow: "GET, POST, PUT, DELETE, OPTIONS" } });
+  }
+
+  if (method !== "GET") {
+    const limited = await enforceRateLimit(db, request, `global-${method.toLowerCase()}`, 120, 600);
+    if (limited) return limited;
+  }
 
   if (method === "GET" && path === "/stats") {
     return json({ stats: await getStats(db) });
@@ -1128,11 +1183,12 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/request-code") {
     const limited = await enforceRateLimit(db, request, "auth-request-code", 5, 600);
     if (limited) return limited;
-    const identifier = String(body.identifier || body.email || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
-    const identifiedUser = !String(body.email || "").includes("@") ? await findUserByIdentifier(db, identifier) : null;
-    const email = String(body.email || identifiedUser?.email || "").trim().toLowerCase().slice(0, 120);
+    const identifier = cleanText(body.identifier || body.email || "", 120).toLowerCase().replace(/^@/, "");
+    const bodyEmail = cleanText(body.email || "", 120).toLowerCase();
+    const identifiedUser = !isValidEmail(bodyEmail) ? await findUserByIdentifier(db, identifier) : null;
+    const email = cleanText(bodyEmail || identifiedUser?.email || "", 120).toLowerCase();
     const username = normalizeUsername(body.username || email.split("@")[0], "founder");
-    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
+    if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     const existing = await db.prepare("SELECT handle FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
     const purpose = ["login", "password"].includes(body.purpose) ? body.purpose : "login";
     const verification = await createEmailVerification(db, env, purpose, email, {
@@ -1159,7 +1215,7 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/login") {
     const limited = await enforceRateLimit(db, request, "auth-login", 8, 600);
     if (limited) return limited;
-    const identifier = String(body.identifier || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+    const identifier = cleanText(body.identifier || "", 120).toLowerCase().replace(/^@/, "");
     const password = String(body.password || "");
     if (!identifier || !password) return json({ error: "Username or email and password required" }, { status: 400 });
     const user = await findUserByIdentifier(db, identifier);
@@ -1182,8 +1238,9 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/verify") {
     const limited = await enforceRateLimit(db, request, "auth-verify", 10, 600);
     if (limited) return limited;
-    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const email = cleanText(body.email || "", 120).toLowerCase();
     const password = String(body.password || "");
+    if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     if (password && password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
     let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
     if (!user && body.acceptedTerms !== true) {
@@ -1240,9 +1297,10 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/password") {
     const limited = await enforceRateLimit(db, request, "auth-password", 5, 600);
     if (limited) return limited;
-    const identifier = String(body.identifier || body.email || "").trim().toLowerCase().replace(/^@/, "").slice(0, 120);
+    const identifier = cleanText(body.identifier || body.email || "", 120).toLowerCase().replace(/^@/, "");
     const user = await findUserByIdentifier(db, identifier);
-    const email = String(body.email || user?.email || "").trim().toLowerCase().slice(0, 120);
+    const email = cleanText(body.email || user?.email || "", 120).toLowerCase();
+    if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     const code = String(body.code || "").trim();
     const password = String(body.password || "");
     if (password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
@@ -1413,10 +1471,10 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/waitlist") {
     const limited = await enforceRateLimit(db, request, "waitlist", 8, 600);
     if (limited) return limited;
-    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const email = cleanText(body.email || "", 120).toLowerCase();
     const username = normalizeUsername(body.username || email.split("@")[0], "founder");
     const handle = `@${username}`;
-    if (!email || !email.includes("@")) return json({ error: "Valid email required" }, { status: 400 });
+    if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     const existingWaitlist = await db.prepare("SELECT username FROM waitlist WHERE email = ?").bind(email).first();
     if (existingWaitlist) {
       const existingUsername = existingWaitlist.username || username;
@@ -1520,6 +1578,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "PUT" && path === "/profile") {
+    const limited = await enforceRateLimit(db, request, "profile-update", 20, 600);
+    if (limited) return limited;
     const profile = normalizeProfile(body.profile);
     const shouldNotify = profile.email && profile.email !== user.email;
     const duplicate = profile.email
@@ -1596,13 +1656,13 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/posts") {
     const limited = await enforceRateLimit(db, request, "posts", 20, 600);
     if (limited) return limited;
-    const content = String(body.content || "").trim().slice(0, 1200);
+    const content = cleanText(body.content || "", 1200);
     const media = parseMediaList(body.media);
     if (!content && media.length === 0) return json({ error: "Write something or attach media before posting" }, { status: 400 });
     const id = createId("post");
-    const tag = String(body.tag || user.industry || "Exploring").slice(0, 40);
-    const type = String(body.type || "Update").slice(0, 40);
-    const stage = String(body.stage || "Building").slice(0, 40);
+    const tag = cleanText(body.tag || user.industry || "Exploring", 40);
+    const type = cleanText(body.type || "Update", 40);
+    const stage = cleanText(body.stage || "Building", 40);
     await db
       .prepare("INSERT INTO posts (id, user_id, type, tag, stage, content, media) VALUES (?, ?, ?, ?, ?, ?, ?)")
       .bind(id, user.id, type, tag, stage, content, JSON.stringify(media))
@@ -1615,8 +1675,8 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/groups") {
     const limited = await enforceRateLimit(db, request, "groups", 10, 600);
     if (limited) return limited;
-    const name = String(body.name || "").trim().slice(0, 80);
-    const description = String(body.description || "").trim().slice(0, 500);
+    const name = cleanText(body.name || "", 80);
+    const description = cleanText(body.description || "", 500);
     if (name.length < 2) return json({ error: "Group name required" }, { status: 400 });
     const baseSlug = normalizeUsername(name, "group");
     const existing = await db.prepare("SELECT id FROM groups WHERE slug = ?").bind(baseSlug).first();
@@ -1631,6 +1691,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "groups" && segments[2] === "join") {
+    const limited = await enforceRateLimit(db, request, "groups-join", 30, 600);
+    if (limited) return limited;
     const groupId = segments[1];
     const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
     if (!group) return json({ error: "Group not found" }, { status: 404 });
@@ -1640,6 +1702,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "groups" && segments[2] === "invite") {
+    const limited = await enforceRateLimit(db, request, "groups-invite", 15, 600);
+    if (limited) return limited;
     const groupId = segments[1];
     const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
     if (!group) return json({ error: "Group not found" }, { status: 404 });
@@ -1663,6 +1727,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "groups" && segments[2] === "announcements") {
+    const limited = await enforceRateLimit(db, request, "groups-announcements", 12, 600);
+    if (limited) return limited;
     const groupId = segments[1];
     const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
     if (!group) return json({ error: "Group not found" }, { status: 404 });
@@ -1671,8 +1737,8 @@ async function handleRequest({ request, env, params }) {
     const official = group.id === FEAR_GROUP_ID || group.kind === "official";
     const canAnnounce = member && (official ? isAdminUser(user) : membership.role === "admin" || group.owner_user_id === user.id || isAdminUser(user));
     if (!canAnnounce) return json({ error: "Only group admins can post announcements" }, { status: 403 });
-    const title = String(body.title || "").trim().slice(0, 100);
-    const text = String(body.body || body.text || "").trim().slice(0, 1200);
+    const title = cleanText(body.title || "", 100);
+    const text = cleanText(body.body || body.text || "", 1200);
     if (!title || !text) return json({ error: "Announcement title and body required" }, { status: 400 });
     await db.prepare("INSERT INTO group_announcements (id, group_id, user_id, title, body) VALUES (?, ?, ?, ?, ?)").bind(createId("group_announcement"), groupId, user.id, title, text).run();
     const members = await db.prepare("SELECT user_id FROM group_members WHERE group_id = ? AND status = 'active' AND user_id <> ? LIMIT 200").bind(groupId, user.id).all();
@@ -1689,7 +1755,7 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "posts" && segments[2] === "comments") {
     const limited = await enforceRateLimit(db, request, "comments", 30, 600);
     if (limited) return limited;
-    const text = String(body.text || "").trim().slice(0, 600);
+    const text = cleanText(body.text || "", 600);
     if (!text) return json({ error: "Comment text required" }, { status: 400 });
     await db
       .prepare("INSERT INTO comments (id, post_id, user_id, text) VALUES (?, ?, ?, ?)")
@@ -1707,16 +1773,18 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "PUT" && segments[0] === "posts" && segments[1]) {
+    const limited = await enforceRateLimit(db, request, "posts-edit", 30, 600);
+    if (limited) return limited;
     const postId = segments[1];
     const post = await db.prepare("SELECT * FROM posts WHERE id = ?").bind(postId).first();
     if (!post) return json({ error: "Post not found" }, { status: 404 });
     if (post.user_id !== user.id) return json({ error: "You can only edit your own posts" }, { status: 403 });
-    const content = String(body.content || "").trim().slice(0, 1200);
+    const content = cleanText(body.content || "", 1200);
     const media = body.media === undefined ? parseMediaList(post.media) : parseMediaList(body.media);
     if (!content && media.length === 0) return json({ error: "Post needs text or media" }, { status: 400 });
-    const type = String(body.type || post.type || "Update").slice(0, 40);
-    const tag = String(body.tag || post.tag || user.industry || "Exploring").slice(0, 40);
-    const stage = String(body.stage || post.stage || "Building").slice(0, 40);
+    const type = cleanText(body.type || post.type || "Update", 40);
+    const tag = cleanText(body.tag || post.tag || user.industry || "Exploring", 40);
+    const stage = cleanText(body.stage || post.stage || "Building", 40);
     await db
       .prepare("UPDATE posts SET content = ?, type = ?, tag = ?, stage = ?, media = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
       .bind(content, type, tag, stage, JSON.stringify(media), postId, user.id)
@@ -1725,6 +1793,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "DELETE" && segments[0] === "posts" && segments[1]) {
+    const limited = await enforceRateLimit(db, request, "posts-delete", 20, 600);
+    if (limited) return limited;
     const postId = segments[1];
     const post = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(postId).first();
     if (!post) return json({ error: "Post not found" }, { status: 404 });
@@ -1737,6 +1807,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "posts" && (segments[2] === "like" || segments[2] === "save")) {
+    const limited = await enforceRateLimit(db, request, "posts-react", 90, 600);
+    if (limited) return limited;
     const kind = segments[2] === "like" ? "like" : "save";
     const existing = await db
       .prepare("SELECT 1 FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?")
@@ -1751,6 +1823,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "connect") {
+    const limited = await enforceRateLimit(db, request, "people-connect", 60, 600);
+    if (limited) return limited;
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
     const connected = await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
@@ -1765,6 +1839,8 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "block") {
+    const limited = await enforceRateLimit(db, request, "people-block", 30, 600);
+    if (limited) return limited;
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
     await db.prepare("INSERT OR IGNORE INTO user_blocks (user_id, blocked_user_id) VALUES (?, ?)").bind(user.id, targetUserId).run();
@@ -1778,8 +1854,10 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "people" && segments[2] === "message") {
+    const limited = await enforceRateLimit(db, request, "people-message", 30, 600);
+    if (limited) return limited;
     const targetUserId = segments[1];
-    const text = String(body.text || "").trim().slice(0, 800);
+    const text = cleanText(body.text || "", 800);
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
     const target = await db.prepare("SELECT id, name FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
     if (!target) return json({ error: "User not found" }, { status: 404 });
@@ -1822,9 +1900,11 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && path === "/reports") {
-    const targetType = String(body.targetType || "").trim().slice(0, 40);
-    const targetId = String(body.targetId || "").trim().slice(0, 120);
-    const reason = String(body.reason || "").trim().slice(0, 600);
+    const limited = await enforceRateLimit(db, request, "reports", 15, 600);
+    if (limited) return limited;
+    const targetType = cleanText(body.targetType || "", 40);
+    const targetId = cleanText(body.targetId || "", 120);
+    const reason = cleanText(body.reason || "", 600);
     if (!targetType || !targetId || !reason) return json({ error: "Report target and reason required" }, { status: 400 });
     await db
       .prepare("INSERT INTO content_reports (id, reporter_user_id, target_type, target_id, reason) VALUES (?, ?, ?, ?, ?)")
@@ -1840,9 +1920,11 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && path === "/media") {
+    const limited = await enforceRateLimit(db, request, "media", 20, 600);
+    if (limited) return limited;
     const url = String(body.url || "").trim().slice(0, 500);
-    const kind = String(body.kind || "image").trim().slice(0, 40);
-    const alt = String(body.alt || "").trim().slice(0, 240);
+    const kind = cleanText(body.kind || "image", 40);
+    const alt = cleanText(body.alt || "", 240);
     if (!/^https:\/\//.test(url)) return json({ error: "A secure media URL is required" }, { status: 400 });
     const id = createId("media");
     await db.prepare("INSERT INTO media_assets (id, user_id, kind, url, alt) VALUES (?, ?, ?, ?, ?)").bind(id, user.id, kind, url, alt).run();
@@ -1860,17 +1942,23 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
+    const limited = await enforceRateLimit(db, request, "events-rsvp", 60, 600);
+    if (limited) return limited;
     await toggleRow(db, "event_rsvps", user.id, "event_id", Number(segments[1]));
     return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "mentors" && segments[2] === "request") {
+    const limited = await enforceRateLimit(db, request, "mentors-request", 30, 600);
+    if (limited) return limited;
     await toggleRow(db, "mentor_requests", user.id, "mentor_id", segments[1]);
     return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "messages" && segments[2] === "send") {
-    const text = String(body.text || "").trim().slice(0, 800);
+    const limited = await enforceRateLimit(db, request, "messages-send", 40, 600);
+    if (limited) return limited;
+    const text = cleanText(body.text || "", 800);
     if (!text) return json({ error: "Message text required" }, { status: 400 });
     const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
     if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
@@ -1897,11 +1985,12 @@ async function handleRequest({ request, env, params }) {
 }
 
 export const onRequest = async (context) => {
+  const requestId = crypto.randomUUID();
   try {
     return await handleRequest(context);
   } catch (error) {
     if (error instanceof Response) return error;
-    console.error("Unhandled API error", error);
-    return json({ error: "Server error" }, { status: 500 });
+    console.error("Unhandled API error", { requestId, message: error?.message, stack: error?.stack });
+    return json({ error: "Server error", requestId }, { status: 500 });
   }
 };

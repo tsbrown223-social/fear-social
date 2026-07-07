@@ -1,0 +1,5 @@
+Contact: mailto:contact@fear.social
+Preferred-Languages: en
+Canonical: https://fear.social/.well-known/security.txt
+Policy: https://fear.social/#privacy
+Hiring: https://fear.social/
