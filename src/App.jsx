@@ -337,8 +337,10 @@ const isVerifiedIdentity=person=>{
   return Boolean(person?.verified)||handle==="@taylorbrown"||email==="tsbrown223@gmail.com"||name==="taylor brown";
 };
 const VerifiedBadge=({size=16})=>(
-  <span aria-label="Verified account" title="Verified account" style={{width:size,height:size,borderRadius:"50%",background:C.accent,color:"#fff",display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 0 0 2px rgba(22,199,78,0.12)"}}>
-    <Icon name="check" size={Math.max(10,size-5)} color="currentColor" strokeWidth={3}/>
+  <span aria-label="Verified account" title="Verified account" style={{width:size,height:size,minWidth:size,borderRadius:"50%",background:C.accent,color:"#fff",display:"inline-flex",alignItems:"center",justifyContent:"center",flex:"0 0 auto",boxShadow:"0 0 0 2px rgba(22,199,78,0.12)",lineHeight:0,verticalAlign:"middle"}}>
+    <svg viewBox="0 0 16 16" width={Math.round(size*0.68)} height={Math.round(size*0.68)} aria-hidden="true" focusable="false" style={{display:"block",overflow:"visible"}}>
+      <path d="M4.3 8.25 6.75 10.7 11.8 5.45" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
   </span>
 );
 const NameWithVerified=({name,person,size=16,style={},nameStyle={}})=>(
