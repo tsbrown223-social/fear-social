@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const GR = "linear-gradient(135deg, #111318 0%, #16C74E 100%)";
 const GR2 = "linear-gradient(135deg, #0a0c0f 0%, #0d2018 60%, #16C74E 100%)";
@@ -1165,6 +1165,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [feedMode,setFeedMode]=useLocalState("fear-feed-mode","forYou");
   const [composer,setComposer]=useState("");
   const [composerMedia,setComposerMedia]=useState([]);
+  const [cameraOpen,setCameraOpen]=useState(false);
   const [postType,setPostType]=useState("Update");
   const [commentInputs,setCommentInputs]=useState({});
   const [openComments,setOpenComments]=useState({});
@@ -1354,6 +1355,14 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     }
   };
   const removeComposerMedia=id=>setComposerMedia(media=>media.filter(item=>item.id!==id));
+  const addCapturedMedia=item=>{
+    if(!item?.url)return notify("Could not capture media","error");
+    if(composerMedia.length>=4)return notify("Remove a file before adding more media","error");
+    setComposerMedia(media=>[...media,item].slice(0,4));
+    setPostType(item.kind==="video"?"Launch":postType);
+    notify(item.kind==="video"?"Video captured":"Photo captured");
+    setCameraOpen(false);
+  };
   const publish=async()=>{
     const media=composerMedia.filter(item=>safeMediaUrl(item.url,item.kind));
     if(!composer.trim()&&media.length===0)return notify("Write something or attach media before publishing","error");
@@ -1682,7 +1691,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <MediaPreviewGrid media={composerMedia} onRemove={removeComposerMedia}/>
                     <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
                       {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} data-label={t} aria-pressed={postType===t} onClick={()=>setPostType(t)} className="bs post-type-btn" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.1}}>{t}</button>)}
-                      <label className="bs composer-media-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Photo/video<input aria-label="Attach photos or videos to post" type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
+                      <button type="button" onClick={()=>setCameraOpen(true)} className="bs composer-media-btn" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Record</button>
+                      <label className="bs composer-media-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Upload<input aria-label="Attach photos or videos to post" type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
                       <GBtn sm className="composer-publish-btn" disabled={!composer.trim()&&composerMedia.length===0} onClick={publish} style={{marginLeft:"auto"}}>Publish</GBtn>
                     </div>
                   </div>
@@ -1743,6 +1753,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} aria-label={id==="notifications"?`${label}, ${unread} unread`:label}><span><Icon name={icon} size={18} color="currentColor" filled={id==="notifications"&&unread>0}/></span>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
       </nav>
+      {cameraOpen&&<CameraCaptureModal onClose={()=>setCameraOpen(false)} onCapture={addCapturedMedia} notify={notify}/>}
       {editProfile&&(
         <div className="edit-modal" role="dialog" aria-modal="true" aria-label="Edit your founder card" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)} onKeyDown={e=>e.key==="Escape"&&setEditProfile(false)}>
           <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
@@ -1782,6 +1793,127 @@ function MediaPreviewGrid({media=[],onRemove}){
   const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
   if(safe.length===0)return null;
   return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><div key={item.id||item.url} style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:C.bg,minHeight:safe.length===1?260:170}}>{item.kind==="video"?<video src={item.url} controls playsInline style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}{onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}</div>)}</div>;
+}
+function CameraCaptureModal({onClose,onCapture,notify}){
+  const videoRef=useRef(null);
+  const streamRef=useRef(null);
+  const recorderRef=useRef(null);
+  const chunksRef=useRef([]);
+  const stopTimerRef=useRef(null);
+  const cancelCaptureRef=useRef(false);
+  const [mode,setMode]=useState("photo");
+  const [facing,setFacing]=useState("user");
+  const [recording,setRecording]=useState(false);
+  const [ready,setReady]=useState(false);
+  const [error,setError]=useState("");
+  const stopStream=useCallback(()=>{
+    if(stopTimerRef.current)clearTimeout(stopTimerRef.current);
+    stopTimerRef.current=null;
+    streamRef.current?.getTracks?.().forEach(track=>track.stop());
+    streamRef.current=null;
+    setReady(false);
+  },[]);
+  useEffect(()=>{
+    let active=true;
+    const start=async()=>{
+      setError("");
+      setReady(false);
+      stopStream();
+      try{
+        if(!navigator?.mediaDevices?.getUserMedia)throw new Error("Camera capture is not supported in this browser.");
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1080},height:{ideal:1920}},audio:mode==="video"});
+        if(!active){
+          stream.getTracks().forEach(track=>track.stop());
+          return;
+        }
+        streamRef.current=stream;
+        if(videoRef.current){
+          videoRef.current.srcObject=stream;
+          await videoRef.current.play().catch(()=>{});
+        }
+        setReady(true);
+      }catch(err){
+        setError(err?.message||"Allow camera access to record a post.");
+      }
+    };
+    start();
+    return()=>{active=false;stopStream();};
+  },[facing,mode,stopStream]);
+  const capturePhoto=()=>{
+    if(!videoRef.current||!ready)return;
+    const video=videoRef.current;
+    const canvas=document.createElement("canvas");
+    canvas.width=video.videoWidth||1080;
+    canvas.height=video.videoHeight||1920;
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    onCapture({id:`camera_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"image",url:canvas.toDataURL("image/jpeg",0.86),alt:"Camera photo"});
+  };
+  const startRecording=()=>{
+    if(!streamRef.current||recording)return;
+    if(typeof MediaRecorder==="undefined")return setError("Video recording is not supported in this browser.");
+    const preferred=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported?.(type))||"";
+    cancelCaptureRef.current=false;
+    chunksRef.current=[];
+    try{
+      const recorder=new MediaRecorder(streamRef.current,mimeType?{mimeType}:undefined);
+      recorderRef.current=recorder;
+      recorder.ondataavailable=event=>{if(event.data?.size)chunksRef.current.push(event.data);};
+      recorder.onstop=()=>{
+        setRecording(false);
+        if(stopTimerRef.current)clearTimeout(stopTimerRef.current);
+        stopTimerRef.current=null;
+        const blob=new Blob(chunksRef.current,{type:recorder.mimeType||"video/webm"});
+        chunksRef.current=[];
+        if(cancelCaptureRef.current)return;
+        if(blob.size>4*1024*1024){
+          setError("That clip is over 4 MB. Try a shorter video for now.");
+          return;
+        }
+        const reader=new FileReader();
+        reader.onerror=()=>setError("Could not prepare that video.");
+        reader.onload=()=>onCapture({id:`camera_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"video",url:String(reader.result||""),alt:"Camera video"});
+        reader.readAsDataURL(blob);
+      };
+      recorder.start(250);
+      setRecording(true);
+      stopTimerRef.current=setTimeout(()=>recorder.state==="recording"&&recorder.stop(),15000);
+    }catch(err){
+      setError(err?.message||"Could not start recording.");
+    }
+  };
+  const stopRecording=()=>recorderRef.current?.state==="recording"&&recorderRef.current.stop();
+  const close=()=>{
+    cancelCaptureRef.current=true;
+    if(recording)stopRecording();
+    stopStream();
+    onClose();
+  };
+  return <div role="dialog" aria-modal="true" aria-label="Record a photo or video" style={{position:"fixed",inset:0,zIndex:8000,background:"rgba(0,0,0,.72)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={close}>
+    <div className="camera-sheet" style={{width:"min(520px,100%)",background:"#0D0F14",border:"1px solid rgba(255,255,255,.12)",borderRadius:24,overflow:"hidden",boxShadow:"0 32px 120px rgba(0,0,0,.45)"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:14,borderBottom:"1px solid rgba(255,255,255,.1)"}}>
+        <div><div style={{fontSize:11,fontWeight:950,letterSpacing:1.8,textTransform:"uppercase",color:C.accent}}>Create in camera</div><div style={{fontFamily:"Georgia,serif",fontSize:24,fontWeight:900,color:"#fff",letterSpacing:0}}>Record a post</div></div>
+        <button onClick={close} aria-label="Close camera" className="bs" style={{width:40,height:40,borderRadius:"50%",border:"1px solid rgba(255,255,255,.16)",background:"rgba(255,255,255,.08)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={18}/></button>
+      </div>
+      <div style={{padding:14}}>
+        <div style={{position:"relative",borderRadius:20,overflow:"hidden",background:"#000",aspectRatio:"9 / 16",maxHeight:"62vh",margin:"0 auto",border:"1px solid rgba(255,255,255,.12)"}}>
+          <video ref={videoRef} muted playsInline autoPlay style={{display:"block",width:"100%",height:"100%",objectFit:"cover",transform:facing==="user"?"scaleX(-1)":"none"}}/>
+          {!ready&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",padding:24,color:"rgba(255,255,255,.72)",fontSize:14,lineHeight:1.6}}>{error||"Starting camera..."}</div>}
+          {recording&&<div style={{position:"absolute",top:14,left:14,display:"inline-flex",alignItems:"center",gap:8,background:"rgba(229,57,53,.92)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:950}}><span style={{width:8,height:8,borderRadius:"50%",background:"#fff"}}/> Recording</div>}
+        </div>
+        {error&&<p role="alert" style={{marginTop:12,color:"#fecaca",fontSize:13,lineHeight:1.5}}>{error}</p>}
+        <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:14,flexWrap:"wrap"}}>
+          {["photo","video"].map(next=><button key={next} onClick={()=>!recording&&setMode(next)} className="bs" aria-pressed={mode===next} style={{border:"1px solid rgba(255,255,255,.14)",background:mode===next?C.accent:"rgba(255,255,255,.08)",color:mode===next?"#fff":"rgba(255,255,255,.74)",borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:950,textTransform:"capitalize"}}>{next}</button>)}
+          <button onClick={()=>!recording&&setFacing(facing==="user"?"environment":"user")} className="bs" style={{border:"1px solid rgba(255,255,255,.14)",background:"rgba(255,255,255,.08)",color:"#fff",borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:950}}>Flip</button>
+        </div>
+        <div style={{display:"flex",justifyContent:"center",marginTop:16}}>
+          {mode==="photo"?<button disabled={!ready} onClick={capturePhoto} className="bs" style={{width:72,height:72,borderRadius:"50%",border:"5px solid rgba(255,255,255,.72)",background:ready?"#fff":"rgba(255,255,255,.34)",boxShadow:"0 0 0 8px rgba(255,255,255,.1)",fontSize:0}}>Capture photo</button>:<button disabled={!ready} onClick={recording?stopRecording:startRecording} className="bs" style={{width:72,height:72,borderRadius:"50%",border:"5px solid rgba(255,255,255,.72)",background:recording?C.coral:C.accent,boxShadow:"0 0 0 8px rgba(255,255,255,.1)",color:"#fff",fontSize:11,fontWeight:950}}>{recording?"Stop":"Rec"}</button>}
+        </div>
+        <p style={{marginTop:14,textAlign:"center",color:"rgba(255,255,255,.48)",fontSize:12,lineHeight:1.5}}>Videos auto-stop after 15 seconds and must stay under 4 MB.</p>
+      </div>
+    </div>
+  </div>;
 }
 function OfficialReelCard({post}){
   if(post?.type!=="Reel"||post?.handle!=="@fear.social")return null;
