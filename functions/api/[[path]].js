@@ -743,6 +743,7 @@ async function getPosts(db, userId) {
         EXISTS(SELECT 1 FROM user_connections c WHERE c.user_id = ? AND c.target_user_id = p.user_id) AS following_author
        FROM posts p
        JOIN users u ON u.id = p.user_id
+       WHERE p.user_id <> 'demo-user' AND u.id <> 'demo-user'
        ORDER BY datetime(p.created_at) DESC`
     )
     .bind(userId, userId, userId)
@@ -753,6 +754,7 @@ async function getPosts(db, userId) {
       `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url, u.verified_badge AS user_verified_badge
        FROM comments c
        JOIN users u ON u.id = c.user_id
+       WHERE c.user_id <> 'demo-user' AND u.id <> 'demo-user'
        ORDER BY datetime(c.created_at) ASC`
     )
     .all();
@@ -877,6 +879,33 @@ const officialReelContent = (dateKey) => {
   };
 };
 
+const OFFICIAL_EVERGREEN_POSTS = [
+  {
+    id: "fear-official-start-here",
+    type: "Update",
+    tag: "Exploring",
+    stage: "Official",
+    content:
+      "What fear.social is: a social platform for people taking their first real step into business, careers, projects, and professional relationships.\n\nBuild a profile, post what you are working toward, find people in your lane, message them, join groups, and turn the scary first move into visible momentum.",
+  },
+  {
+    id: "fear-official-opportunities",
+    type: "Update",
+    tag: "Opportunities",
+    stage: "Official",
+    content:
+      "Deals is built for jobs, gigs, volunteer roles, internships, collabs, and early opportunities.\n\nThe goal is simple: help members find openings that match their field, goals, location, and first-step ambition instead of scrolling through generic listings.",
+  },
+  {
+    id: "fear-official-community",
+    type: "Update",
+    tag: "Community",
+    stage: "Official",
+    content:
+      "The fear. group, DMs, profiles, posts, and activity feed are here to make business feel less intimidating.\n\nYou do not need to already feel like a founder. You need a place to start, ask, learn, connect, and keep moving.",
+  },
+];
+
 async function ensureUserFollowsOfficial(db, userId) {
   if (!userId || userId === OFFICIAL_USER_ID || userId === "demo-user") return;
   await db
@@ -938,6 +967,16 @@ async function ensureOfficialDailyReelPost(db) {
     .prepare("UPDATE posts SET type = 'Reel', tag = ?, stage = 'Daily', content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
     .bind(reel.tag, reel.content, postId, OFFICIAL_USER_ID)
     .run();
+  for (const post of OFFICIAL_EVERGREEN_POSTS) {
+    await db
+      .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, ?, ?, ?, ?, '[]', CURRENT_TIMESTAMP)")
+      .bind(post.id, OFFICIAL_USER_ID, post.type, post.tag, post.stage, post.content)
+      .run();
+    await db
+      .prepare("UPDATE posts SET type = ?, tag = ?, stage = ?, content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+      .bind(post.type, post.tag, post.stage, post.content, post.id, OFFICIAL_USER_ID)
+      .run();
+  }
   await ensureAllUsersFollowOfficial(db);
 }
 
