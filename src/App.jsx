@@ -43,9 +43,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes slideDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);}}
 @keyframes heartbeat{0%,100%{transform:scale(1);}25%{transform:scale(1.4);}50%{transform:scale(1.1);}75%{transform:scale(1.3);}}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+@keyframes previewFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+@keyframes previewSweep{0%{transform:translateX(-120%);opacity:0;}12%,70%{opacity:.9;}100%{transform:translateX(120%);opacity:0;}}
+@keyframes signalRise{0%{transform:translateY(18px);opacity:0;}18%,82%{opacity:1;}100%{transform:translateY(-18px);opacity:0;}}
+@keyframes softBlink{0%,100%{opacity:.45;}50%{opacity:1;}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
+.preview-float{animation:previewFloat 5.5s ease-in-out infinite;}
+.preview-sweep{animation:previewSweep 4.8s ease-in-out infinite;}
+.signal-rise{animation:signalRise 5s ease-in-out infinite;}
+.soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
 .bs{transition:all 0.15s ease;}.bs:hover{transform:translateY(-2px);filter:brightness(1.08);}.bs:active{transform:scale(0.96);}
@@ -79,6 +87,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-light .landing-ticker{background:#FFFFFF!important;border-color:#E6EAF0!important;}
 .theme-light .landing-ticker span{color:#687080!important;}
 .theme-light .landing-platform,.theme-light .landing-launch,.theme-light .landing-cta,.theme-light .landing-footer{background:#F7F8FA!important;}
+.theme-light .landing-product-peek,.theme-light .landing-workflow{background:#F7F8FA!important;}
+.theme-light .landing-product-peek h2,.theme-light .landing-workflow h2{color:#0D0F14!important;}
+.theme-light .landing-product-peek p,.theme-light .landing-workflow p{color:#5C6675!important;}
+.theme-light .landing-mini-app{background:#FFFFFF!important;border-color:#E5E9F0!important;box-shadow:0 30px 90px rgba(13,15,20,0.1)!important;}
+.theme-light .landing-mini-card{background:#F7F8FA!important;border-color:#E5E9F0!important;color:#0D0F14!important;}
+.theme-light .landing-mini-dark{background:#111318!important;color:#fff!important;}
 .theme-light .landing-platform p,.theme-light .landing-launch p,.theme-light .landing-cta p{color:#5C6675!important;}
 .theme-light .landing-feature-grid .ch,.theme-light .landing-testimonial-grid .ch{background:#FFFFFF!important;border-color:#E5E9F0!important;box-shadow:0 18px 55px rgba(13,15,20,0.06)!important;}
 .theme-light .landing-card-title{color:#0D0F14!important;}
@@ -204,6 +218,15 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-section{padding:64px 18px!important;}
   .landing-section h2{font-size:40px!important;line-height:1.08!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
+  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards{grid-template-columns:1fr!important;}
+  .landing-mini-app{border-radius:22px!important;padding:12px!important;}
+  .landing-mini-topbar{overflow:hidden!important;}
+  .landing-mini-topbar .mini-nav-pill,.landing-mini-topbar .mini-live{display:none!important;}
+  .landing-mini-shell{grid-template-columns:1fr!important;}
+  .landing-mini-side{display:none!important;}
+  .landing-demo-tabs{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .landing-demo-tabs button{width:100%!important;justify-content:center!important;}
+  .landing-preview-layer{position:static!important;transform:none!important;margin-top:12px!important;}
   .landing-stats{grid-template-columns:repeat(2,1fr)!important;}
   .cookie-notice{left:12px!important;right:12px!important;bottom:12px!important;}
   .cookie-card{max-width:none!important;border-radius:18px!important;}
@@ -553,6 +576,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const [email,setEmail]=useState("");
   const [joined,setJoined]=useState(false);
   const [stats,setStats]=useState(REAL_STATS);
+  const [activeDemo,setActiveDemo]=useState("feed");
   useEffect(()=>{
     let active=true;
     fetch("/api/stats").then(res=>res.json()).then(data=>{if(active)setStats(data.stats||REAL_STATS);}).catch(()=>{});
@@ -570,6 +594,30 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   };
   const ticker=["First steps · ","Business ideas · ","Warm intros · ","Mentor requests · ","Build updates · ","Events · ","Private rooms · ","Opportunity alerts · "];
   const statRows=[["Beta status","Open"],["Emails captured",fmt(stats.waitlist)],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
+  const demoTabs=[
+    {id:"feed",label:"Feed",icon:"home",title:"A feed built for action.",copy:"Post what you are building, ask for feedback, and find people who understand the stage you are in.",metric:"For You"},
+    {id:"discover",label:"Discover",icon:"diamond",title:"Find people before you need them.",copy:"Browse future founders, students, operators, creators, and first-step builders by field and intent.",metric:"Profiles"},
+    {id:"messages",label:"DMs",icon:"mail",title:"Turn a follow into a real conversation.",copy:"Message people directly, follow up on asks, and keep business conversations inside one place.",metric:"Live DMs"},
+    {id:"deals",label:"Deals",icon:"briefcase",title:"Opportunities that fit your next move.",copy:"See jobs, gigs, internships, collabs, pilot customers, and early business openings tuned to your profile.",metric:"Matches"},
+  ];
+  const demo=demoTabs.find(t=>t.id===activeDemo)||demoTabs[0];
+  const workflowRows=[
+    ["Create your card","Build a profile that says what you want, what you are learning, and what kind of business step you are trying to take.","user"],
+    ["Post your first move","Ask for feedback, share a win, announce a launch, or simply say what you are exploring.","megaphone"],
+    ["Meet the right people","Follow founders, DM collaborators, join groups, and use opportunities to move from idea to action.","network"],
+    ["Keep momentum visible","Notifications, groups, saved posts, and deal matches make the platform feel alive after signup.","bell"],
+  ];
+  const communityCards=[
+    ["Student with an idea","Needs a first customer, a mentor, and a place to ask beginner questions without feeling behind."],
+    ["Creator building a product","Wants collaborators, feedback, launch support, and a lightweight professional network."],
+    ["Future operator","Looking for internships, local opportunities, startup tasks, and people already taking action."],
+  ];
+  const liveSignals=[
+    ["Sienna posted a launch update","Brand Management"],
+    ["Jacquelyn opened a fashion group","Fashion"],
+    ["Ryan saved a startup operations gig","Opportunity"],
+    ["Taylor received a new connection","Activity"],
+  ];
   const featureRows=[
     ["network","Builder Directory","Create a polished profile, discover people by ambition and industry, and turn cold browsing into warm introductions."],
     ["megaphone","Build Updates","Post progress, signal what you need, and keep mentors, collaborators, and early supporters close to the work."],
@@ -626,10 +674,72 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
           </div>
         </div>
+        <div className="landing-mini-app preview-float" aria-label="fear.social product preview" style={{width:"min(980px,100%)",marginTop:54,background:"rgba(16,17,20,0.92)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:28,padding:14,boxShadow:"0 34px 110px rgba(0,0,0,0.45)",position:"relative",overflow:"hidden"}}>
+          <div className="preview-sweep" style={{position:"absolute",top:0,bottom:0,width:"38%",background:"linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)",pointerEvents:"none"}}/>
+          <div className="landing-mini-topbar" style={{height:42,borderRadius:18,background:"#0B0C0E",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",gap:8,padding:"0 12px",color:"rgba(255,255,255,0.52)",fontSize:12,fontWeight:800}}>
+            <span style={{fontFamily:"Georgia,serif",fontSize:18,color:"#fff",marginRight:8}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></span>
+            {["Feed","Discover","Messages","Deals"].map(label=><span className="mini-nav-pill" key={label} style={{padding:"7px 10px",borderRadius:999,background:label==="Feed"?C.aLight:"transparent",color:label==="Feed"?C.accent:"rgba(255,255,255,0.42)"}}>{label}</span>)}
+            <span className="mini-live" style={{marginLeft:"auto",display:"inline-flex",alignItems:"center",gap:6,color:"rgba(255,255,255,0.6)"}}><span className="soft-blink" style={{width:8,height:8,borderRadius:"50%",background:C.accent}}/> live product</span>
+          </div>
+          <div className="landing-mini-shell" style={{display:"grid",gridTemplateColumns:"220px minmax(0,1fr) 230px",gap:12,marginTop:12}}>
+            <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>TB</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Taylor Brown</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>first-step builder</div></div></div>
+              {["2 new follows","1 unread DM","3 saved deals"].map((row,i)=><div key={row} className="signal-rise" style={{animationDelay:`${i*0.55}s`,display:"flex",alignItems:"center",gap:8,padding:"9px 0",borderTop:i?`1px solid rgba(255,255,255,0.07)`:"none",fontSize:12,color:"rgba(255,255,255,0.66)"}}><Icon name={i===0?"heart":i===1?"mail":"bookmark"} size={14} color={C.accent}/>{row}</div>)}
+            </div>
+            <div className="landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>SB</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Sienna Baron <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · just now</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
+              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Looking for feedback on my first pitch deck before I send it to local boutiques. Anyone open to a quick review?</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{["Comment","Message"].map((label,i)=><button key={label} style={{border:"1px solid rgba(255,255,255,0.1)",background:i?C.accent:"rgba(255,255,255,0.06)",color:i?"#fff":"rgba(255,255,255,0.74)",borderRadius:11,padding:"10px 12px",fontWeight:900}}>{label}</button>)}</div>
+            </div>
+            <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
+              <div style={{fontWeight:950,color:"#fff",marginBottom:12}}>Suggested next steps</div>
+              {["Join fear. group","Save a local gig","Ask for a mentor intro"].map((row,i)=><div key={row} style={{display:"flex",gap:9,alignItems:"center",marginTop:10,color:"rgba(255,255,255,0.66)",fontSize:12}}><span style={{width:25,height:25,borderRadius:8,background:i===1?C.accent:"rgba(22,199,78,0.12)",display:"flex",alignItems:"center",justifyContent:"center",color:i===1?"#fff":C.accent}}><Icon name={i===0?"network":i===1?"briefcase":"brain"} size={13}/></span>{row}</div>)}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="landing-ticker" style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
         <div style={{display:"flex",width:"max-content"}} className="ticker">
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:12,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={12} color={C.accent}/> {t}</span>)}
+        </div>
+      </div>
+      <div className="landing-product-peek landing-section" style={{padding:"112px 52px",background:"#050506"}}>
+        <div className="landing-peek-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"0.86fr 1.14fr",gap:34,alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Inside The App</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>People should feel the account before they create it.</h2>
+            <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:24}}>The landing page now previews the actual product loops: posting, discovering people, messaging, joining groups, and matching with opportunities. It gives visitors something to imagine themselves using.</p>
+            <div className="landing-demo-tabs" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {demoTabs.map(tab=><button key={tab.id} onClick={()=>setActiveDemo(tab.id)} className="bs" aria-pressed={activeDemo===tab.id} style={{display:"inline-flex",alignItems:"center",gap:8,border:`1px solid ${activeDemo===tab.id?C.aSoft:"rgba(255,255,255,0.12)"}`,background:activeDemo===tab.id?C.accent:"rgba(255,255,255,0.06)",color:activeDemo===tab.id?"#fff":"rgba(255,255,255,0.72)",borderRadius:999,padding:"10px 13px",fontSize:13,fontWeight:900}}><Icon name={tab.icon} size={15}/>{tab.label}</button>)}
+            </div>
+          </div>
+          <div className="landing-mini-app" style={{background:"#101114",border:"1px solid rgba(255,255,255,0.11)",borderRadius:30,padding:18,boxShadow:"0 34px 110px rgba(0,0,0,0.32)",position:"relative",overflow:"hidden"}}>
+            <div className="preview-sweep" style={{position:"absolute",top:0,bottom:0,width:"34%",background:"linear-gradient(90deg, transparent, rgba(22,199,78,0.12), transparent)",pointerEvents:"none"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:6}}>{demo.metric}</div><h3 style={{fontFamily:"Georgia,serif",fontSize:34,lineHeight:1,color:"#fff",letterSpacing:0}}>{demo.title}</h3></div>
+              <div style={{width:52,height:52,borderRadius:18,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={demo.icon} size={25}/></div>
+            </div>
+            <p style={{fontSize:14,color:"rgba(255,255,255,0.58)",lineHeight:1.7,marginBottom:18}}>{demo.copy}</p>
+            <div style={{display:"grid",gap:10}}>
+              {(activeDemo==="feed"?[
+                ["Launch","I finally made the first version of my landing page. Looking for feedback before I send it out."],
+                ["Ask","Does anyone know a beginner-friendly way to test a business idea with local customers?"],
+                ["Milestone","First 10 emails captured. Small, but it feels real now."],
+              ]:activeDemo==="discover"?[
+                ["Founder","Allison Brown · Food · Los Angeles"],
+                ["Founder","Jacquelyn Keenan · Fashion · Building a brand"],
+                ["Founder","Ryan Hrabovsky · Exploring · Looking for cofounders"],
+              ]:activeDemo==="messages"?[
+                ["DM","Hey, saw your ask. I can review the deck tonight."],
+                ["DM","Want to join the fear. group call this week?"],
+                ["DM","I know someone testing a similar food concept."],
+              ]:[
+                ["92% match","Campus Business Event Lead · Hybrid"],
+                ["86% match","Fashion Pop-Up Assistant · Local"],
+                ["81% match","Startup Ops Shadow Day · Remote"],
+              ]).map(([label,text],i)=><div key={text} className="landing-mini-card" style={{background:i===0?"rgba(22,199,78,0.12)":"rgba(255,255,255,0.055)",border:`1px solid ${i===0?"rgba(22,199,78,0.24)":"rgba(255,255,255,0.08)"}`,borderRadius:16,padding:14,display:"grid",gridTemplateColumns:"90px minmax(0,1fr)",gap:12,alignItems:"center"}}><span style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1,color:i===0?C.accent:"rgba(255,255,255,0.44)"}}>{label}</span><span style={{fontSize:14,color:"rgba(255,255,255,0.8)",lineHeight:1.45,overflowWrap:"anywhere"}}>{text}</span></div>)}
+            </div>
+          </div>
         </div>
       </div>
       <div id="platform" className="landing-platform landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
@@ -648,6 +758,20 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           ))}
         </div>
       </div>
+      <div className="landing-workflow landing-section" style={{padding:"112px 52px",background:"#0B0C0E",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        <div style={{maxWidth:1180,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:26,alignItems:"end",flexWrap:"wrap",marginBottom:38}}>
+            <div style={{maxWidth:680}}>
+              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Account Journey</div>
+              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.5vw,66px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1}}>From curious visitor to active builder.</h2>
+            </div>
+            <p style={{fontSize:15,color:"rgba(255,255,255,0.54)",lineHeight:1.75,maxWidth:390}}>The page now sells the feeling of progress: make a profile, post the first thing, meet people, then keep momentum moving.</p>
+          </div>
+          <div className="landing-workflow-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+            {workflowRows.map(([title,desc,icon],i)=><div key={title} className="ch" style={{background:"#101114",border:"1px solid rgba(255,255,255,0.09)",borderRadius:20,padding:22,position:"relative",overflow:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><div style={{width:42,height:42,borderRadius:14,background:i===0?C.accent:"rgba(22,199,78,0.12)",color:i===0?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={icon} size={21}/></div><span style={{fontFamily:"Georgia,serif",fontSize:34,fontWeight:800,color:"rgba(255,255,255,0.12)"}}>0{i+1}</span></div><div style={{fontSize:18,fontWeight:900,color:"#fff",marginBottom:10}}>{title}</div><p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.72}}>{desc}</p></div>)}
+          </div>
+        </div>
+      </div>
       <div style={{background:"#F7F8FA",borderTop:"1px solid #ECEFF3",borderBottom:"1px solid #ECEFF3",padding:"64px 52px"}}>
         <div className="landing-stats" style={{maxWidth:1100,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
           {statRows.map(([l,n])=>(
@@ -656,6 +780,29 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <div style={{fontSize:12,color:"#687080",marginTop:7,fontWeight:700}}>{l}</div>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="landing-section" style={{background:"#fff",padding:"110px 52px"}}>
+        <div style={{maxWidth:1180,margin:"0 auto"}}>
+          <div style={{textAlign:"center",maxWidth:760,margin:"0 auto 48px"}}>
+            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Who It Is For</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.4vw,66px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>Not just founders. People before the first step.</h2>
+            <p style={{fontSize:16,color:"#687080",lineHeight:1.75}}>fear.social should feel approachable for anyone who wants business momentum but does not know where to start yet.</p>
+          </div>
+          <div className="landing-proof-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,alignItems:"stretch"}}>
+            <div className="landing-community-cards" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+              {communityCards.map(([title,copy],i)=><div key={title} className="ch" style={{background:"#F7F8FA",border:"1px solid #EAECF0",borderRadius:20,padding:22}}><div style={{width:44,height:44,borderRadius:"50%",background:i===0?C.accent:C.aLight,color:i===0?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950,marginBottom:18}}>{title.split(" ").map(w=>w[0]).slice(0,2).join("")}</div><div style={{fontSize:17,fontWeight:950,color:"#111318",lineHeight:1.18,marginBottom:10}}>{title}</div><p style={{fontSize:13,color:"#687080",lineHeight:1.65}}>{copy}</p></div>)}
+            </div>
+            <div style={{background:"#111318",borderRadius:24,padding:24,position:"relative",overflow:"hidden",minHeight:320}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+                <div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Live Signals</div><div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:800,color:"#fff",letterSpacing:0}}>The app should feel awake.</div></div>
+                <div style={{width:46,height:46,borderRadius:16,background:"rgba(22,199,78,0.14)",color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="bell" size={22}/></div>
+              </div>
+              <div style={{display:"grid",gap:10}}>
+                {liveSignals.map(([title,label],i)=><div key={title} className="signal-rise" style={{animationDelay:`${i*0.7}s`,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950,fontSize:12}}>{label[0]}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:14,fontWeight:900,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{title}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)",marginTop:3}}>{label}</div></div><Icon name="sparkle" size={16} color={C.accent}/></div>)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="activity" className="landing-launch landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
