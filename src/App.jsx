@@ -866,7 +866,6 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               </div>
             ))}
           </div>
-          <div style={{marginTop:18,fontSize:13,color:"#687080",lineHeight:1.65}}>Paid plan path: validate Pro demand from the waitlist, open Stripe checkout for FEAR Pro, then add annual billing once monthly conversion is proven.</div>
         </div>
       </div>
       <div id="cta" className="landing-cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
