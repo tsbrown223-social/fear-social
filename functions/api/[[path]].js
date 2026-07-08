@@ -798,52 +798,59 @@ async function getPosts(db, userId) {
 const DAILY_REEL_TEMPLATES = [
   {
     tag: "Exploring",
-    title: "The First Step",
-    hook: "You do not need a perfect plan to begin.",
-    beats: ["Name the move you are avoiding.", "Make it small enough to do today.", "Post the update before you overthink it."],
-    prompt: "What is one business or career move you can take before tonight?",
+    title: "Your First Move Lives Here",
+    hook: "fear.social is built for the moment before you know exactly where to start.",
+    feature: "Create a profile, say what you are trying to become, and let the app turn that first step into something visible.",
+    beats: ["Post what you are exploring.", "Save one opportunity in Deals.", "Find one person building near your lane."],
+    cta: "Open fear.social and make your first move public today.",
   },
   {
     tag: "Networking",
-    title: "Find Your People",
-    hook: "The right room can change how possible your future feels.",
-    beats: ["Follow someone building near your lane.", "Ask one real question.", "Turn one message into momentum."],
-    prompt: "Who do you need to meet this week?",
+    title: "Find People Before You Feel Ready",
+    hook: "The network you need should not feel locked behind confidence you do not have yet.",
+    feature: "Discover founders, creators, mentors, students, operators, and first-time builders who are also figuring it out.",
+    beats: ["Search by field.", "Open a profile.", "Send one real message."],
+    cta: "Use Discover to find one person who makes your next step feel possible.",
   },
   {
     tag: "Opportunities",
-    title: "One Door Opens",
-    hook: "Jobs, gigs, volunteer roles, and collaborations all count as first steps.",
-    beats: ["Save one opportunity.", "Send one thoughtful note.", "Track what you learn from the attempt."],
-    prompt: "What kind of opening would help you move forward?",
+    title: "Deals Is Your Opportunity Board",
+    hook: "Jobs, gigs, volunteer roles, internships, and collabs all count as momentum.",
+    feature: "fear.social matches opportunities to your field, goals, skills, and location so the next door is easier to spot.",
+    beats: ["Check For You in Deals.", "Save the best fit.", "Post an opportunity if you have one."],
+    cta: "Go to Deals and find one opening worth chasing.",
   },
   {
     tag: "Mentors",
-    title: "Ask Better",
-    hook: "A good mentor request is specific, short, and easy to answer.",
-    beats: ["Say what you are trying to build.", "Ask for one piece of advice.", "Make the next action clear."],
-    prompt: "What question would unlock your next step?",
+    title: "Ask The Question",
+    hook: "A mentor request does not need to be perfect. It needs to be clear.",
+    feature: "fear.social helps you find people, start useful conversations, and ask for the kind of guidance that creates motion.",
+    beats: ["Write the thing you are stuck on.", "Ask for one piece of advice.", "Keep the next action small."],
+    cta: "Use Mentors or DMs to ask one better question today.",
   },
   {
     tag: "Creative",
-    title: "Build In Public",
-    hook: "Progress gets easier to believe when you can see it stacking up.",
-    beats: ["Share the attempt.", "Share the lesson.", "Share the next move."],
-    prompt: "What are you building that deserves to be seen?",
+    title: "Post The Progress",
+    hook: "You do not need a launch to start building in public.",
+    feature: "The fear.social feed is for updates, asks, milestones, hiring notes, launches, photos, videos, and honest first steps.",
+    beats: ["Share what you tried.", "Add what you learned.", "Tell people what you need next."],
+    cta: "Publish one update so your momentum has a place to live.",
   },
   {
     tag: "Finance",
-    title: "Make It Real",
-    hook: "A business starts feeling real when the numbers have somewhere to live.",
-    beats: ["Write the price.", "List the cost.", "Find the first person who might pay."],
-    prompt: "What would make your idea measurable today?",
+    title: "Make The Idea Concrete",
+    hook: "Business gets less scary when the next step becomes measurable.",
+    feature: "Use fear.social to track your idea, find feedback, meet collaborators, and turn loose ambition into actual motion.",
+    beats: ["Name the offer.", "Ask for feedback.", "Find one possible customer or collaborator."],
+    cta: "Post the rough version. The polished version can come later.",
   },
   {
     tag: "Community",
-    title: "Momentum Check",
-    hook: "The person you want to become is built through small repeated proof.",
-    beats: ["One post.", "One conversation.", "One next step."],
-    prompt: "What proof can you give yourself today?",
+    title: "Join The fear. Group",
+    hook: "Every member starts in the official fear. group so no one enters alone.",
+    feature: "The fear. group is where product updates, prompts, feature drops, and community announcements live inside the app.",
+    beats: ["Read the latest announcement.", "React to the prompt.", "Bring one person into the conversation."],
+    cta: "Open Groups and check the official fear. room today.",
   },
 ];
 
@@ -858,10 +865,12 @@ const officialReelContent = (dateKey) => {
       "",
       `Hook: ${reel.hook}`,
       "",
+      `Why fear.social: ${reel.feature}`,
+      "",
       "Reel beats:",
       ...reel.beats.map((beat, beatIndex) => `${beatIndex + 1}. ${beat}`),
       "",
-      `Community prompt: ${reel.prompt}`,
+      `CTA: ${reel.cta}`,
     ].join("\n"),
   };
 };
@@ -903,6 +912,10 @@ async function ensureOfficialDailyReelPost(db) {
   await db
     .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, 'Reel', ?, 'Daily', ?, '[]', CURRENT_TIMESTAMP)")
     .bind(postId, OFFICIAL_USER_ID, reel.tag, reel.content)
+    .run();
+  await db
+    .prepare("UPDATE posts SET type = 'Reel', tag = ?, stage = 'Daily', content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+    .bind(reel.tag, reel.content, postId, OFFICIAL_USER_ID)
     .run();
 }
 

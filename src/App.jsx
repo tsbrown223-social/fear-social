@@ -1786,7 +1786,8 @@ function OfficialReelCard({post}){
   const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
   const title=lines.find(line=>line.startsWith("Daily fear.social Reel:"))?.replace("Daily fear.social Reel:","").trim()||"Daily Reel";
   const hook=lines.find(line=>line.startsWith("Hook:"))?.replace("Hook:","").trim()||"Take the next step before you feel ready.";
-  const prompt=lines.find(line=>line.startsWith("Community prompt:"))?.replace("Community prompt:","").trim()||"What is your next move?";
+  const feature=lines.find(line=>line.startsWith("Why fear.social:"))?.replace("Why fear.social:","").trim()||"fear.social helps you turn first-step ambition into visible momentum.";
+  const cta=lines.find(line=>line.startsWith("CTA:"))?.replace("CTA:","").trim()||"Open fear.social and make your next move.";
   return <div aria-label={`Official fear.social Reel: ${title}`} style={{marginTop:14,borderRadius:22,overflow:"hidden",background:GR2,border:`1px solid ${C.aSoft}`,boxShadow:"0 24px 60px rgba(22,199,78,0.14)"}}>
     <div style={{minHeight:430,display:"grid",alignContent:"space-between",padding:24,position:"relative",color:"#fff"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 78% 18%, rgba(22,199,78,.35), transparent 32%), radial-gradient(circle at 18% 82%, rgba(255,255,255,.08), transparent 34%)"}}/>
@@ -1798,9 +1799,10 @@ function OfficialReelCard({post}){
         <div style={{fontSize:13,fontWeight:950,letterSpacing:1.6,textTransform:"uppercase",color:C.accent}}>Official prompt</div>
         <div style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,7vw,58px)",lineHeight:1.02,fontWeight:900,letterSpacing:0}}>{title}</div>
         <p style={{fontSize:18,lineHeight:1.45,color:"rgba(255,255,255,.78)",maxWidth:470}}>{hook}</p>
+        <p style={{fontSize:14,lineHeight:1.55,color:"rgba(255,255,255,.62)",maxWidth:500}}>{feature}</p>
       </div>
       <div style={{position:"relative",zIndex:1,display:"grid",gap:12}}>
-        <div style={{display:"flex",gap:8,alignItems:"center",fontSize:13,fontWeight:900,color:"rgba(255,255,255,.74)"}}><span style={{width:34,height:34,borderRadius:"50%",background:C.accent,color:"#071008",display:"flex",alignItems:"center",justifyContent:"center",flex:"0 0 auto"}}><Icon name="zap" size={17} color="currentColor"/></span> {prompt}</div>
+        <div style={{display:"flex",gap:8,alignItems:"center",fontSize:13,fontWeight:900,color:"rgba(255,255,255,.74)"}}><span style={{width:34,height:34,borderRadius:"50%",background:C.accent,color:"#071008",display:"flex",alignItems:"center",justifyContent:"center",flex:"0 0 auto"}}><Icon name="zap" size={17} color="currentColor"/></span> {cta}</div>
         <div style={{height:6,borderRadius:999,background:"rgba(255,255,255,.12)",overflow:"hidden"}}><span style={{display:"block",height:"100%",width:"68%",borderRadius:999,background:C.accent}}/></div>
       </div>
     </div>
