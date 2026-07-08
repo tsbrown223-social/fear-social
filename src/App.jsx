@@ -88,8 +88,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-light .landing-ticker span{color:#687080!important;}
 .theme-light .landing-platform,.theme-light .landing-launch,.theme-light .landing-cta,.theme-light .landing-footer{background:#F7F8FA!important;}
 .theme-light .landing-product-peek,.theme-light .landing-workflow{background:#F7F8FA!important;}
-.theme-light .landing-product-peek h2,.theme-light .landing-workflow h2{color:#0D0F14!important;}
-.theme-light .landing-product-peek p,.theme-light .landing-workflow p{color:#5C6675!important;}
+.theme-light .landing-signal-engine{background:#FFFFFF!important;}
+.theme-light .landing-product-peek h2,.theme-light .landing-workflow h2,.theme-light .landing-signal-engine h2{color:#0D0F14!important;}
+.theme-light .landing-product-peek p,.theme-light .landing-workflow p,.theme-light .landing-signal-engine p{color:#5C6675!important;}
 .theme-light .landing-mini-app{background:#FFFFFF!important;border-color:#E5E9F0!important;box-shadow:0 30px 90px rgba(13,15,20,0.1)!important;}
 .theme-light .landing-mini-card{background:#F7F8FA!important;border-color:#E5E9F0!important;color:#0D0F14!important;}
 .theme-light .landing-mini-dark{background:#111318!important;color:#fff!important;}
@@ -218,7 +219,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-section{padding:64px 18px!important;}
   .landing-section h2{font-size:40px!important;line-height:1.08!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
-  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards{grid-template-columns:1fr!important;}
+  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid{grid-template-columns:1fr!important;}
+  .landing-signal-grid .landing-mini-card{transform:none!important;}
   .landing-mini-app{border-radius:22px!important;padding:12px!important;}
   .landing-mini-topbar{overflow:hidden!important;}
   .landing-mini-topbar .mini-nav-pill,.landing-mini-topbar .mini-live{display:none!important;}
@@ -613,10 +615,20 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["Future operator","Looking for internships, local opportunities, startup tasks, and people already taking action."],
   ];
   const liveSignals=[
-    ["Sienna posted a launch update","Brand Management"],
-    ["Jacquelyn opened a fashion group","Fashion"],
-    ["Ryan saved a startup operations gig","Opportunity"],
-    ["Taylor received a new connection","Activity"],
+    ["Mara Vale posted a launch update","Fictional demo"],
+    ["Jules Kade opened a fashion group","Fictional demo"],
+    ["Kai Moss saved a startup operations gig","Fictional demo"],
+    ["Nia Sol received a new connection","Fictional demo"],
+  ];
+  const signalRows=[
+    ["Profile pulse","See who is active, what they are building, and the kind of first step they are trying to take.","@mara.moves","Mara Vale"],
+    ["Momentum map","Turn posts, follows, groups, saved deals, and DMs into a clearer path forward.","@jules.builds","Jules Kade"],
+    ["Opportunity radar","Surface useful jobs, gigs, collabs, and local openings before users know what to search for.","@kai.starts","Kai Moss"],
+  ];
+  const demoPeople=[
+    ["Founder","Nia Sol · Food · Sample City"],
+    ["Founder","Jules Kade · Fashion · Demo District"],
+    ["Founder","Oren Pike · Exploring · Looking for collaborators"],
   ];
   const featureRows=[
     ["network","Builder Directory","Create a polished profile, discover people by ambition and industry, and turn cold browsing into warm introductions."],
@@ -668,7 +680,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         )}
         <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Email capture is live · Private beta access · No credit card required</div>
         <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="landing-proof-row fu">
-          <div style={{display:"flex"}}>{["TB","EP","BP","AR"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
+          <div style={{display:"flex"}}>{["NR","MV","JK","KM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
             <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for first-time business builders</div>
             <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
@@ -683,12 +695,12 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
           <div className="landing-mini-shell" style={{display:"grid",gridTemplateColumns:"220px minmax(0,1fr) 230px",gap:12,marginTop:12}}>
             <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>TB</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Taylor Brown</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>first-step builder</div></div></div>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>NR</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Nova Reed</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>fictional demo builder</div></div></div>
               {["2 new follows","1 unread DM","3 saved deals"].map((row,i)=><div key={row} className="signal-rise" style={{animationDelay:`${i*0.55}s`,display:"flex",alignItems:"center",gap:8,padding:"9px 0",borderTop:i?`1px solid rgba(255,255,255,0.07)`:"none",fontSize:12,color:"rgba(255,255,255,0.66)"}}><Icon name={i===0?"heart":i===1?"mail":"bookmark"} size={14} color={C.accent}/>{row}</div>)}
             </div>
             <div className="landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>SB</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Sienna Baron <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · just now</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
-              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Looking for feedback on my first pitch deck before I send it to local boutiques. Anyone open to a quick review?</div>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>MV</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Mara Vale <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · demo post</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
+              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Demo post: looking for feedback on a first pitch deck before sending it to local boutiques. Anyone open to a quick review?</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{["Comment","Message"].map((label,i)=><button key={label} style={{border:"1px solid rgba(255,255,255,0.1)",background:i?C.accent:"rgba(255,255,255,0.06)",color:i?"#fff":"rgba(255,255,255,0.74)",borderRadius:11,padding:"10px 12px",fontWeight:900}}>{label}</button>)}</div>
             </div>
             <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
@@ -720,16 +732,13 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <div style={{width:52,height:52,borderRadius:18,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={demo.icon} size={25}/></div>
             </div>
             <p style={{fontSize:14,color:"rgba(255,255,255,0.58)",lineHeight:1.7,marginBottom:18}}>{demo.copy}</p>
+            <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,color:"rgba(255,255,255,0.5)",marginBottom:14}}><Icon name="info" size={13} color={C.accent}/> Fictional demo content</div>
             <div style={{display:"grid",gap:10}}>
               {(activeDemo==="feed"?[
                 ["Launch","I finally made the first version of my landing page. Looking for feedback before I send it out."],
                 ["Ask","Does anyone know a beginner-friendly way to test a business idea with local customers?"],
                 ["Milestone","First 10 emails captured. Small, but it feels real now."],
-              ]:activeDemo==="discover"?[
-                ["Founder","Allison Brown · Food · Los Angeles"],
-                ["Founder","Jacquelyn Keenan · Fashion · Building a brand"],
-                ["Founder","Ryan Hrabovsky · Exploring · Looking for cofounders"],
-              ]:activeDemo==="messages"?[
+              ]:activeDemo==="discover"?demoPeople:activeDemo==="messages"?[
                 ["DM","Hey, saw your ask. I can review the deck tonight."],
                 ["DM","Want to join the fear. group call this week?"],
                 ["DM","I know someone testing a similar food concept."],
@@ -756,6 +765,23 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <div className="landing-card-copy" style={{fontSize:14,color:"rgba(255,255,255,0.52)",lineHeight:1.72}}>{desc}</div>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="landing-signal-engine landing-section" style={{padding:"112px 52px",background:"#050506",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+        <div style={{maxWidth:1180,margin:"0 auto"}}>
+          <div style={{display:"grid",gridTemplateColumns:"minmax(0,0.9fr) minmax(0,1.1fr)",gap:28,alignItems:"center"}} className="landing-signal-grid">
+            <div>
+              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Signal Engine</div>
+              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,70px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Make the landing page feel like the app is already moving.</h2>
+              <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:22}}>Instead of telling people “networking platform,” show them signals: fictional profiles, posts, matches, notifications, and next steps that make account creation feel worth it.</p>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                {["Fictional users","Live-feeling UI","Account anticipation"].map(label=><span key={label} style={{background:"rgba(22,199,78,0.12)",border:"1px solid rgba(22,199,78,0.24)",color:C.accent,borderRadius:999,padding:"9px 12px",fontSize:12,fontWeight:900}}>{label}</span>)}
+              </div>
+            </div>
+            <div style={{display:"grid",gap:12,position:"relative"}}>
+              {signalRows.map(([title,copy,handle,name],i)=><div key={title} className="ch landing-mini-card" style={{background:i===1?"rgba(22,199,78,0.12)":"#101114",border:`1px solid ${i===1?"rgba(22,199,78,0.26)":"rgba(255,255,255,0.09)"}`,borderRadius:22,padding:18,display:"grid",gridTemplateColumns:"58px minmax(0,1fr) auto",gap:14,alignItems:"center",transform:i===1?"translateX(18px)":"none"}}><div style={{width:58,height:58,borderRadius:18,background:i===1?C.accent:C.aLight,color:i===1?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950}}>{name.split(" ").map(w=>w[0]).join("")}</div><div style={{minWidth:0}}><div style={{fontSize:18,fontWeight:950,color:"#fff",marginBottom:5}}>{title}</div><p style={{fontSize:13,color:"rgba(255,255,255,0.58)",lineHeight:1.55,margin:0}}>{copy}</p><div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:7}}>{name} · {handle} · fictional demo</div></div><div className="soft-blink" style={{width:12,height:12,borderRadius:"50%",background:C.accent,boxShadow:"0 0 22px rgba(22,199,78,0.7)"}}/></div>)}
+            </div>
+          </div>
         </div>
       </div>
       <div className="landing-workflow landing-section" style={{padding:"112px 52px",background:"#0B0C0E",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
