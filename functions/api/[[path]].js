@@ -947,9 +947,74 @@ async function getNotifications(db, userId) {
   }));
 }
 
+const parseJsonArray = (value, fallback = []) => {
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const normalizeOpportunity = (body = {}, user = {}) => {
+  const skills = Array.isArray(body.skills)
+    ? body.skills
+    : String(body.skills || "")
+        .split(/[,\n]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+  return {
+    title: cleanText(body.title || "", 120),
+    company: cleanText(body.company || "", 100),
+    type: cleanText(body.type || "Opportunity", 40),
+    tag: cleanText(body.tag || user.industry || "Exploring", 60),
+    budget: cleanText(body.budget || "Open", 80),
+    location: cleanText(body.location || "Remote", 80),
+    level: cleanText(body.level || "First step", 80),
+    skills: skills.map((skill) => cleanText(skill, 40)).filter(Boolean).slice(0, 8),
+    desc: cleanText(body.desc || body.description || "", 900),
+  };
+};
+
+async function getOpportunities(db) {
+  try {
+    const rows = await db
+      .prepare(
+        `SELECT o.*, u.name AS poster_name, u.handle AS poster_handle
+         FROM opportunities o
+         LEFT JOIN users u ON u.id = o.user_id
+         WHERE COALESCE(o.status, 'open') = 'open'
+         ORDER BY datetime(o.created_at) DESC
+         LIMIT 120`
+      )
+      .all();
+    return (rows.results || []).map((opportunity) => {
+      const skills = parseJsonArray(opportunity.skills);
+      return {
+        id: opportunity.id,
+        title: opportunity.title,
+        company: opportunity.company,
+        type: opportunity.type,
+        tag: opportunity.tag,
+        budget: opportunity.budget,
+        location: opportunity.location,
+        level: opportunity.level,
+        skills,
+        desc: opportunity.description,
+        fit: [opportunity.tag, opportunity.type, opportunity.level, opportunity.location, ...skills, opportunity.title, opportunity.company, opportunity.description].filter(Boolean),
+        postedBy: opportunity.poster_name || "fear.social member",
+        postedByHandle: opportunity.poster_handle || "",
+        userPosted: true,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 async function getBootstrap(db, user) {
   const userId = user.id;
-  const [posts, people, events, mentors, conversations, stats, notifications, groups] = await Promise.all([
+  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
@@ -1005,6 +1070,7 @@ async function getBootstrap(db, user) {
     getStats(db),
     getNotifications(db, userId),
     getGroups(db, user),
+    getOpportunities(db),
   ]);
 
   const messages = await db
@@ -1068,6 +1134,7 @@ async function getBootstrap(db, user) {
     stats,
     notifications,
     groups,
+    opportunities,
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
   };
 }
@@ -1682,6 +1749,40 @@ async function handleRequest({ request, env, params }) {
       .bind(id, user.id, type, tag, stage, content, JSON.stringify(media))
       .run();
     return json({ posts: await getPosts(db, user.id) }, { status: 201 });
+  }
+
+  if (method === "POST" && path === "/opportunities") {
+    const limited = await enforceRateLimit(db, request, "opportunities", 12, 600);
+    if (limited) return limited;
+    const opportunity = normalizeOpportunity(body, user);
+    if (opportunity.title.length < 4) return json({ error: "Opportunity title is required" }, { status: 400 });
+    if (opportunity.company.length < 2) return json({ error: "Company or project name is required" }, { status: 400 });
+    if (opportunity.desc.length < 18) return json({ error: "Opportunity description is too short" }, { status: 400 });
+    const id = createId("opportunity");
+    try {
+      await db
+        .prepare(
+          `INSERT INTO opportunities (id, user_id, title, company, type, tag, budget, location, level, skills, description)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          id,
+          user.id,
+          opportunity.title,
+          opportunity.company,
+          opportunity.type,
+          opportunity.tag,
+          opportunity.budget,
+          opportunity.location,
+          opportunity.level,
+          JSON.stringify(opportunity.skills),
+          opportunity.desc
+        )
+        .run();
+      return json({ opportunities: await getOpportunities(db) }, { status: 201 });
+    } catch {
+      return json({ error: "Opportunity storage is not ready yet" }, { status: 503 });
+    }
   }
 
   const segments = path.split("/").filter(Boolean);
