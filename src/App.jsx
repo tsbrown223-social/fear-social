@@ -594,58 +594,58 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       notify(err.message||"Could not save email","error");
     }
   };
-  const ticker=["First steps · ","Business ideas · ","Warm intros · ","Mentor requests · ","Build updates · ","Events · ","Private rooms · ","Opportunity alerts · "];
+  const ticker=["First steps · ","Career starts · ","Warm intros · ","Mentor requests · ","Build updates · ","Entry opportunities · ","Private rooms · ","People who get it · "];
   const statRows=[["Beta status","Open"],["Emails captured",fmt(stats.waitlist)],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
   const demoTabs=[
-    {id:"feed",label:"Feed",icon:"home",title:"A feed built for action.",copy:"Post what you are building, ask for feedback, and find people who understand the stage you are in.",metric:"For You"},
-    {id:"discover",label:"Discover",icon:"diamond",title:"Find people before you need them.",copy:"Browse future founders, students, operators, creators, and first-step builders by field and intent.",metric:"Profiles"},
-    {id:"messages",label:"DMs",icon:"mail",title:"Turn a follow into a real conversation.",copy:"Message people directly, follow up on asks, and keep business conversations inside one place.",metric:"Live DMs"},
-    {id:"deals",label:"Deals",icon:"briefcase",title:"Opportunities that fit your next move.",copy:"See jobs, gigs, internships, collabs, pilot customers, and early business openings tuned to your profile.",metric:"Matches"},
+    {id:"feed",label:"Feed",icon:"home",title:"A feed for people trying to become somebody.",copy:"Post what you are learning, ask for direction, share progress, and find people who are taking their first real step too.",metric:"For You"},
+    {id:"discover",label:"Discover",icon:"diamond",title:"Find the people your future needs.",copy:"Meet future founders, students, operators, creators, mentors, and early builders by field, goal, and ambition.",metric:"Profiles"},
+    {id:"messages",label:"DMs",icon:"mail",title:"Turn courage into a conversation.",copy:"Reach out, ask the question, follow up, and start building the relationships that can change what happens next.",metric:"Live DMs"},
+    {id:"deals",label:"Deals",icon:"briefcase",title:"See openings that make the next step real.",copy:"Find jobs, gigs, internships, collabs, pilot customers, and first career opportunities tuned to where you want to go.",metric:"Matches"},
   ];
   const demo=demoTabs.find(t=>t.id===activeDemo)||demoTabs[0];
   const workflowRows=[
-    ["Create your card","Build a profile that says what you want, what you are learning, and what kind of business step you are trying to take.","user"],
-    ["Post your first move","Ask for feedback, share a win, announce a launch, or simply say what you are exploring.","megaphone"],
-    ["Meet the right people","Follow founders, DM collaborators, join groups, and use opportunities to move from idea to action.","network"],
-    ["Keep momentum visible","Notifications, groups, saved posts, and deal matches make the platform feel alive after signup.","bell"],
+    ["Create your card","Show who you are becoming, what you care about, what you are learning, and what opportunity you are trying to earn.","user"],
+    ["Make the first move","Ask for advice, share what you are building, look for feedback, or say out loud what you want next.","megaphone"],
+    ["Find your people","Follow builders, message mentors, join groups, and meet people who make your future feel less far away.","network"],
+    ["Turn hope into motion","Save opportunities, track signals, build relationships, and keep coming back to what moves you forward.","bell"],
   ];
   const communityCards=[
-    ["Student with an idea","Needs a first customer, a mentor, and a place to ask beginner questions without feeling behind."],
-    ["Creator building a product","Wants collaborators, feedback, launch support, and a lightweight professional network."],
-    ["Future operator","Looking for internships, local opportunities, startup tasks, and people already taking action."],
+    ["Student with ambition","Looking for the first internship, first mentor, first project, or first person who says, yes, you belong here."],
+    ["Builder with no map","Has an idea, a skill, or a dream, but needs feedback, collaborators, and a place to start without pretending to know everything."],
+    ["Future professional","Searching for jobs, gigs, startup tasks, warm intros, and proof that the career they want can actually begin."],
   ];
   const liveSignals=[
-    ["Mara Vale posted a launch update","Fictional demo"],
-    ["Jules Kade opened a fashion group","Fictional demo"],
-    ["Kai Moss saved a startup operations gig","Fictional demo"],
-    ["Nia Sol received a new connection","Fictional demo"],
+    ["Mara Vale asked for portfolio feedback","Sample preview"],
+    ["Jules Kade opened a fashion career group","Sample preview"],
+    ["Kai Moss saved a startup operations role","Sample preview"],
+    ["Nia Sol received a new mentor connection","Sample preview"],
   ];
   const signalRows=[
-    ["Profile pulse","See who is active, what they are building, and the kind of first step they are trying to take.","@mara.moves","Mara Vale"],
-    ["Momentum map","Turn posts, follows, groups, saved deals, and DMs into a clearer path forward.","@jules.builds","Jules Kade"],
-    ["Opportunity radar","Surface useful jobs, gigs, collabs, and local openings before users know what to search for.","@kai.starts","Kai Moss"],
+    ["Find your people","See who is active, what they want to become, and who is close enough to help with the next step.","@mara.moves","Mara Vale"],
+    ["Build career momentum","Turn posts, follows, groups, saved roles, and DMs into a clearer path toward work you actually want.","@jules.builds","Jules Kade"],
+    ["Spot real opportunities","Surface useful jobs, gigs, collabs, and local openings before you even know what to search for.","@kai.starts","Kai Moss"],
   ];
   const demoPeople=[
-    ["Founder","Nia Sol · Food · Sample City"],
-    ["Founder","Jules Kade · Fashion · Demo District"],
-    ["Founder","Oren Pike · Exploring · Looking for collaborators"],
+    ["Builder","Nia Sol · Food · Looking for a first internship"],
+    ["Builder","Jules Kade · Fashion · Building a portfolio"],
+    ["Builder","Oren Pike · Exploring · Looking for collaborators"],
   ];
   const featureRows=[
-    ["network","Builder Directory","Create a polished profile, discover people by ambition and industry, and turn cold browsing into warm introductions."],
-    ["megaphone","Build Updates","Post progress, signal what you need, and keep mentors, collaborators, and early supporters close to the work."],
-    ["brain","Mentor Requests","Route focused business asks through a cleaner workflow so advice becomes action instead of scattered DMs."],
-    ["calendar","Events & Rooms","Coordinate live sessions, small-group rooms, and RSVP-based programming without leaving the network."],
-    ["briefcase","Opportunities","Surface co-founder searches, pilot customers, jobs, and partnership leads where ambitious builders gather."],
-    ["zap","FEAR Pro","A paid operating layer for people ready to move: advanced matching, priority mentor access, and AI prep tools.",true],
+    ["network","People Directory","Create a profile for the person you are becoming, then find students, founders, mentors, operators, and collaborators moving in the same direction."],
+    ["megaphone","Progress Posts","Share what you are learning, what you need, what you are applying for, and what you are building so momentum becomes visible."],
+    ["brain","Mentor Requests","Ask focused questions, get pointed in the right direction, and turn advice into actual next steps."],
+    ["calendar","Groups & Rooms","Join focused spaces around fields, careers, events, opportunities, and the scary first moves people usually make alone."],
+    ["briefcase","Opportunities","Find entry jobs, gigs, internships, startup tasks, project partners, and career openings that match your ambition."],
+    ["zap","FEAR Pro","A future upgrade path for people ready to move faster with advanced matching, priority mentor access, and AI prep tools.",true],
   ];
   const readinessRows=[
-    ["Email Capture","Waitlist, account signup, and verification emails are wired through the backend so new demand is recorded immediately.","check"],
-    ["Account System","Email verification, passwords, sessions, profiles, and privacy controls are in place.","user"],
-    ["Growth Engine","Free access brings future founders and business starters in; Pro converts the most active members into a paid plan with clear upgrade value.","zap"],
+    ["A place to begin","Create an account when you do not know the perfect title yet. Start with curiosity, direction, and the next move in front of you.","check"],
+    ["A profile with purpose","Show your goals, your field, your projects, your questions, and the opportunities you are trying to earn.","user"],
+    ["A network with motion","Follow people, message mentors, join groups, save opportunities, and build toward the career or company you want.","zap"],
   ];
   const pricingRows=[
-    {name:"Free",price:"$0",period:"forever",note:"For anyone taking the first real step into business.",features:["Public profile and builder directory","Build updates, comments, likes, and saves","Basic discovery and connection tools","Events, rooms, and direct messages","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced builder and co-founder matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and meetings"],grad:true,button:"Reserve Pro access"},
+    {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, business, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced people and opportunity matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and interviews"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
@@ -653,7 +653,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Now accepting first-step emails</span>
+          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
         </div>
         <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
           Your first step<br/><span style={{color:C.accent}}>is fear.</span>
@@ -662,13 +662,13 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           Empowering tomorrow's founders today.
         </p>
         <p style={{fontSize:18,color:"rgba(255,255,255,0.56)",lineHeight:1.75,maxWidth:720,marginBottom:38,position:"relative"}} className="fu">
-          A sharper social network for future founders, early builders, and anyone ready to step into business before they know exactly where to begin.
+          Find direction, people, opportunities, and momentum before you feel fully ready. Your future does not start after confidence. It starts with a first step.
         </p>
         {joined?(
           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
             <div style={{textAlign:"left"}}>
-              <div style={{fontWeight:800,color:"#fff",fontSize:19}}>You're on the access list.</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.48)",marginTop:3}}>Your email is saved. Create your account whenever you're ready.</div>
+              <div style={{fontWeight:800,color:"#fff",fontSize:19}}>Your first move is saved.</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.48)",marginTop:3}}>Create your account when you are ready to find people, roles, and momentum.</div>
             </div>
             <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Create account</button>
           </div>
@@ -678,7 +678,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
           </div>
         )}
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Email capture is live · Private beta access · No credit card required</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Free to start · Built for first moves · No credit card required</div>
         <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="landing-proof-row fu">
           <div style={{display:"flex"}}>{["NR","MV","JK","KM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
           <div style={{textAlign:"left"}}>
@@ -695,12 +695,12 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
           <div className="landing-mini-shell" style={{display:"grid",gridTemplateColumns:"220px minmax(0,1fr) 230px",gap:12,marginTop:12}}>
             <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>NR</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Nova Reed</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>fictional demo builder</div></div></div>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>NR</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Nova Reed</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>first-step builder</div></div></div>
               {["2 new follows","1 unread DM","3 saved deals"].map((row,i)=><div key={row} className="signal-rise" style={{animationDelay:`${i*0.55}s`,display:"flex",alignItems:"center",gap:8,padding:"9px 0",borderTop:i?`1px solid rgba(255,255,255,0.07)`:"none",fontSize:12,color:"rgba(255,255,255,0.66)"}}><Icon name={i===0?"heart":i===1?"mail":"bookmark"} size={14} color={C.accent}/>{row}</div>)}
             </div>
             <div className="landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>MV</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Mara Vale <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · demo post</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
-              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Demo post: looking for feedback on a first pitch deck before sending it to local boutiques. Anyone open to a quick review?</div>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>MV</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Mara Vale <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · career update</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
+              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Looking for feedback on a first pitch deck before sending it to local boutiques. Anyone open to a quick review?</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{["Comment","Message"].map((label,i)=><button key={label} style={{border:"1px solid rgba(255,255,255,0.1)",background:i?C.accent:"rgba(255,255,255,0.06)",color:i?"#fff":"rgba(255,255,255,0.74)",borderRadius:11,padding:"10px 12px",fontWeight:900}}>{label}</button>)}</div>
             </div>
             <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
@@ -718,9 +718,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div className="landing-product-peek landing-section" style={{padding:"112px 52px",background:"#050506"}}>
         <div className="landing-peek-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"0.86fr 1.14fr",gap:34,alignItems:"center"}}>
           <div>
-            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Inside The App</div>
-            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>People should feel the account before they create it.</h2>
-            <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:24}}>The landing page now previews the actual product loops: posting, discovering people, messaging, joining groups, and matching with opportunities. It gives visitors something to imagine themselves using.</p>
+            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>What You Can Do Here</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Your future needs people, proof, and a place to begin.</h2>
+            <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:24}}>fear.social helps you post your progress, discover people in your lane, message mentors and collaborators, join focused groups, and find opportunities that make your next step real.</p>
             <div className="landing-demo-tabs" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {demoTabs.map(tab=><button key={tab.id} onClick={()=>setActiveDemo(tab.id)} className="bs" aria-pressed={activeDemo===tab.id} style={{display:"inline-flex",alignItems:"center",gap:8,border:`1px solid ${activeDemo===tab.id?C.aSoft:"rgba(255,255,255,0.12)"}`,background:activeDemo===tab.id?C.accent:"rgba(255,255,255,0.06)",color:activeDemo===tab.id?"#fff":"rgba(255,255,255,0.72)",borderRadius:999,padding:"10px 13px",fontSize:13,fontWeight:900}}><Icon name={tab.icon} size={15}/>{tab.label}</button>)}
             </div>
@@ -732,12 +732,12 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <div style={{width:52,height:52,borderRadius:18,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={demo.icon} size={25}/></div>
             </div>
             <p style={{fontSize:14,color:"rgba(255,255,255,0.58)",lineHeight:1.7,marginBottom:18}}>{demo.copy}</p>
-            <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,color:"rgba(255,255,255,0.5)",marginBottom:14}}><Icon name="info" size={13} color={C.accent}/> Fictional demo content</div>
+            <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,color:"rgba(255,255,255,0.5)",marginBottom:14}}><Icon name="info" size={13} color={C.accent}/> Sample product preview</div>
             <div style={{display:"grid",gap:10}}>
               {(activeDemo==="feed"?[
-                ["Launch","I finally made the first version of my landing page. Looking for feedback before I send it out."],
-                ["Ask","Does anyone know a beginner-friendly way to test a business idea with local customers?"],
-                ["Milestone","First 10 emails captured. Small, but it feels real now."],
+                ["Launch","I posted my first portfolio and I am looking for feedback before I apply to local brand roles."],
+                ["Ask","Does anyone know a beginner-friendly way to get real experience before landing a first job?"],
+                ["Milestone","First mentor call booked. Small, but it feels like my future is starting to move."],
               ]:activeDemo==="discover"?demoPeople:activeDemo==="messages"?[
                 ["DM","Hey, saw your ask. I can review the deck tonight."],
                 ["DM","Want to join the fear. group call this week?"],
@@ -753,9 +753,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       </div>
       <div id="platform" className="landing-platform landing-section" style={{padding:"118px 52px",maxWidth:1180,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:76}}>
-          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Platform</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything you need to turn intent into a first move.</h2>
-          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:700,margin:"0 auto"}}>The product is structured around the workflows business starters repeat every week: clarity, introductions, updates, asks, events, and opportunity flow.</p>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Product</div>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything you need to stop waiting and start moving.</h2>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:700,margin:"0 auto"}}>A profile, a feed, direct messages, groups, mentor asks, and opportunity matching, all built for people trying to take the first step into work, business, and the future they want.</p>
         </div>
         <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
           {featureRows.map(([icon,title,desc,pro],i)=>(
@@ -771,15 +771,15 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{maxWidth:1180,margin:"0 auto"}}>
           <div style={{display:"grid",gridTemplateColumns:"minmax(0,0.9fr) minmax(0,1.1fr)",gap:28,alignItems:"center"}} className="landing-signal-grid">
             <div>
-              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Signal Engine</div>
-              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,70px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Make the landing page feel like the app is already moving.</h2>
-              <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:22}}>Instead of telling people “networking platform,” show them signals: fictional profiles, posts, matches, notifications, and next steps that make account creation feel worth it.</p>
+              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Momentum System</div>
+              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,70px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>The next step gets clearer when the right signals are around you.</h2>
+              <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:22}}>Profiles, posts, matches, notifications, groups, and messages help you see who is active, what is possible, and where your first real opportunity might come from.</p>
               <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                {["Fictional users","Live-feeling UI","Account anticipation"].map(label=><span key={label} style={{background:"rgba(22,199,78,0.12)",border:"1px solid rgba(22,199,78,0.24)",color:C.accent,borderRadius:999,padding:"9px 12px",fontSize:12,fontWeight:900}}>{label}</span>)}
+                {["Career signals","Warm introductions","Opportunity matches"].map(label=><span key={label} style={{background:"rgba(22,199,78,0.12)",border:"1px solid rgba(22,199,78,0.24)",color:C.accent,borderRadius:999,padding:"9px 12px",fontSize:12,fontWeight:900}}>{label}</span>)}
               </div>
             </div>
             <div style={{display:"grid",gap:12,position:"relative"}}>
-              {signalRows.map(([title,copy,handle,name],i)=><div key={title} className="ch landing-mini-card" style={{background:i===1?"rgba(22,199,78,0.12)":"#101114",border:`1px solid ${i===1?"rgba(22,199,78,0.26)":"rgba(255,255,255,0.09)"}`,borderRadius:22,padding:18,display:"grid",gridTemplateColumns:"58px minmax(0,1fr) auto",gap:14,alignItems:"center",transform:i===1?"translateX(18px)":"none"}}><div style={{width:58,height:58,borderRadius:18,background:i===1?C.accent:C.aLight,color:i===1?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950}}>{name.split(" ").map(w=>w[0]).join("")}</div><div style={{minWidth:0}}><div style={{fontSize:18,fontWeight:950,color:"#fff",marginBottom:5}}>{title}</div><p style={{fontSize:13,color:"rgba(255,255,255,0.58)",lineHeight:1.55,margin:0}}>{copy}</p><div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:7}}>{name} · {handle} · fictional demo</div></div><div className="soft-blink" style={{width:12,height:12,borderRadius:"50%",background:C.accent,boxShadow:"0 0 22px rgba(22,199,78,0.7)"}}/></div>)}
+              {signalRows.map(([title,copy,handle,name],i)=><div key={title} className="ch landing-mini-card" style={{background:i===1?"rgba(22,199,78,0.12)":"#101114",border:`1px solid ${i===1?"rgba(22,199,78,0.26)":"rgba(255,255,255,0.09)"}`,borderRadius:22,padding:18,display:"grid",gridTemplateColumns:"58px minmax(0,1fr) auto",gap:14,alignItems:"center",transform:i===1?"translateX(18px)":"none"}}><div style={{width:58,height:58,borderRadius:18,background:i===1?C.accent:C.aLight,color:i===1?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950}}>{name.split(" ").map(w=>w[0]).join("")}</div><div style={{minWidth:0}}><div style={{fontSize:18,fontWeight:950,color:"#fff",marginBottom:5}}>{title}</div><p style={{fontSize:13,color:"rgba(255,255,255,0.58)",lineHeight:1.55,margin:0}}>{copy}</p><div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:7}}>{name} · {handle} · sample profile</div></div><div className="soft-blink" style={{width:12,height:12,borderRadius:"50%",background:C.accent,boxShadow:"0 0 22px rgba(22,199,78,0.7)"}}/></div>)}
             </div>
           </div>
         </div>
@@ -788,10 +788,10 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{maxWidth:1180,margin:"0 auto"}}>
           <div style={{display:"flex",justifyContent:"space-between",gap:26,alignItems:"end",flexWrap:"wrap",marginBottom:38}}>
             <div style={{maxWidth:680}}>
-              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Account Journey</div>
-              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.5vw,66px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1}}>From curious visitor to active builder.</h2>
+              <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Your First Move</div>
+              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.5vw,66px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1}}>From wondering what comes next to doing something about it.</h2>
             </div>
-            <p style={{fontSize:15,color:"rgba(255,255,255,0.54)",lineHeight:1.75,maxWidth:390}}>The page now sells the feeling of progress: make a profile, post the first thing, meet people, then keep momentum moving.</p>
+            <p style={{fontSize:15,color:"rgba(255,255,255,0.54)",lineHeight:1.75,maxWidth:390}}>Make a profile, post the first thing, meet people, find openings, and let one small action become the beginning of a real path.</p>
           </div>
           <div className="landing-workflow-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
             {workflowRows.map(([title,desc,icon],i)=><div key={title} className="ch" style={{background:"#101114",border:"1px solid rgba(255,255,255,0.09)",borderRadius:20,padding:22,position:"relative",overflow:"hidden"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><div style={{width:42,height:42,borderRadius:14,background:i===0?C.accent:"rgba(22,199,78,0.12)",color:i===0?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={icon} size={21}/></div><span style={{fontFamily:"Georgia,serif",fontSize:34,fontWeight:800,color:"rgba(255,255,255,0.12)"}}>0{i+1}</span></div><div style={{fontSize:18,fontWeight:900,color:"#fff",marginBottom:10}}>{title}</div><p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.72}}>{desc}</p></div>)}
@@ -811,9 +811,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div className="landing-section" style={{background:"#fff",padding:"110px 52px"}}>
         <div style={{maxWidth:1180,margin:"0 auto"}}>
           <div style={{textAlign:"center",maxWidth:760,margin:"0 auto 48px"}}>
-            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Who It Is For</div>
-            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.4vw,66px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>Not just founders. People before the first step.</h2>
-            <p style={{fontSize:16,color:"#687080",lineHeight:1.75}}>fear.social should feel approachable for anyone who wants business momentum but does not know where to start yet.</p>
+            <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Built For</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.4vw,66px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>Not just founders. People trying to find their future.</h2>
+            <p style={{fontSize:16,color:"#687080",lineHeight:1.75}}>For students, creators, early professionals, builders, and anyone who knows they want more but needs a place to begin.</p>
           </div>
           <div className="landing-proof-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,alignItems:"stretch"}}>
             <div className="landing-community-cards" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
@@ -821,7 +821,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             </div>
             <div style={{background:"#111318",borderRadius:24,padding:24,position:"relative",overflow:"hidden",minHeight:320}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-                <div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Live Signals</div><div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:800,color:"#fff",letterSpacing:0}}>The app should feel awake.</div></div>
+                <div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Live Signals</div><div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:800,color:"#fff",letterSpacing:0}}>Momentum should feel close.</div></div>
                 <div style={{width:46,height:46,borderRadius:16,background:"rgba(22,199,78,0.14)",color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="bell" size={22}/></div>
               </div>
               <div style={{display:"grid",gap:10}}>
@@ -833,8 +833,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       </div>
       <div id="activity" className="landing-launch landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:64}}>
-          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Launch Ready</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0}}>The foundation is ready to accept real demand.</h2>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>What Changes When You Join</div>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,4rem,62px)",fontWeight:800,color:"#fff",letterSpacing:0}}>The first step gets less lonely.</h2>
         </div>
         <div className="landing-testimonial-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
           {readinessRows.map(([title,desc,icon],i)=>(
@@ -849,8 +849,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div id="pricing" className="landing-pricing landing-section" style={{background:"#fff",borderTop:"1px solid #ECEFF3",padding:"110px 52px"}}>
         <div style={{maxWidth:980,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>A clean plan for free growth and paid power users.</h2>
-          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:680,margin:"0 auto 56px"}}>Start with a free profile, even if the business is still just an idea. Convert the most active members into FEAR Pro at a simple founding-member price when billing opens.</p>
+          <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>Start free. Move with purpose.</h2>
+          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:680,margin:"0 auto 56px"}}>Create a profile, find people, post progress, message builders, save opportunities, and start building toward the work and future you want.</p>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
             {pricingRows.map((p,i)=>(
               <div key={i} className="ch" style={{background:p.grad?"#111318":"#F7F8FA",border:`1px solid ${p.grad?"#111318":"#EAECF0"}`,borderRadius:22,padding:"38px 34px",position:"relative",overflow:"hidden",boxShadow:p.grad?"0 28px 80px rgba(0,0,0,0.18)":"none"}}>
@@ -870,8 +870,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       </div>
       <div id="cta" className="landing-cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
         <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
-        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Build with people<br/>who are also building.</h2>
-        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:620,position:"relative"}}>Get on the list, create your account, and start turning the idea in your head into relationships, action, and momentum.</p>
+        <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Your future can start<br/>before you feel ready.</h2>
+        <p style={{fontSize:18,color:"rgba(255,255,255,0.54)",lineHeight:1.75,margin:"0 auto 38px",maxWidth:620,position:"relative"}}>Create your account, find your people, and take the step that turns hope into something you can actually build on.</p>
         <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",position:"relative"}}>
           <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900,boxShadow:"0 18px 50px rgba(22,199,78,0.28)"}}>Create free account →</button>
           <button onClick={()=>scrollToSection("pricing")} className="bs" style={{background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.16)",borderRadius:999,padding:"15px 24px",fontSize:15,fontWeight:900}}>See Pro plan</button>
