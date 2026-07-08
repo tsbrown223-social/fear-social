@@ -1708,7 +1708,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                         </div>
                       </div>
                     ):<>
-                      {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75}}>{p.content}</p>}
+                      {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:p.type==="Reel"?"pre-line":"normal"}}>{p.content}</p>}
+                      <OfficialReelCard post={p}/>
                       <MediaPreviewGrid media={p.media}/>
                     </>}
                   </div>
@@ -1779,6 +1780,31 @@ function MediaPreviewGrid({media=[],onRemove}){
   const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
   if(safe.length===0)return null;
   return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><div key={item.id||item.url} style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:C.bg,minHeight:safe.length===1?260:170}}>{item.kind==="video"?<video src={item.url} controls playsInline style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}{onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}</div>)}</div>;
+}
+function OfficialReelCard({post}){
+  if(post?.type!=="Reel"||post?.handle!=="@fear.social")return null;
+  const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
+  const title=lines.find(line=>line.startsWith("Daily fear.social Reel:"))?.replace("Daily fear.social Reel:","").trim()||"Daily Reel";
+  const hook=lines.find(line=>line.startsWith("Hook:"))?.replace("Hook:","").trim()||"Take the next step before you feel ready.";
+  const prompt=lines.find(line=>line.startsWith("Community prompt:"))?.replace("Community prompt:","").trim()||"What is your next move?";
+  return <div aria-label={`Official fear.social Reel: ${title}`} style={{marginTop:14,borderRadius:22,overflow:"hidden",background:GR2,border:`1px solid ${C.aSoft}`,boxShadow:"0 24px 60px rgba(22,199,78,0.14)"}}>
+    <div style={{minHeight:430,display:"grid",alignContent:"space-between",padding:24,position:"relative",color:"#fff"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 78% 18%, rgba(22,199,78,.35), transparent 32%), radial-gradient(circle at 18% 82%, rgba(255,255,255,.08), transparent 34%)"}}/>
+      <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"space-between",gap:12,alignItems:"center"}}>
+        <span style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(255,255,255,.2)",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:950,letterSpacing:1.2,textTransform:"uppercase",background:"rgba(255,255,255,.08)"}}><Icon name="sparkle" size={14} color={C.accent}/> Daily Reel</span>
+        <span style={{fontFamily:"Georgia,serif",fontSize:21,fontWeight:900}}>fear<span style={{color:C.accent}}>.</span>social</span>
+      </div>
+      <div style={{position:"relative",zIndex:1,display:"grid",gap:14,maxWidth:520}}>
+        <div style={{fontSize:13,fontWeight:950,letterSpacing:1.6,textTransform:"uppercase",color:C.accent}}>Official prompt</div>
+        <div style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,7vw,58px)",lineHeight:1.02,fontWeight:900,letterSpacing:0}}>{title}</div>
+        <p style={{fontSize:18,lineHeight:1.45,color:"rgba(255,255,255,.78)",maxWidth:470}}>{hook}</p>
+      </div>
+      <div style={{position:"relative",zIndex:1,display:"grid",gap:12}}>
+        <div style={{display:"flex",gap:8,alignItems:"center",fontSize:13,fontWeight:900,color:"rgba(255,255,255,.74)"}}><span style={{width:34,height:34,borderRadius:"50%",background:C.accent,color:"#071008",display:"flex",alignItems:"center",justifyContent:"center",flex:"0 0 auto"}}><Icon name="zap" size={17} color="currentColor"/></span> {prompt}</div>
+        <div style={{height:6,borderRadius:999,background:"rgba(255,255,255,.12)",overflow:"hidden"}}><span style={{display:"block",height:"100%",width:"68%",borderRadius:999,background:C.accent}}/></div>
+      </div>
+    </div>
+  </div>;
 }
 function EmptyState({title,text}){
   return <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:28,textAlign:"center",color:C.muted}}><div style={{fontWeight:900,fontSize:18,color:C.text,marginBottom:8}}>{title}</div><div style={{fontSize:14,lineHeight:1.65}}>{text}</div></div>;

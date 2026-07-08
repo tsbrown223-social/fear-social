@@ -61,10 +61,11 @@ const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
 const TERMS_VERSION = "2026-07-06";
 const FEAR_GROUP_ID = "fear-official";
+const OFFICIAL_USER_ID = "fear-social-official";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
-const VERIFIED_HANDLES = new Set(["@taylorbrown"]);
-const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com"]);
-const VERIFIED_NAMES = new Set(["taylor brown"]);
+const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
+const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
+const VERIFIED_NAMES = new Set(["taylor brown", "fear.social"]);
 
 const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim()) && String(value || "").length <= 120;
 
@@ -794,6 +795,117 @@ async function getPosts(db, userId) {
   }));
 }
 
+const DAILY_REEL_TEMPLATES = [
+  {
+    tag: "Exploring",
+    title: "The First Step",
+    hook: "You do not need a perfect plan to begin.",
+    beats: ["Name the move you are avoiding.", "Make it small enough to do today.", "Post the update before you overthink it."],
+    prompt: "What is one business or career move you can take before tonight?",
+  },
+  {
+    tag: "Networking",
+    title: "Find Your People",
+    hook: "The right room can change how possible your future feels.",
+    beats: ["Follow someone building near your lane.", "Ask one real question.", "Turn one message into momentum."],
+    prompt: "Who do you need to meet this week?",
+  },
+  {
+    tag: "Opportunities",
+    title: "One Door Opens",
+    hook: "Jobs, gigs, volunteer roles, and collaborations all count as first steps.",
+    beats: ["Save one opportunity.", "Send one thoughtful note.", "Track what you learn from the attempt."],
+    prompt: "What kind of opening would help you move forward?",
+  },
+  {
+    tag: "Mentors",
+    title: "Ask Better",
+    hook: "A good mentor request is specific, short, and easy to answer.",
+    beats: ["Say what you are trying to build.", "Ask for one piece of advice.", "Make the next action clear."],
+    prompt: "What question would unlock your next step?",
+  },
+  {
+    tag: "Creative",
+    title: "Build In Public",
+    hook: "Progress gets easier to believe when you can see it stacking up.",
+    beats: ["Share the attempt.", "Share the lesson.", "Share the next move."],
+    prompt: "What are you building that deserves to be seen?",
+  },
+  {
+    tag: "Finance",
+    title: "Make It Real",
+    hook: "A business starts feeling real when the numbers have somewhere to live.",
+    beats: ["Write the price.", "List the cost.", "Find the first person who might pay."],
+    prompt: "What would make your idea measurable today?",
+  },
+  {
+    tag: "Community",
+    title: "Momentum Check",
+    hook: "The person you want to become is built through small repeated proof.",
+    beats: ["One post.", "One conversation.", "One next step."],
+    prompt: "What proof can you give yourself today?",
+  },
+];
+
+const officialReelContent = (dateKey) => {
+  const dayMs = Date.parse(`${dateKey}T00:00:00.000Z`);
+  const index = Number.isFinite(dayMs) ? Math.floor(dayMs / 86400000) % DAILY_REEL_TEMPLATES.length : 0;
+  const reel = DAILY_REEL_TEMPLATES[index];
+  return {
+    ...reel,
+    content: [
+      `Daily fear.social Reel: ${reel.title}`,
+      "",
+      `Hook: ${reel.hook}`,
+      "",
+      "Reel beats:",
+      ...reel.beats.map((beat, beatIndex) => `${beatIndex + 1}. ${beat}`),
+      "",
+      `Community prompt: ${reel.prompt}`,
+    ].join("\n"),
+  };
+};
+
+async function ensureOfficialDailyReelPost(db) {
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const postId = `fear-reel-${dateKey}`;
+  const reel = officialReelContent(dateKey);
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, role, headline, website, looking_for, goal, verified_badge, email_verified_at)
+       VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', '', 'admin', 'Official fear.social daily reels and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
+    )
+    .bind(OFFICIAL_USER_ID, `official-${OFFICIAL_USER_ID}`)
+    .run();
+  await db
+    .prepare(
+      `UPDATE users
+       SET name = 'fear.social',
+           handle = '@fear.social',
+           email = 'official@fear.social',
+           location = 'Remote',
+           industry = 'Community',
+           stage = 'Building',
+           bio = 'Official fear.social account for daily prompts, product updates, and first-step momentum.',
+           privacy = 'public',
+           role = 'admin',
+           headline = 'Official fear.social daily reels and platform notes.',
+           website = 'https://fear.social',
+           looking_for = 'People ready to take their first business or career step.',
+           goal = 'Turn fear into momentum.',
+           verified_badge = 1,
+           email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .bind(OFFICIAL_USER_ID)
+    .run();
+  await db
+    .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, 'Reel', ?, 'Daily', ?, '[]', CURRENT_TIMESTAMP)")
+    .bind(postId, OFFICIAL_USER_ID, reel.tag, reel.content)
+    .run();
+}
+
 async function profileWithFollowerCount(db, user) {
   const row = await db
     .prepare("SELECT COUNT(*) AS followers FROM user_connections WHERE target_user_id = ?")
@@ -1014,6 +1126,7 @@ async function getOpportunities(db) {
 
 async function getBootstrap(db, user) {
   const userId = user.id;
+  await ensureOfficialDailyReelPost(db);
   const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities] = await Promise.all([
     getPosts(db, userId),
     db
@@ -1221,6 +1334,7 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "GET" && path === "/stats") {
+    await ensureOfficialDailyReelPost(db);
     return json({ stats: await getStats(db) });
   }
 
