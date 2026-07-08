@@ -507,6 +507,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
     )
     .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal)
       .run();
+  await ensureUserFollowsOfficial(db, id);
   await createSession(db, id, sessionToken, request);
 
   if (profile.email) {
@@ -665,6 +666,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
         String(profile.picture || "").slice(0, 500)
       )
       .run();
+    await ensureUserFollowsOfficial(db, id);
     await recordRegistrationEmail(db, `${provider}_account_created`, email, {
       userId: id,
       name: profile.name || "",
@@ -875,6 +877,25 @@ const officialReelContent = (dateKey) => {
   };
 };
 
+async function ensureUserFollowsOfficial(db, userId) {
+  if (!userId || userId === OFFICIAL_USER_ID || userId === "demo-user") return;
+  await db
+    .prepare("INSERT OR IGNORE INTO user_connections (user_id, target_user_id) VALUES (?, ?)")
+    .bind(userId, OFFICIAL_USER_ID)
+    .run();
+}
+
+async function ensureAllUsersFollowOfficial(db) {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO user_connections (user_id, target_user_id)
+       SELECT id, ? FROM users
+       WHERE id <> 'demo-user' AND id <> ?`
+    )
+    .bind(OFFICIAL_USER_ID, OFFICIAL_USER_ID)
+    .run();
+}
+
 async function ensureOfficialDailyReelPost(db) {
   const dateKey = new Date().toISOString().slice(0, 10);
   const postId = `fear-reel-${dateKey}`;
@@ -917,6 +938,7 @@ async function ensureOfficialDailyReelPost(db) {
     .prepare("UPDATE posts SET type = 'Reel', tag = ?, stage = 'Daily', content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
     .bind(reel.tag, reel.content, postId, OFFICIAL_USER_ID)
     .run();
+  await ensureAllUsersFollowOfficial(db);
 }
 
 async function profileWithFollowerCount(db, user) {
@@ -1472,6 +1494,7 @@ async function handleRequest({ request, env, params }) {
         )
         .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
         .run();
+      await ensureUserFollowsOfficial(db, id);
       await recordRegistrationEmail(db, "verified_account_created", email, {
         userId: id,
         name: profile.name,
@@ -2069,6 +2092,10 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    if (targetUserId === OFFICIAL_USER_ID) {
+      await ensureUserFollowsOfficial(db, user.id);
+      return json(await getBootstrap(db, user));
+    }
     const connected = await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
     if (connected) {
       await safeRun(
