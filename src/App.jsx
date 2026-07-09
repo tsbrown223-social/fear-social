@@ -234,7 +234,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-nav>div>div:first-child{font-size:19px!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
   .landing-nav-links{display:none!important;}
   .landing-nav-actions{gap:6px!important;flex-shrink:0;}
-  .landing-nav-a11y{display:none!important;}
   .landing-nav-login,.landing-nav-join{padding:8px 11px!important;font-size:12px!important;}
   .theme-toggle-label{display:none!important;}
   .landing-hero{min-height:100dvh!important;padding:98px 16px 50px!important;justify-content:flex-start!important;}
@@ -275,7 +274,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .verify-card .verify-actions{grid-template-columns:1fr!important;}
   .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
   .toast-stack>div{min-width:0!important;width:100%!important;}
-  [aria-label="Open accessibility settings"]{bottom:calc(82px + env(safe-area-inset-bottom))!important;left:12px!important;width:44px!important;height:44px!important;}
   [style*="grid-template-columns: 310px 1fr"]{grid-template-columns:1fr!important;}
   [style*="grid-template-columns: repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
   [style*="grid-template-columns: repeat(5,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
@@ -598,7 +596,6 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
       </div>
       <div className="landing-nav-actions" style={{display:"flex",gap:8}}>
         <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
-        <button onClick={()=>onOpenPanel("accessibility")} className="bs landing-nav-a11y" aria-label="Accessibility settings" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,width:38,height:38,color:"#111318",fontSize:15,fontWeight:900,cursor:"pointer",whiteSpace:"nowrap"}}>Aa</button>
         <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs landing-nav-login" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <button onClick={()=>setScreen("signup")} className="bs landing-nav-join" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
       </div>
@@ -1792,7 +1789,20 @@ const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
 function MediaPreviewGrid({media=[],onRemove}){
   const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
   if(safe.length===0)return null;
-  return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><div key={item.id||item.url} style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:C.bg,minHeight:safe.length===1?260:170}}>{item.kind==="video"?<video src={item.url} controls playsInline style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}{onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}</div>)}</div>;
+  return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><MediaPreviewItem key={item.id||item.url} item={item} single={safe.length===1} onRemove={onRemove}/>)}</div>;
+}
+function MediaPreviewItem({item,single,onRemove}){
+  const [videoError,setVideoError]=useState(false);
+  return <div style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:item.kind==="video"?"#000":C.bg,minHeight:single?260:170}}>
+    {item.kind==="video"&&!videoError?<video src={item.url} controls playsInline preload="metadata" onLoadedData={()=>setVideoError(false)} onError={()=>setVideoError(true)} style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:item.kind==="video"?<div style={{minHeight:single?320:190,display:"grid",placeItems:"center",textAlign:"center",padding:24,color:"rgba(255,255,255,.72)",background:"#000"}}>
+      <div>
+        <div style={{width:54,height:54,borderRadius:"50%",border:"1px solid rgba(255,255,255,.22)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:12,color:"#fff"}}><Icon name="camera" size={24}/></div>
+        <div style={{fontWeight:950,color:"#fff",marginBottom:6}}>Video attached</div>
+        <p style={{fontSize:13,lineHeight:1.55,maxWidth:320}}>This browser cannot preview that video format. MP4 usually previews best. You can remove it and upload/record again.</p>
+      </div>
+    </div>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}
+    {onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}
+  </div>;
 }
 function CameraCaptureModal({onClose,onCapture,notify}){
   const videoRef=useRef(null);
@@ -1852,7 +1862,7 @@ function CameraCaptureModal({onClose,onCapture,notify}){
   const startRecording=()=>{
     if(!streamRef.current||recording)return;
     if(typeof MediaRecorder==="undefined")return setError("Video recording is not supported in this browser.");
-    const preferred=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+    const preferred=["video/mp4;codecs=h264,aac","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
     const mimeType=preferred.find(type=>MediaRecorder.isTypeSupported?.(type))||"";
     cancelCaptureRef.current=false;
     chunksRef.current=[];
@@ -1864,7 +1874,7 @@ function CameraCaptureModal({onClose,onCapture,notify}){
         setRecording(false);
         if(stopTimerRef.current)clearTimeout(stopTimerRef.current);
         stopTimerRef.current=null;
-        const blob=new Blob(chunksRef.current,{type:recorder.mimeType||"video/webm"});
+        const blob=new Blob(chunksRef.current,{type:recorder.mimeType||mimeType||"video/webm"});
         chunksRef.current=[];
         if(cancelCaptureRef.current)return;
         if(blob.size>4*1024*1024){
@@ -2312,7 +2322,6 @@ export default function App(){
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} themeMode={themeMode} setThemeMode={setThemeMode}/>}
-        <button onClick={()=>setOpenPanel("accessibility")} aria-label="Open accessibility settings" className="bs" style={{position:"fixed",left:18,bottom:cookieConsent.choice?18:128,zIndex:8400,width:48,height:48,borderRadius:"50%",border:`1px solid ${C.border}`,background:"#fff",boxShadow:"0 12px 40px rgba(0,0,0,.18)",color:C.text,fontWeight:900}}>Aa</button>
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
         {openPanel==="privacy"&&<PrivacyPolicyPanel onClose={()=>setOpenPanel(null)} onOpenAccessibility={()=>setOpenPanel("accessibility")}/>}
         {openPanel==="accessibility"&&<AccessibilityPanel settings={accessibility} setSettings={setAccessibility} onClose={()=>setOpenPanel(null)}/>}
