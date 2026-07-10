@@ -160,8 +160,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 }
 @media(max-width:760px){
   html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
-  body{background:#050506;}
-  .app-view{overflow-x:hidden!important;font-size:15px;}
+  body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:pan-y;}
+  .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink{animation:none!important;}
+  .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
   .app-view h1,.app-view h2,.app-view h3,.app-view p,.app-view div,.app-view span,.app-view a{max-width:100%;}
   .app-view p,.app-view h1,.app-view h2,.app-view h3{overflow-wrap:anywhere;}
   .app-view button,.app-view .bs,.app-view label.bs{min-height:44px;}
@@ -181,16 +182,16 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .mobile-bottom-nav button.active{background:${C.aLight};color:${C.accent};}
   .mobile-bottom-nav span{font-size:16px;line-height:1;display:flex;}
   .mobile-bottom-nav svg{width:17px;height:17px;}
-  .app-topbar{min-height:58px!important;padding:7px 10px!important;gap:7px!important;flex-wrap:nowrap!important;overflow:hidden!important;}
+  .app-topbar{min-height:58px!important;padding:7px 10px!important;gap:7px!important;flex-wrap:nowrap!important;overflow:hidden!important;box-shadow:0 8px 28px rgba(13,15,20,.06)!important;}
   .app-topbar-logo{font-size:18px!important;flex:1 1 auto;min-width:0;max-width:42vw;overflow:hidden;text-overflow:ellipsis;}
   .app-topbar>button{flex:0 0 auto;}
   .app-topbar>button[aria-label="Edit profile"]>div>div{width:34px!important;height:34px!important;font-size:11px!important;}
   .app-topbar>button[aria-label*="unread notifications"],.app-topbar .theme-toggle-button{width:38px!important;height:38px!important;min-height:38px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
-  .app-shell{padding:12px 10px calc(104px + env(safe-area-inset-bottom))!important;width:100%!important;}
+  .app-shell{padding:12px 10px calc(104px + env(safe-area-inset-bottom))!important;width:100%!important;max-width:100%!important;}
   .feed-grid{display:block!important;}
   .mobile-profile-summary{display:block!important;}
   .mobile-profile-summary{padding:14px!important;border-radius:16px!important;}
-  .composer-card{border-radius:18px!important;padding:12px!important;}
+  .composer-card{border-radius:18px!important;padding:12px!important;box-shadow:0 12px 34px rgba(13,15,20,.06)!important;}
   .composer-card>div{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;}
   .composer-card>div>div:first-child{display:none!important;}
   .composer-card textarea{min-height:96px!important;font-size:16px!important;line-height:1.5!important;padding:12px!important;border-radius:14px!important;}
@@ -200,7 +201,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{grid-column:1/-1!important;margin-left:0!important;}
   .composer-actions .composer-media-btn{font-size:14px!important;}
   .composer-actions .composer-publish-btn{font-size:15px!important;}
-  .post-card{border-radius:18px!important;margin-bottom:12px!important;}
+  .post-card{border-radius:18px!important;margin-bottom:12px!important;box-shadow:0 12px 34px rgba(13,15,20,.05)!important;}
   .post-card>div:first-child{padding:14px!important;}
   .post-card .profile-link{align-items:flex-start!important;}
   .post-card .profile-link>div:last-child{max-width:100%;}
@@ -211,7 +212,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .opportunity-form-actions{display:grid!important;grid-template-columns:1fr!important;}
   .opportunity-form-actions button{width:100%!important;justify-content:center!important;}
   .post-actions{padding:10px 12px!important;gap:6px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
-  .post-actions button{font-size:12.5px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;padding:8px 2px!important;}
+  .post-actions button{font-size:12px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;padding:8px 2px!important;white-space:nowrap!important;}
   .post-actions svg{width:16px!important;height:16px!important;flex:0 0 auto;}
   .comment-row{display:grid!important;grid-template-columns:1fr!important;}
   .comment-row button{width:100%!important;}
@@ -290,10 +291,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .cookie-notice{left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;}
   .cookie-card{max-width:none!important;border-radius:18px!important;}
   .cookie-actions{display:grid!important;grid-template-columns:1fr!important;}
-  .signup-root{display:block!important;background:${C.dark}!important;min-height:100vh!important;}
+  .signup-root{display:block!important;background:linear-gradient(180deg,#F7F8FA 0%,#EAFBF1 100%)!important;min-height:100dvh!important;}
   .signup-copy{display:none!important;}
-  .signup-form-panel{width:100%!important;min-height:100vh!important;padding:82px 22px 32px!important;}
-  .signup-form-panel>div{max-width:440px!important;margin:0 auto!important;}
+  .signup-form-panel{width:100%!important;min-height:100dvh!important;padding:74px 16px 28px!important;background:transparent!important;align-items:flex-start!important;}
+  .signup-form-panel>div{max-width:440px!important;margin:0 auto!important;background:rgba(255,255,255,.96)!important;border:1px solid #E4E8F0!important;border-radius:24px!important;padding:22px!important;box-shadow:0 22px 70px rgba(13,15,20,.12)!important;}
+  .signup-form-panel input{min-height:50px!important;border-radius:14px!important;}
+  .signup-form-panel .bs{min-height:46px!important;}
   .verify-shell{padding:20px 14px!important;align-items:flex-start!important;}
   .verify-card{padding:24px!important;border-radius:24px!important;margin-top:34px!important;}
   .verify-card h1{font-size:34px!important;}
@@ -974,18 +977,20 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const passwordReady=form.password.length>=8&&form.password===form.confirmPassword;
-  const valid=form.name&&form.username&&form.email&&passwordReady&&acceptedTerms;
+  const valid=form.name.trim()&&form.username.length>=2&&form.email&&passwordReady&&acceptedTerms;
   const loginValid=login.identifier&&login.password;
   const passwordSetupReady=passwordSetup.password.length>=8&&passwordSetup.password===passwordSetup.confirmPassword;
   const requestCode=async()=>{
     if(!acceptedTerms)return notify("Accept the Terms and Conditions to continue","error");
     if(!valid)return;
     try{
-      await api("/auth/request-code",{method:"POST",body:JSON.stringify({email:form.email,username:form.username})});
-      setStep(1);
-      notify("Verification code sent");
+      const nextProfile={name:form.name.trim(),username:form.username,handle:`@${form.username}`,email:form.email.trim().toLowerCase()};
+      const saved=await api("/auth/signup",{method:"POST",body:JSON.stringify({email:nextProfile.email,username:form.username,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-10"})});
+      setProfile(p=>({...p,...saved.profile}));
+      setScreen("app");
+      notify(saved.emailStatus?.signupConfirmationSent?"Account created. Confirmation email sent.":"Account created. You are signed in.");
     }catch(err){
-      notify(err.message||"Could not send verification code","error");
+      notify(err.message||"Could not create account","error");
     }
   };
   const loginWithPassword=async()=>{
@@ -1024,7 +1029,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
-      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-08"})});
+      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-10"})});
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       notify(err.message||"Could not verify email","error");
@@ -1102,8 +1107,9 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
             <button role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>setMode("login")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"||mode==="password"?"#fff":C.muted,background:mode==="login"||mode==="password"?C.accent:"transparent"}}>Log in</button>
           </div>
           {mode==="signup"?<>
-          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Sign up</div>
-          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Create your fear.social account.</div>
+          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create account</div>
+          <div style={{fontSize:14,color:C.muted,marginBottom:24,lineHeight:1.55}}>Start free. No card. You will enter the platform immediately after creating your account.</div>
+          <div style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"11px 12px",marginBottom:22,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={16} color="currentColor"/> Fast signup with email confirmation sent automatically.</div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
@@ -1126,7 +1132,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
               <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)} style={{marginTop:2,accentColor:C.accent,flexShrink:0}}/>
               <span style={{fontSize:12,color:C.muted,lineHeight:1.55}}>I agree to the <button type="button" onClick={e=>{e.preventDefault();setShowTerms(true);}} style={{background:"none",border:"none",padding:0,color:C.accent,fontWeight:900,textDecoration:"underline",cursor:"pointer"}}>Terms and Conditions</button> and understand fear.social's privacy and community rules.</span>
             </label>
-            <GBtn full disabled={!valid} onClick={requestCode}>Send verification code →</GBtn>
+            <GBtn full disabled={!valid} onClick={requestCode}>Create account →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
           </div>
           </>:mode==="login"?<>
@@ -1511,6 +1517,18 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify("Comment saved locally. Cloud sync failed.","error");
     }
   };
+  const reportPost=async post=>{
+    if(!post?.id)return;
+    const reason=window.prompt("What should fear.social review about this post?");
+    const cleanReason=String(reason||"").trim();
+    if(!cleanReason)return;
+    try{
+      await callBackend("/reports",{method:"POST",body:JSON.stringify({targetType:"post",targetId:String(post.id),reason:cleanReason})});
+      notify("Report sent. Thank you for helping keep fear.social safe.");
+    }catch(err){
+      notify(err.message||"Could not send report","error");
+    }
+  };
   const beginEditPost=post=>setEditingPost({id:post.id,content:post.content,type:post.type||"Update",tag:post.tag||profile.industry||"Exploring"});
   const cancelEditPost=()=>setEditingPost(null);
   const savePostEdit=async id=>{
@@ -1744,7 +1762,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <div className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
                       <Av i={p.av} src={p.avatarUrl} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
                       <div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text,minWidth:0}}><NameWithVerified name={p.user} person={p} size={15}/></b><Tag label={p.type||"Update"} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago{p.edited?" · edited":""}</div></div>
-                      {isOwner&&<div style={{display:"flex",gap:6,flexShrink:0}}><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></div>}
+                      {isOwner?<div style={{display:"flex",gap:6,flexShrink:0}}><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></div>:<button onClick={e=>{e.stopPropagation();reportPost(p);}} className="bs post-report-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.muted,flexShrink:0}}>Report</button>}
                     </div>
                     {isEditing?(
                       <div style={{display:"grid",gap:10}}>
@@ -1761,8 +1779,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     </>}
                   </div>
                   <div className="post-actions" style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
-                    <button className="bs" onClick={()=>togglePostAction(p.id,"like")} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="heart" size={17} color="currentColor" filled={p.liked}/> {p.likes}</button>
-                    <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> {p.comments.length}</button>
+                    <button className="bs" onClick={()=>togglePostAction(p.id,"like")} aria-label={`${p.liked?"Unlike":"Like"} post by ${p.user}`} style={{background:"none",border:"none",fontWeight:800,color:p.liked?C.coral:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="heart" size={17} color="currentColor" filled={p.liked}/> Like {fmt(p.likes||0)}</button>
+                    <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} aria-label={`Comment on post by ${p.user}`} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> Comment {fmt((p.comments||[]).length)}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}><Icon name="bookmark" size={17} color="currentColor" filled={p.saved}/> {p.saved?"Saved":"Save"}</button>
                   </div>
                   {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}><NameWithVerified name={c.user} person={c} size={13}/></b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input aria-label={`Write a comment on ${p.user}'s post`} value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
@@ -2175,28 +2193,29 @@ function TermsConditionsPanel({onClose}){
   const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
   return (
     <ModalShell title="Terms and Conditions" eyebrow="Legal" onClose={onClose}>
-      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 8, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 10, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
       {section("Acceptance of Terms","By creating an account, checking the agreement box, accessing the platform, or using any fear.social feature, you agree to these Terms, the Privacy Policy, and any community or safety rules shown in the product. If you do not agree, do not create an account or use the service.")}
       {section("Purpose of the Platform","fear.social is designed to help people take practical first steps into business, entrepreneurship, projects, networking, mentorship, and professional collaboration. The service may include profiles, posts, comments, messaging, notifications, directories, events, rooms, opportunities, and future paid tools.")}
       {section("Eligibility and COPPA","You must be legally able to agree to these Terms. fear.social is not directed to children under 13, and children under 13 may not create accounts or submit personal information. If we learn that a child under 13 provided personal information without required verifiable parental consent, we may close the account and delete the information. If you are under the age of majority where you live, use the service only with permission from a parent or guardian.")}
       {section("Accounts and Security","You are responsible for accurate account information, keeping your password secure, and activity that happens through your account. Do not impersonate anyone, create misleading accounts, sell or transfer accounts without permission, or use another person's account. Notify contact@fear.social if you believe your account has been compromised.")}
       {section("User Content and License","You keep ownership of content you post, upload, message, or submit, including text, profile details, photos, videos, comments, opportunities, group announcements, and direct messages. You grant fear.social a worldwide, non-exclusive, royalty-free, sublicensable license to host, store, reproduce, display, process, transmit, adapt for formatting, and distribute that content as needed to operate, improve, protect, and promote the service. You represent that you have the rights needed to share your content and that your content does not violate another person's privacy, publicity, copyright, trademark, or other rights.")}
       {section("Platform Intellectual Property","fear.social owns the platform code, product design, software, interface, databases, workflows, copy, branding, logos, trade dress, and other platform materials except user content and third-party materials. The fear.social name, logo, and marks should be protected through trademark filings and brand usage controls. You may not copy, modify, reverse engineer, sell, scrape, frame, or present fear.social platform materials, branding, or code as your own without written permission.")}
-      {section("Copyright and IP Complaints","If you believe content on fear.social infringes your copyright, trademark, privacy, publicity, or other rights, contact contact@fear.social with the specific URL or content, your contact information, proof of rights, and a statement explaining the issue. We may remove or restrict disputed content, notify the user, preserve records, terminate repeat infringers, or request more information before acting.")}
+      {section("Copyright, Trademark, and IP Complaints","If you believe content on fear.social infringes your copyright, trademark, privacy, publicity, or other rights, contact contact@fear.social with the specific URL or content, your contact information, proof of rights, and a statement explaining the issue. For copyright notices, include enough information for us to identify the copyrighted work and the allegedly infringing material, a good-faith statement, an accuracy statement, and your physical or electronic signature. We may remove or restrict disputed content, notify the user, preserve records, terminate repeat infringers, or request more information before acting.")}
       {section("Direct Messages and Communications","Direct messages are part of the service and may be stored, processed, moderated, or reviewed when needed for safety, abuse prevention, legal compliance, support, or platform operations. Do not use messages for harassment, spam, scams, unlawful offers, or unwanted solicitation.")}
-      {section("Community Conduct","Do not harass, threaten, exploit, spam, deceive, discriminate against, or abuse other users. Do not post or send content that is hateful, sexually exploitative, violent, illegal, invasive of privacy, infringing, malicious, or designed to manipulate users or the platform.")}
+      {section("Community Conduct","Do not harass, threaten, exploit, spam, deceive, discriminate against, or abuse other users. Do not post or send content that is hateful, sexually exploitative, pornographic, violent, illegal, invasive of privacy, infringing, defamatory, malicious, fraudulent, predatory, or designed to manipulate users or the platform. Do not post another person's private information, intimate imagery, financial information, credentials, or content involving minors in an unsafe or exploitative way.")}
       {section("Prohibited Uses","You may not scrape the service, attack the infrastructure, bypass security, upload malware, reverse engineer non-public systems, automate abusive activity, interfere with other users, misrepresent business opportunities, or use fear.social for unlawful, fraudulent, or harmful purposes.")}
       {section("Security Testing and Reports","If you believe you found a vulnerability, report it to contact@fear.social with steps to reproduce, affected URLs, timestamps, and any request IDs. Do not access other users' data, run denial-of-service testing, spam the service, or publicly disclose an issue before we have had a reasonable chance to investigate and fix it.")}
+      {section("Content Reports and Enforcement","Users can report posts, messages, profiles, groups, opportunities, or other content that may violate these Terms. Reports may be reviewed by fear.social, and we may remove content, limit distribution, suspend accounts, preserve evidence, contact affected users, notify service providers, or report matters to law enforcement when appropriate. Reporting content does not guarantee removal, and not reporting content does not mean fear.social endorses it.")}
       {section("Business Opportunities and User Interactions","Users are responsible for evaluating collaborators, mentors, jobs, gigs, investments, services, advice, and opportunities they discover through fear.social. We do not guarantee any user's identity, qualifications, results, funding, employment, partnership, or business outcome.")}
       {section("No Professional Advice","fear.social does not provide legal, financial, tax, investment, medical, employment, or other professional advice. Content on the platform is for general community and informational purposes. Verify important decisions with qualified professionals.")}
       {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. Pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after paid tools launch. Any paid feature will be presented before purchase.")}
       {section("Email, Verification, and Notifications","By signing up, you agree that fear.social may send verification, security, account, signup, transactional, and service-related emails to the email address on your account, including from contact@fear.social. You may also receive in-app notifications for follows, messages, comments, account activity, and platform updates.")}
       {section("Privacy and Data","Your use of fear.social is also governed by the Privacy Policy. The platform may collect account details, profile information, posts, messages, comments, activity data, device/session data, and other information needed to provide and secure the service.")}
-      {section("Moderation, Bans, and Section 230","fear.social hosts user-generated content and may moderate in good faith. We may remove content, limit visibility, suspend features, ban users, revoke access, delete accounts, preserve evidence, or report activity when we believe it is necessary to protect users, comply with law, enforce these Terms, respond to complaints, or maintain platform integrity. Under laws such as 47 U.S.C. § 230, platforms may receive protection for third-party user content and for good-faith restriction of objectionable material; these Terms do not waive any protections available to fear.social.")}
+      {section("Moderation, Bans, and Section 230","fear.social hosts user-generated content and may moderate in good faith. We may remove content, limit visibility, suspend features, ban users, revoke access, delete accounts, preserve evidence, or report activity when we believe it is necessary to protect users, comply with law, enforce these Terms, respond to complaints, or maintain platform integrity. Under laws such as 47 U.S.C. § 230, platforms may receive protection from being treated as the publisher or speaker of third-party user content and may receive protection for good-faith restriction of objectionable material. These Terms do not waive any protections, defenses, immunities, safe harbors, or limitations available to fear.social.")}
       {section("Third-Party Links and Services","The platform may link to third-party websites, tools, profiles, payment systems, or services. fear.social is not responsible for third-party content, policies, availability, security, or transactions. Use third-party services at your own risk.")}
       {section("Service Changes and Availability","fear.social is an evolving product. Features may be changed, limited, paused, removed, or unavailable. Beta features may contain errors or downtime. We do not guarantee uninterrupted access, message delivery timing, data availability, or that all features will remain free or unchanged.")}
-      {section("Disclaimers","The service is provided as is and as available, without warranties of any kind to the fullest extent permitted by law. fear.social does not guarantee business success, user behavior, opportunity quality, message delivery, or the accuracy of user-generated content.")}
-      {section("Limitation of Liability","To the fullest extent permitted by law, fear.social and its operators will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, lost profits, lost opportunities, lost data, or harm arising from use of or inability to use the service.")}
+      {section("Disclaimers","The service is provided as is and as available, without warranties of any kind to the fullest extent permitted by law. fear.social does not guarantee business success, employment, funding, user behavior, opportunity quality, identity verification, message delivery, uninterrupted access, or the accuracy, safety, legality, or usefulness of user-generated content.")}
+      {section("Limitation of Liability","To the fullest extent permitted by law, fear.social and its operators will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, lost profits, lost opportunities, lost data, reputational harm, user conduct, third-party content, or harm arising from use of or inability to use the service. Where liability cannot be excluded, liability is limited to the maximum extent allowed by applicable law.")}
       {section("Indemnity","You agree to defend, indemnify, and hold harmless fear.social and its operators from claims, damages, liabilities, losses, and expenses arising from your content, your use of the service, your violation of these Terms, or your violation of another person's rights.")}
       {section("Disputes and Governing Law","Contact contact@fear.social first so we can try to resolve disputes informally. To the fullest extent permitted by law, disputes will be handled individually rather than as a class or representative action, and you agree to the exclusive jurisdiction and venue of courts located in the United States unless a different venue is required by applicable consumer law. Some jurisdictions do not allow certain dispute, warranty, or liability limits, so some provisions may not apply to you.")}
       {section("Termination","You may stop using fear.social at any time. We may suspend or terminate access if we believe you violated these Terms, created risk, broke the law, abused the platform, or harmed users. You may request account deletion or data help by contacting contact@fear.social.")}

@@ -59,7 +59,7 @@ const CONTACT_EMAIL = "contact@fear.social";
 const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
 const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
-const TERMS_VERSION = "2026-07-08";
+const TERMS_VERSION = "2026-07-10";
 const FEAR_GROUP_ID = "fear-official";
 const OFFICIAL_USER_ID = "fear-social-official";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
@@ -1459,7 +1459,13 @@ async function handleRequest({ request, env, params }) {
     const username = normalizeUsername(body.username || email.split("@")[0], "founder");
     if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     const existing = await db.prepare("SELECT handle FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
-    const purpose = ["login", "password"].includes(body.purpose) ? body.purpose : "login";
+    const purpose = ["signup", "login", "password"].includes(body.purpose) ? body.purpose : "login";
+    if (purpose === "signup") {
+      if (existing) return json({ error: "That email already has an account. Log in instead, or reset your password." }, { status: 409 });
+      const handle = `@${username}`;
+      const handleOwner = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)").bind(handle).first();
+      if (handleOwner) return json({ error: "That username is already taken. Try a different username." }, { status: 409 });
+    }
     const verification = await createEmailVerification(db, env, purpose, email, {
       username: existing?.handle || username,
       handle: existing?.handle || `@${username}`,
@@ -1479,6 +1485,74 @@ async function handleRequest({ request, env, params }) {
       verificationSent: Boolean(verification?.notification?.sent),
       verificationQueued: Boolean(verification?.notification?.queued),
     });
+  }
+
+  if (method === "POST" && path === "/auth/signup") {
+    const limited = await enforceRateLimit(db, request, "auth-signup", 8, 600);
+    if (limited) return limited;
+    const email = cleanText(body.email || body.profile?.email || "", 120).toLowerCase();
+    const password = String(body.password || "");
+    if (!isValidEmail(email)) return json({ error: "Enter a valid email address." }, { status: 400 });
+    if (password.length < 8) return json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    if (body.acceptedTerms !== true) return json({ error: "You must accept the Terms and Conditions to create an account." }, { status: 400 });
+
+    const profile = normalizeProfile({
+      ...(body.profile || {}),
+      email,
+      username: body.username || body.profile?.username || email.split("@")[0],
+    });
+    const existingEmail = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    if (existingEmail) return json({ error: "That email already has an account. Log in instead, or reset your password." }, { status: 409 });
+    const handleOwner = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)").bind(profile.handle).first();
+    if (handleOwner) return json({ error: "That username is already taken. Try a different username." }, { status: 409 });
+
+    const id = createId("user");
+    const sessionToken = crypto.randomUUID();
+    const passwordHash = await hashPassword(password);
+    try {
+      await db
+        .prepare(
+          `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, terms_accepted_at, terms_version)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`
+        )
+        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
+        .run();
+    } catch (err) {
+      console.warn("signup insert failed", err);
+      return json({ error: "Account could not be created. Try a different username or email." }, { status: 409 });
+    }
+
+    await ensureUserFollowsOfficial(db, id);
+    await createSession(db, id, sessionToken, request);
+    await recordRegistrationEmail(db, "account_created", email, {
+      userId: id,
+      name: profile.name,
+      handle: profile.handle,
+      username: profile.username,
+      metadata: { source: "direct_signup", termsVersion: TERMS_VERSION },
+    });
+    const signupEmail = await sendSignupReceivedEmail(db, env, email, {
+      username: profile.username,
+      handle: profile.handle,
+      status: "Account created",
+      nextStep: "Your account is ready. You can log in with your email or username and password.",
+    });
+    const verification = await createEmailVerification(db, env, "signup_verify", email, profile);
+    const user = { id, token: sessionToken, ...profile, password_hash: passwordHash, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION };
+
+    return json(
+      {
+        ok: true,
+        token: sessionToken,
+        profile: await profileWithFollowerCount(db, user),
+        emailStatus: {
+          signupConfirmationSent: Boolean(signupEmail?.sent),
+          verificationSent: Boolean(verification?.notification?.sent),
+        },
+        ...(await getBootstrap(db, user)),
+      },
+      { status: 201, headers: { "set-cookie": sessionCookie(sessionToken) } }
+    );
   }
 
   if (method === "POST" && path === "/auth/login") {
