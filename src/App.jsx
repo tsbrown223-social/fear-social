@@ -48,6 +48,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes previewSweep{0%{transform:translateX(-120%);opacity:0;}12%,70%{opacity:.9;}100%{transform:translateX(120%);opacity:0;}}
 @keyframes signalRise{0%{transform:translateY(18px);opacity:0;}18%,82%{opacity:1;}100%{transform:translateY(-18px);opacity:0;}}
 @keyframes softBlink{0%,100%{opacity:.45;}50%{opacity:1;}}
+@keyframes orbitSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes ambientDrift{0%,100%{transform:translate3d(0,0,0) scale(1);}50%{transform:translate3d(18px,-24px,0) scale(1.08);}}
+@keyframes scanLine{0%{transform:translateY(-20%);opacity:0;}18%,72%{opacity:.65;}100%{transform:translateY(120%);opacity:0;}}
+@keyframes cardBreath{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg));}50%{transform:translateY(-8px) rotate(var(--tilt,0deg));}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -55,6 +59,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .preview-sweep{animation:previewSweep 4.8s ease-in-out infinite;}
 .signal-rise{animation:signalRise 5s ease-in-out infinite;}
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
+.landing-root{cursor:default;}
+.landing-cursor{position:fixed;z-index:2;width:460px;height:460px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle, rgba(22,199,78,.13), rgba(22,199,78,.045) 38%, transparent 67%);filter:blur(10px);mix-blend-mode:screen;transition:left .18s ease,top .18s ease;}
+.landing-progress{position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
+.landing-progress span{display:block;width:100%;border-radius:999px;background:linear-gradient(180deg,#16C74E,#B8F5CE);box-shadow:0 0 22px rgba(22,199,78,.5);}
+.landing-ambient{animation:ambientDrift 9s ease-in-out infinite;}
+.landing-orbit{animation:orbitSpin 34s linear infinite;transform-origin:center;}
+.landing-scan{animation:scanLine 5.5s ease-in-out infinite;}
+.landing-motion-card{animation:cardBreath 6s ease-in-out infinite;}
+.landing-magnetic{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
+.landing-magnetic:hover{transform:translateY(-6px) scale(1.015);border-color:rgba(22,199,78,.36)!important;}
+.landing-scroll-step{opacity:.62;transition:opacity .2s ease,transform .2s ease,border-color .2s ease;}
+.landing-scroll-step:hover{opacity:1;transform:translateX(8px);border-color:rgba(22,199,78,.32)!important;}
+.landing-world-node{transition:transform .18s ease,background .18s ease,border-color .18s ease;}
+.landing-world-node:hover{transform:translateY(-6px) scale(1.02);background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.38)!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
 .bs{transition:all 0.15s ease;}.bs:hover{transform:translateY(-2px);filter:brightness(1.08);}.bs:active{transform:scale(0.96);}
@@ -161,7 +179,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 @media(max-width:760px){
   html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
   body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:pan-y;}
-  .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink{animation:none!important;}
+  .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
+  .landing-cursor,.landing-progress{display:none!important;}
+  .landing-magnetic:hover,.landing-scroll-step:hover,.landing-world-node:hover{transform:none!important;}
   .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
   .app-view h1,.app-view h2,.app-view h3,.app-view p,.app-view div,.app-view span,.app-view a{max-width:100%;}
   .app-view p,.app-view h1,.app-view h2,.app-view h3{overflow-wrap:anywhere;}
@@ -264,8 +284,14 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-section{padding:62px 16px!important;}
   .landing-section h2{font-size:34px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
-  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid{grid-template-columns:1fr!important;}
+  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid,.landing-journey-grid,.landing-world-grid,.landing-reels-grid{grid-template-columns:1fr!important;}
   .landing-signal-grid .landing-mini-card{transform:none!important;}
+  .landing-immersive-stage{min-height:auto!important;padding:64px 16px!important;}
+  .landing-sticky-world{position:relative!important;top:auto!important;min-height:520px!important;}
+  .landing-scroll-step{opacity:1!important;transform:none!important;}
+  .landing-world-board{min-height:620px!important;}
+  .landing-world-node{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin-bottom:10px!important;}
+  .landing-orbit-ring{display:none!important;}
   .landing-mini-app{border-radius:22px!important;padding:12px!important;margin-top:34px!important;animation:none!important;}
   .landing-mini-topbar{overflow:hidden!important;}
   .landing-mini-topbar>span:first-child{font-size:16px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
@@ -650,10 +676,31 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const [joined,setJoined]=useState(false);
   const [stats,setStats]=useState(REAL_STATS);
   const [activeDemo,setActiveDemo]=useState("feed");
+  const [cursor,setCursor]=useState({x:50,y:24});
+  const [scrollProgress,setScrollProgress]=useState(0);
   useEffect(()=>{
     let active=true;
     fetch("/api/stats").then(res=>res.json()).then(data=>{if(active)setStats(data.stats||REAL_STATS);}).catch(()=>{});
     return()=>{active=false;};
+  },[]);
+  useEffect(()=>{
+    const move=e=>{
+      const w=window.innerWidth||1;
+      const h=window.innerHeight||1;
+      setCursor({x:(e.clientX/w)*100,y:(e.clientY/h)*100});
+    };
+    const scroll=()=>{
+      const doc=document.documentElement;
+      const max=Math.max(1,doc.scrollHeight-window.innerHeight);
+      setScrollProgress(Math.min(100,Math.max(0,(window.scrollY/max)*100)));
+    };
+    window.addEventListener("pointermove",move,{passive:true});
+    window.addEventListener("scroll",scroll,{passive:true});
+    scroll();
+    return()=>{
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("scroll",scroll);
+    };
   },[]);
   const joinWaitlist=async()=>{
     if(!email||!email.includes("@"))return notify("Enter a valid email first","error");
@@ -691,6 +738,23 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["Kai Moss saved a startup operations role","Sample preview"],
     ["Nia Sol received a new mentor connection","Sample preview"],
   ];
+  const journeyRows=[
+    ["01","See who you can become","fear gives ambition a place to land: a profile, a direction, and a community built around the person you are trying to become."],
+    ["02","Find the next real opening","Posts, opportunities, messages, groups, and profile signals help you see the people and paths that can move your future forward."],
+    ["03","Turn curiosity into motion","One account becomes a place to ask, follow, message, save roles, post progress, and take the next step before confidence is perfect."],
+  ];
+  const worldNodes=[
+    {label:"Profile",copy:"Show your goals, field, posts, and proof.",x:"8%",y:"18%",icon:"user"},
+    {label:"Feed",copy:"Post progress, ask questions, and build in public.",x:"60%",y:"8%",icon:"home"},
+    {label:"Deals",copy:"Find jobs, gigs, volunteer roles, and collabs.",x:"66%",y:"58%",icon:"briefcase"},
+    {label:"Groups",copy:"Join rooms for fields, events, and first moves.",x:"18%",y:"66%",icon:"network"},
+    {label:"DMs",copy:"Turn interest into a real conversation.",x:"38%",y:"38%",icon:"mail"},
+  ];
+  const reelCards=[
+    ["fear. daily","Your first step does not need to be perfect. It needs to be visible.","00:12"],
+    ["opportunity drop","Three beginner-friendly ways to get business experience this week.","00:18"],
+    ["mentor signal","Ask one clear question. Make it easy for the right person to help.","00:15"],
+  ];
   const signalRows=[
     ["Find your people","See who is active, what they want to become, and who is close enough to help with the next step.","@mara.moves","Mara Vale"],
     ["Build career momentum","Turn posts, follows, groups, saved roles, and DMs into a clearer path toward work you actually want.","@jules.builds","Jules Kade"],
@@ -719,9 +783,17 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced people and opportunity matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and interviews"],grad:true,button:"Reserve Pro access"},
   ];
   return(
-    <div className="landing-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden"}}>
+    <div className="landing-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
+      <div className="landing-cursor" style={{left:`${cursor.x}%`,top:`${cursor.y}%`}}/>
+      <div className="landing-progress" aria-hidden="true"><span style={{height:`${scrollProgress}%`}}/></div>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
+        <div className="landing-ambient" style={{position:"absolute",left:"7%",top:"18%",width:170,height:170,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,.22), transparent 68%)",filter:"blur(2px)",pointerEvents:"none"}}/>
+        <div className="landing-ambient" style={{position:"absolute",right:"8%",bottom:"22%",width:260,height:260,borderRadius:"50%",background:"radial-gradient(circle, rgba(255,255,255,.08), transparent 70%)",animationDelay:"-4s",pointerEvents:"none"}}/>
+        <div className="landing-orbit" style={{position:"absolute",width:"min(760px,82vw)",height:"min(760px,82vw)",border:"1px solid rgba(255,255,255,.075)",borderRadius:"50%",pointerEvents:"none"}}>
+          <span style={{position:"absolute",left:"50%",top:-5,width:10,height:10,borderRadius:"50%",background:C.accent,boxShadow:"0 0 28px rgba(22,199,78,.8)"}}/>
+          <span style={{position:"absolute",right:"7%",bottom:"18%",width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,.72)"}}/>
+        </div>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
           <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
@@ -784,6 +856,36 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div className="landing-ticker" style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
         <div style={{display:"flex",width:"max-content"}} className="ticker">
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:12,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={12} color={C.accent}/> {t}</span>)}
+        </div>
+      </div>
+      <div className="landing-immersive-stage landing-section" style={{background:"#050506",padding:"128px 52px",position:"relative",overflow:"hidden"}}>
+        <div className="landing-journey-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"minmax(0,0.9fr) minmax(0,1.1fr)",gap:34,alignItems:"start"}}>
+          <div style={{position:"relative",zIndex:1}}>
+            <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:16}}>Scroll Into fear</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(40px,5.2vw,82px)",lineHeight:.96,letterSpacing:0,color:"#fff",marginBottom:18}}>Step into the world where your next move gets clearer.</h2>
+            <p style={{fontSize:17,lineHeight:1.82,color:"rgba(255,255,255,.58)",maxWidth:560}}>fear.social is built for the moment before momentum: when you know you want more, but you need people, proof, direction, and one place to begin.</p>
+            <div style={{display:"grid",gap:12,marginTop:34}}>
+              {journeyRows.map(([num,title,copy])=>(
+                <div key={title} className="landing-scroll-step" style={{border:"1px solid rgba(255,255,255,.1)",background:"rgba(255,255,255,.045)",borderRadius:20,padding:20}}>
+                  <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+                    <span style={{fontFamily:"Georgia,serif",fontSize:30,fontWeight:900,color:C.accent,lineHeight:1}}>{num}</span>
+                    <div><div style={{fontSize:18,fontWeight:950,color:"#fff",marginBottom:8}}>{title}</div><p style={{fontSize:14,lineHeight:1.68,color:"rgba(255,255,255,.55)"}}>{copy}</p></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="landing-sticky-world" style={{position:"sticky",top:112,minHeight:680,border:"1px solid rgba(255,255,255,.1)",borderRadius:34,background:"radial-gradient(circle at 50% 38%, rgba(22,199,78,.22), transparent 34%), linear-gradient(145deg,#0B0C0E,#12151B)",boxShadow:"0 44px 140px rgba(0,0,0,.42)",overflow:"hidden"}}>
+            <div className="landing-scan" style={{position:"absolute",left:0,right:0,top:0,height:"45%",background:"linear-gradient(180deg, transparent, rgba(22,199,78,.12), transparent)",pointerEvents:"none"}}/>
+            <div className="landing-orbit-ring landing-orbit" style={{position:"absolute",left:"15%",top:"8%",width:"70%",aspectRatio:"1",border:"1px dashed rgba(255,255,255,.13)",borderRadius:"50%"}}/>
+            <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:172,height:172,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontFamily:"Georgia,serif",fontSize:34,fontWeight:900,boxShadow:"0 0 70px rgba(22,199,78,.35)"}}>fear.</div>
+            {worldNodes.map((node,i)=>(
+              <div key={node.label} className="landing-world-node landing-motion-card" style={{"--tilt":`${i%2?2:-2}deg`,position:"absolute",left:node.x,top:node.y,width:210,background:"rgba(255,255,255,.075)",border:"1px solid rgba(255,255,255,.12)",backdropFilter:"blur(16px)",borderRadius:22,padding:16,animationDelay:`-${i}s`}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{width:36,height:36,borderRadius:12,background:"rgba(22,199,78,.16)",color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={node.icon} size={18}/></span><b style={{color:"#fff",fontSize:16}}>{node.label}</b></div>
+                <p style={{fontSize:13,lineHeight:1.55,color:"rgba(255,255,255,.6)"}}>{node.copy}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <div className="landing-product-peek landing-section" style={{padding:"112px 52px",background:"#050506"}}>
@@ -852,6 +954,38 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             <div style={{display:"grid",gap:12,position:"relative"}}>
               {signalRows.map(([title,copy,handle,name],i)=><div key={title} className="ch landing-mini-card" style={{background:i===1?"rgba(22,199,78,0.12)":"#101114",border:`1px solid ${i===1?"rgba(22,199,78,0.26)":"rgba(255,255,255,0.09)"}`,borderRadius:22,padding:18,display:"grid",gridTemplateColumns:"58px minmax(0,1fr) auto",gap:14,alignItems:"center",transform:i===1?"translateX(18px)":"none"}}><div style={{width:58,height:58,borderRadius:18,background:i===1?C.accent:C.aLight,color:i===1?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:950}}>{name.split(" ").map(w=>w[0]).join("")}</div><div style={{minWidth:0}}><div style={{fontSize:18,fontWeight:950,color:"#fff",marginBottom:5}}>{title}</div><p style={{fontSize:13,color:"rgba(255,255,255,0.58)",lineHeight:1.55,margin:0}}>{copy}</p><div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:7}}>{name} · {handle} · sample profile</div></div><div className="soft-blink" style={{width:12,height:12,borderRadius:"50%",background:C.accent,boxShadow:"0 0 22px rgba(22,199,78,0.7)"}}/></div>)}
             </div>
+          </div>
+        </div>
+      </div>
+      <div className="landing-section" style={{padding:"112px 52px",background:"linear-gradient(180deg,#050506 0%,#0B0C0E 100%)",borderTop:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"auto -10% -25% -10%",height:360,background:"radial-gradient(circle at 50% 50%, rgba(22,199,78,.14), transparent 68%)",pointerEvents:"none"}}/>
+        <div style={{maxWidth:1180,margin:"0 auto",position:"relative"}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:28,alignItems:"end",flexWrap:"wrap",marginBottom:36}}>
+            <div style={{maxWidth:680}}>
+              <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Daily fear Signals</div>
+              <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,74px)",lineHeight:1,color:"#fff",letterSpacing:0}}>A community that keeps giving people a reason to move.</h2>
+            </div>
+            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.56)",maxWidth:390}}>fear.social can use its own account to publish short product reels, first-step prompts, opportunity drops, and community updates inside the app.</p>
+          </div>
+          <div className="landing-reels-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+            {reelCards.map(([label,copy,time],i)=>(
+              <div key={label} className="landing-magnetic landing-motion-card" style={{"--tilt":`${i===1?1.5:-1.5}deg`,background:"linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035))",border:"1px solid rgba(255,255,255,.1)",borderRadius:28,padding:14,minHeight:420,position:"relative",overflow:"hidden",animationDelay:`-${i*1.4}s`}}>
+                <div style={{position:"absolute",inset:14,borderRadius:22,background:i===1?"radial-gradient(circle at 50% 18%, rgba(22,199,78,.34), transparent 30%), #090A0C":"radial-gradient(circle at 50% 14%, rgba(255,255,255,.18), transparent 28%), #090A0C",border:"1px solid rgba(255,255,255,.08)"}}/>
+                <div style={{position:"relative",minHeight:392,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:20}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:950,color:"#fff"}}><Icon name="sparkle" size={13} color={C.accent}/>{label}</span>
+                    <span style={{fontSize:12,color:"rgba(255,255,255,.55)",fontWeight:900}}>{time}</span>
+                  </div>
+                  <div>
+                    <div style={{width:62,height:62,borderRadius:20,background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif",fontSize:28,fontWeight:900,color:"#fff",marginBottom:18}}>f.</div>
+                    <p style={{fontFamily:"Georgia,serif",fontSize:31,lineHeight:1.05,color:"#fff",letterSpacing:0,fontWeight:900}}>{copy}</p>
+                    <div style={{display:"flex",gap:8,marginTop:22}}>
+                      {["Like","Save","Share"].map((action,idx)=><span key={action} style={{display:"inline-flex",alignItems:"center",gap:6,border:"1px solid rgba(255,255,255,.12)",background:idx===0?"rgba(22,199,78,.18)":"rgba(255,255,255,.07)",color:idx===0?C.accent:"rgba(255,255,255,.72)",borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900}}><Icon name={idx===0?"heart":idx===1?"bookmark":"send"} size={13}/>{action}</span>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
