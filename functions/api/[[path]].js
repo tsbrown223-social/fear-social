@@ -1522,8 +1522,16 @@ async function handleRequest({ request, env, params }) {
       return json({ error: "Account could not be created. Try a different username or email." }, { status: 409 });
     }
 
-    await ensureUserFollowsOfficial(db, id);
-    await createSession(db, id, sessionToken, request);
+    try {
+      await ensureUserFollowsOfficial(db, id);
+    } catch (err) {
+      console.warn("official follow backfill failed during signup", err);
+    }
+    try {
+      await createSession(db, id, sessionToken, request);
+    } catch (err) {
+      console.warn("session record failed during signup", err);
+    }
     await recordRegistrationEmail(db, "account_created", email, {
       userId: id,
       name: profile.name,
@@ -1552,7 +1560,7 @@ async function handleRequest({ request, env, params }) {
       {
         ok: true,
         token: sessionToken,
-        profile: await profileWithFollowerCount(db, user),
+        profile: { ...profile, id, followers: 0, verified: isVerifiedAccount(user) },
         emailStatus: {
           signupConfirmationSent: Boolean(signupEmail?.sent),
           verificationSent: Boolean(verification?.notification?.sent),
