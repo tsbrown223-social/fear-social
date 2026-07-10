@@ -1531,13 +1531,21 @@ async function handleRequest({ request, env, params }) {
       username: profile.username,
       metadata: { source: "direct_signup", termsVersion: TERMS_VERSION },
     });
-    const signupEmail = await sendSignupReceivedEmail(db, env, email, {
-      username: profile.username,
-      handle: profile.handle,
-      status: "Account created",
-      nextStep: "Your account is ready. You can log in with your email or username and password.",
-    });
-    const verification = await createEmailVerification(db, env, "signup_verify", email, profile);
+    let signupEmail = null;
+    let verification = null;
+    try {
+      [signupEmail, verification] = await Promise.all([
+        sendSignupReceivedEmail(db, env, email, {
+          username: profile.username,
+          handle: profile.handle,
+          status: "Account created",
+          nextStep: "Your account is ready. You can log in with your email or username and password.",
+        }),
+        createEmailVerification(db, env, "signup_verify", email, profile),
+      ]);
+    } catch (err) {
+      console.warn("signup email notifications failed", err);
+    }
     const user = { id, token: sessionToken, ...profile, password_hash: passwordHash, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION };
 
     return json(
@@ -1549,7 +1557,6 @@ async function handleRequest({ request, env, params }) {
           signupConfirmationSent: Boolean(signupEmail?.sent),
           verificationSent: Boolean(verification?.notification?.sent),
         },
-        ...(await getBootstrap(db, user)),
       },
       { status: 201, headers: { "set-cookie": sessionCookie(sessionToken) } }
     );
