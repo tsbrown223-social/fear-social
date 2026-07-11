@@ -89,17 +89,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-cinema-card:before{content:"";position:absolute;inset:-30% auto -30% -35%;width:32%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(12deg);animation:cinematicSweep 9s ease-in-out infinite;pointer-events:none;}
 .landing-story-button{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-story-button:hover{transform:translateX(8px);border-color:rgba(22,199,78,.42)!important;background:rgba(22,199,78,.12)!important;}
-.landing-intro-copy{width:100%;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;padding:0 16px;}
+.landing-intro-copy{position:fixed;inset:0;width:100%;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1;padding:0 16px;pointer-events:none;will-change:transform,opacity;transform:translate3d(0,var(--intro-y,0px),0) scale(var(--intro-scale,1));opacity:var(--intro-opacity,1);}
 .landing-intro-copy:before{content:"";position:absolute;inset:18% auto auto 50%;width:min(720px,92vw);aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle, rgba(22,199,78,.2), rgba(22,199,78,.06) 42%, transparent 70%);filter:blur(18px);animation:introBloom 2.8s ease both, cinematicFog 9s ease-in-out infinite;pointer-events:none;}
 .landing-intro-copy:after{content:"";position:absolute;left:50%;bottom:7vh;width:1px;height:72px;background:linear-gradient(180deg, transparent, rgba(22,199,78,.65), transparent);opacity:.7;animation:introBloom 2.8s ease 2.3s both;pointer-events:none;}
 .landing-typed-headline{z-index:1;text-shadow:0 0 44px rgba(22,199,78,.13),0 24px 80px rgba(0,0,0,.62);}
 .landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.45s steps(18,end) forwards;}
-.landing-type-line-second{animation-delay:1.55s;animation-duration:1.05s;color:#16C74E;}
+.landing-type-line-second{animation-delay:1.55s;animation-duration:1.05s;color:#fff;}
+.landing-fear-word{color:#16C74E;}
 .landing-type-line-caret{position:relative;}
 .landing-type-line-caret:after{content:"";display:inline-block;width:.08em;height:.82em;margin-left:.08em;background:#16C74E;vertical-align:-.05em;animation:caretBlink .78s steps(1,end) infinite;}
 .landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
-.landing-after-intro{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;padding:64px 0 0;}
-.landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;}
+.landing-after-intro{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;margin-top:100dvh;padding:24px 0 0;will-change:transform,opacity;opacity:var(--after-opacity,0);transform:translate3d(0,var(--after-y,90px),0);}
+.landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;min-height:205dvh!important;}
 @media(prefers-reduced-motion:reduce){.landing-type-line{clip-path:none!important;}.landing-type-line-caret:after{display:none!important;}}
 .a11y-reduce-motion .landing-type-line{clip-path:none!important;}
 .a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
@@ -328,7 +329,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-intro-copy{min-height:100dvh!important;justify-content:center!important;padding:0 2px!important;}
   .landing-intro-copy:before{width:112vw!important;filter:blur(16px)!important;}
   .landing-intro-copy:after{bottom:6vh!important;height:54px!important;}
-  .landing-hero h1{font-size:43px!important;line-height:1.04!important;margin-bottom:0!important;width:100%!important;}
+  .landing-hero h1{font-size:39px!important;line-height:1.04!important;margin-bottom:0!important;width:100%!important;}
   .landing-type-line{white-space:nowrap!important;}
   .landing-after-intro{padding-top:56px!important;}
   .landing-hero p{font-size:15px!important;line-height:1.58!important;margin-bottom:20px!important;}
@@ -730,7 +731,16 @@ const INITIAL_MESSAGES=[];
 
 function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
   const [scrolled,setScrolled]=useState(false);
-  useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
+  useEffect(()=>{
+    const h=()=>setScrolled(window.scrollY>(window.innerHeight||720)*0.72);
+    h();
+    window.addEventListener("scroll",h,{passive:true});
+    window.addEventListener("resize",h);
+    return()=>{
+      window.removeEventListener("scroll",h);
+      window.removeEventListener("resize",h);
+    };
+  },[]);
   const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Join","cta"]];
   return(
     <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none",opacity:scrolled?1:0,transform:scrolled?"translateY(0)":"translateY(-16px)",transition:"opacity .35s ease, transform .35s ease"}}>
@@ -784,7 +794,15 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     const scroll=()=>{
       const doc=document.documentElement;
       const max=Math.max(1,doc.scrollHeight-window.innerHeight);
-      setScrollProgress(Math.min(100,Math.max(0,(window.scrollY/max)*100)));
+      const y=window.scrollY||0;
+      setScrollProgress(Math.min(100,Math.max(0,(y/max)*100)));
+      const p=Math.min(1,Math.max(0,y/Math.max(1,(window.innerHeight||720)*0.9)));
+      const after=Math.min(1,Math.max(0,(p-0.14)/0.52));
+      doc.style.setProperty("--intro-y",`${Math.round(p*-180)}px`);
+      doc.style.setProperty("--intro-scale",`${1-(p*0.2)}`);
+      doc.style.setProperty("--intro-opacity",`${Math.max(0,1-(p*1.12))}`);
+      doc.style.setProperty("--after-opacity",`${after}`);
+      doc.style.setProperty("--after-y",`${Math.round((1-after)*90)}px`);
     };
     window.addEventListener("pointermove",move,{passive:true});
     window.addEventListener("scroll",scroll,{passive:true});
@@ -897,7 +915,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div className="landing-intro-copy">
           <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="landing-typed-headline">
             <span className="landing-type-line"><span>Your first step</span></span>
-            <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is fear.</span></span>
+            <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is </span><span className="landing-fear-word">fear.</span></span>
           </h1>
         </div>
         <div className="landing-after-intro">
