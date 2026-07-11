@@ -1342,6 +1342,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [notifications,setNotifications]=useLocalState("fear-notifications",[]);
   const [unreadNotifications,setUnreadNotifications]=useLocalState("fear-unread-notifications",0);
   const [stats,setStats]=useLocalState("fear-stats",REAL_STATS);
+  const [connections,setConnections]=useLocalState("fear-connections",{followersByUserId:{},followingByUserId:{}});
   const [userDeals,setUserDeals]=useLocalState("fear-user-deals",[]);
   const [savedDeals,setSavedDeals]=useLocalState("fear-saved-deals",[]);
   const [filter,setFilter]=useState("All");
@@ -1357,6 +1358,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [editProfile,setEditProfile]=useState(false);
   const [selectedProfile,setSelectedProfile]=useState(null);
   const [profileReturnView,setProfileReturnView]=useState("discover");
+  const [profileMetric,setProfileMetric]=useState("Posts");
   const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
   const applyBackendState=useCallback((data)=>{
@@ -1372,9 +1374,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if(data.groups)setGroups(data.groups);
     if(data.opportunities)setUserDeals(data.opportunities);
     if(data.notifications)setNotifications(data.notifications);
+    if(data.connections)setConnections(data.connections);
     if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
+  },[setConnections,setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     applyBackendState(data);
@@ -1482,9 +1485,12 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   };
   const unread=unreadNotifications;
   const followerCount=Number(profile.followers||0);
+  const ownFollowers=connections.followersByUserId?.[profile.id]||[];
+  const ownFollowing=connections.followingByUserId?.[profile.id]||people.filter(p=>p.connected);
   const statCards=[
     ["Posts",fmt(ownProfilePosts.length)],
     ["Followers",fmt(followerCount)],
+    ["Following",fmt(ownFollowing.length)],
     ["Saved",fmt(posts.filter(p=>p.saved).length)],
     ["RSVPs",fmt(events.filter(e=>e.going).length)],
   ];
@@ -1851,7 +1857,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
                 <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} src={profile.avatarUrl} size={54} grad online/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={15}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.location||"Location not set"}</div></div></div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>{statCards.map(([k,v])=><div key={k} className="uh" style={{background:C.bg,borderRadius:12,padding:12,textAlign:"center"}}><div style={{fontWeight:900,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{k}</div></div>)}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>{statCards.map(([k,v])=><button key={k} className="uh bs" onClick={()=>{setProfileMetric(k);setView("profile");}} aria-label={`Open your ${k}`} style={{background:C.bg,border:"none",borderRadius:12,padding:12,textAlign:"center",minHeight:58}}><div style={{fontWeight:900,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{k}</div></button>)}</div>
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
@@ -1942,8 +1948,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
-        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards} posts={ownProfilePosts}/>}
-        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)}/>}
+        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
+        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} aria-label={id==="notifications"?`${label}, ${unread} unread`:label}><span><Icon name={icon} size={18} color="currentColor" filled={id==="notifications"&&unread>0}/></span>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
@@ -2127,6 +2133,7 @@ function OfficialReelCard({post}){
   if(post?.type!=="Reel"||post?.handle!=="@fear.social")return null;
   const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
   const title=lines.find(line=>line.startsWith("Daily fear.social Reel:"))?.replace("Daily fear.social Reel:","").trim()||"Daily Reel";
+  const quote=lines.find(line=>line.startsWith("Quote:"))?.replace("Quote:","").trim()||"";
   const hook=lines.find(line=>line.startsWith("Hook:"))?.replace("Hook:","").trim()||"Take the next step before you feel ready.";
   const feature=lines.find(line=>line.startsWith("Why fear.social:"))?.replace("Why fear.social:","").trim()||"fear.social helps you turn first-step ambition into visible momentum.";
   const cta=lines.find(line=>line.startsWith("CTA:"))?.replace("CTA:","").trim()||"Open fear.social and make your next move.";
@@ -2140,6 +2147,7 @@ function OfficialReelCard({post}){
       <div style={{position:"relative",zIndex:1,display:"grid",gap:14,maxWidth:520}}>
         <div style={{fontSize:13,fontWeight:950,letterSpacing:1.6,textTransform:"uppercase",color:C.accent}}>Official prompt</div>
         <div style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,7vw,58px)",lineHeight:1.02,fontWeight:900,letterSpacing:0}}>{title}</div>
+        {quote&&<div style={{padding:"16px 18px",borderRadius:20,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.14)",fontFamily:"Georgia,serif",fontSize:24,lineHeight:1.28,color:"#fff"}}>"{quote}"</div>}
         <p style={{fontSize:18,lineHeight:1.45,color:"rgba(255,255,255,.78)",maxWidth:470}}>{hook}</p>
         <p style={{fontSize:14,lineHeight:1.55,color:"rgba(255,255,255,.62)",maxWidth:500}}>{feature}</p>
       </div>
@@ -2221,9 +2229,37 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId}){
   if(safeMessages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Direct messages</h1><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{safeMessages.map(m=><button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1])||"Start the conversation"}</div></div></button>)}</div>{thread&&<div className="message-panel" role="tabpanel" aria-label={`Conversation with ${thread.name}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/><div><b><NameWithVerified name={thread.name} person={thread} size={15}/></b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":thread.handle||"Direct message"}</div></div></div><div aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>{thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input aria-label={`Message ${thread.name}`} value={thread.draft||""} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="send" size={15} color="#fff"/> Send</GBtn></div></div>}</div></div>;
 }
-function ProfilePanel({profile,setEditProfile,stats,posts=[]}){
+const ProfileStatButton=({label,value,active,onClick})=>(
+  <button onClick={onClick} aria-pressed={active} className="bs profile-stat-button" style={{...cardStyle,padding:18,borderRadius:16,textAlign:"left",background:active?C.aLight:C.card,border:`1px solid ${active?C.aSoft:C.border}`,color:C.text}}>
+    <div style={{fontSize:25,fontWeight:900,color:active?C.accent:C.text,lineHeight:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{value}</div>
+    <div style={{fontSize:12,color:active?C.accent:C.muted,marginTop:6,fontWeight:900}}>{label}</div>
+  </button>
+);
+
+function ProfileMetricSection({active,posts=[],people=[],events=[],emptyName="this profile",openProfile}){
+  if(active==="Posts")return <ProfilePostsSection posts={posts} emptyTitle="No posts yet" emptyText={`${emptyName} has not published any posts yet.`}/>;
+  if(active==="Saved")return <ProfilePostsSection posts={posts} emptyTitle="No saved posts yet" emptyText="Saved posts will appear here after you save them from the feed."/>;
+  if(active==="RSVPs")return <section style={{marginTop:18}}><SectionHead eyebrow="Profile" title="RSVPs" count={`${fmt(events.length)} events`}/>{events.length===0?<EmptyState title="No RSVPs yet" text="Events you RSVP to will appear here."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{events.map(e=><article key={e.id} className="ch" style={{...cardStyle,padding:18,borderRadius:18}}><b style={{color:C.text,overflowWrap:"anywhere"}}>{e.title}</b><p style={{fontSize:13,color:C.muted,lineHeight:1.55,marginTop:8}}>{e.date} · {e.time} · {e.type}</p></article>)}</div>}</section>;
+  return <section style={{marginTop:18}}><SectionHead eyebrow="Network" title={active} count={`${fmt(people.length)} people`}/>{people.length===0?<EmptyState title={`No ${active.toLowerCase()} yet`} text={`${emptyName} does not have anyone to show here yet.`}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{people.map(person=><button key={`${active}-${person.id}`} onClick={()=>openProfile?.(person)} className="ch profile-link" style={{...cardStyle,padding:16,borderRadius:18,textAlign:"left",display:"flex",gap:12,alignItems:"center",minWidth:0}}><Av i={person.av} src={person.avatarUrl} size={44}/><span style={{minWidth:0}}><b style={{display:"block",color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={person.name} person={person} size={14}/></b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:3}}>{[person.handle,person.industry||person.loc].filter(Boolean).join(" · ")}</span></span></button>)}</div>}</section>;
+}
+
+const SectionHead=({eyebrow,title,count})=>(
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:12,marginBottom:12,flexWrap:"wrap"}}>
+    <div>
+      <div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:6}}>{eyebrow}</div>
+      <h2 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.05,letterSpacing:0,color:C.text}}>{title}</h2>
+    </div>
+    <span style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>{count}</span>
+  </div>
+);
+
+function ProfilePanel({profile,setEditProfile,stats,posts=[],followers=[],following=[],savedPosts=[],rsvps=[],openProfile,initialMetric="Posts"}){
+  const [activeMetric,setActiveMetric]=useState(initialMetric);
+  useEffect(()=>setActiveMetric(initialMetric),[initialMetric]);
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
   const detailRows=[["First step",profile.goal],["Looking for",profile.lookingFor],["Field",profile.industry||"Exploring"]].filter(([,v])=>v);
+  const metricPeople={Followers:followers,Following:following};
+  const metricPosts={Posts:posts,Saved:savedPosts};
   return <div className="directory-wrap" style={{maxWidth:860}}>
     <div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:12,boxShadow:"0 18px 44px rgba(15,23,42,0.04)"}}>
       <div style={{height:146,background:safeImageUrl(profile.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/>
@@ -2242,16 +2278,17 @@ function ProfilePanel({profile,setEditProfile,stats,posts=[]}){
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{detailRows.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
     </div>
-    <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>{stats.map(([k,v])=><div key={k} style={{...cardStyle,padding:18,borderRadius:16}}><div style={{fontSize:25,fontWeight:900,color:C.text,lineHeight:1}}>{v}</div><div style={{fontSize:12,color:C.muted,marginTop:6}}>{k}</div></div>)}</div>
-    <ProfilePostsSection posts={posts} emptyTitle="No posts on your profile yet" emptyText="When you publish from the feed, your posts will live here on your profile too."/>
+    <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
+    <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} events={activeMetric==="RSVPs"?rsvps:[]} emptyName="You" openProfile={openProfile}/>
   </div>;
 }
-function PublicProfilePanel({profile,posts=[],onBack,onConnect,onMessage}){
+function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,openProfile}){
+  const [activeMetric,setActiveMetric]=useState("Posts");
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
   const stats=[
     ["Posts",fmt(posts.length)],
-    ["Followers",fmt(profile.followers)],
-    ["Mutuals",fmt(profile.mutual)],
+    ["Followers",fmt(followers.length||profile.followers)],
+    ["Following",fmt(following.length)],
     ["Field",profile.industry||"Exploring"],
   ];
   const details=[["First step",profile.goal],["Looking for",profile.lookingFor],["Headline",profile.headline]].filter(([,v])=>v);
@@ -2277,20 +2314,14 @@ function PublicProfilePanel({profile,posts=[],onBack,onConnect,onMessage}){
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{details.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
     </div>
-    <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>{stats.map(([k,v])=><div key={k} style={{...cardStyle,padding:18,borderRadius:16}}><div style={{fontSize:typeof v==="string"&&v.length>12?15:24,fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1}}>{v}</div><div style={{fontSize:12,color:C.muted,marginTop:6}}>{k}</div></div>)}</div>
-    <ProfilePostsSection posts={posts} emptyTitle="No posts yet" emptyText={`${profile.name||"This member"} has not published any posts yet.`}/>
+    <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
+    {activeMetric==="Field"?<section style={{marginTop:18}}><SectionHead eyebrow="Profile" title="Field" count={profile.industry||"Exploring"}/><div style={{...cardStyle,padding:20,borderRadius:18}}><IT label={profile.industry||"Exploring"}/><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12}}>This profile is currently building around {profile.industry||"Exploring"}.</p></div></section>:<ProfileMetricSection active={activeMetric} posts={posts} people={activeMetric==="Followers"?followers:following} emptyName={profile.name||"This member"} openProfile={openProfile}/>}
   </div>;
 }
 function ProfilePostsSection({posts=[],emptyTitle,emptyText}){
   const safePosts=Array.isArray(posts)?posts:[];
   return <section aria-label="Profile posts" style={{marginTop:18}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:12,marginBottom:12,flexWrap:"wrap"}}>
-      <div>
-        <div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Profile</div>
-        <h2 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.05,letterSpacing:0,color:C.text}}>Posts</h2>
-      </div>
-      <span style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>{fmt(safePosts.length)} posts</span>
-    </div>
+    <SectionHead eyebrow="Profile" title="Posts" count={`${fmt(safePosts.length)} posts`}/>
     {safePosts.length===0?<EmptyState title={emptyTitle} text={emptyText}/>:<div style={{display:"grid",gap:12}}>{safePosts.map(post=><article key={post.id} className="ch post-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden"}}>
       <div style={{padding:20}}>
         <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12,minWidth:0}}>

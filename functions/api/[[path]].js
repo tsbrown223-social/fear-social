@@ -16,8 +16,10 @@ const json = (body, init = {}) =>
     },
   });
 
-const MAX_JSON_BODY_BYTES = 8 * 1024 * 1024;
+const MAX_JSON_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_FORM_BODY_BYTES = 64 * 1024;
+const MAX_MEDIA_URL_BYTES = 900000;
+const MAX_TOTAL_MEDIA_URL_BYTES = 1800000;
 
 const assertBodySize = (request, maxBytes) => {
   const length = Number(request.headers.get("content-length") || 0);
@@ -68,6 +70,24 @@ const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]
 const VERIFIED_NAMES = new Set(["taylor brown", "fear.social"]);
 
 const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim()) && String(value || "").length <= 120;
+const isSafeHttpUrl = (value, { allowHttp = false, max = 500 } = {}) => {
+  const url = String(value || "").trim();
+  if (!url || url.length > max) return false;
+  try {
+    const parsed = new URL(url);
+    if (parsed.username || parsed.password) return false;
+    if (parsed.protocol === "https:") return true;
+    return allowHttp && parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
+const isSafeDataMediaUrl = (value, kind = "image") => {
+  const url = String(value || "").trim();
+  if (!url || url.length > MAX_MEDIA_URL_BYTES) return false;
+  if (kind === "video") return /^data:video\/(mp4|webm|quicktime);base64,[a-z0-9+/=\s]+$/i.test(url);
+  return /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(url);
+};
 
 const cleanText = (value, max = 120) =>
   String(value || "")
@@ -161,12 +181,21 @@ async function verifyPassword(password, stored = "") {
       key,
       256
     );
-    return toHex(bits) === digest;
+    return timingSafeEqualHex(toHex(bits), digest);
   }
   const [scheme, salt, digest] = parts;
-  if (scheme === "sha256" && salt && digest) return (await sha256(`${salt}:${password}`)) === digest;
+  if (scheme === "sha256" && salt && digest) return timingSafeEqualHex(await sha256(`${salt}:${password}`), digest);
   return false;
 }
+
+const timingSafeEqualHex = (a = "", b = "") => {
+  const left = fromHex(a);
+  const right = fromHex(b);
+  if (!left.length || left.length !== right.length) return false;
+  let diff = 0;
+  for (let i = 0; i < left.length; i += 1) diff |= left[i] ^ right[i];
+  return diff === 0;
+};
 
 const addDays = (days) => new Date(Date.now() + days * 86400000).toISOString();
 
@@ -199,6 +228,14 @@ const normalizeUsername = (value, fallback = "founder") => {
   return base || "founder";
 };
 
+const cleanMediaUrl = (value, kind = "image", max = MAX_MEDIA_URL_BYTES) => {
+  const url = String(value || "").trim();
+  if (!url || url.length > max) return "";
+  if (isSafeHttpUrl(url, { max })) return url;
+  if (isSafeDataMediaUrl(url, kind)) return url;
+  return "";
+};
+
 const requireDb = (env) => {
   if (!env.DB) {
     throw json({ error: "D1 database binding DB is missing" }, { status: 500 });
@@ -223,10 +260,10 @@ const normalizeProfile = (profile = {}) => {
     stage: cleanText(profile.stage || "I'm actively building", 80),
     bio: cleanText(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.", 400),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
-    avatarUrl: String(profile.avatarUrl || profile.avatar_url || "").trim().slice(0, 750000),
-    coverUrl: String(profile.coverUrl || profile.cover_url || "").trim().slice(0, 1500000),
+    avatarUrl: cleanMediaUrl(profile.avatarUrl || profile.avatar_url || "", "image", 700000),
+    coverUrl: cleanMediaUrl(profile.coverUrl || profile.cover_url || "", "image", 900000),
     headline: cleanText(profile.headline || "", 140),
-    website: /^https?:\/\//i.test(website) ? website : website ? `https://${website}` : "",
+    website: website ? (isSafeHttpUrl(/^https?:\/\//i.test(website) ? website : `https://${website}`, { allowHttp: false, max: 180 }) ? (/^https?:\/\//i.test(website) ? website : `https://${website}`) : "") : "",
     lookingFor: cleanText(profile.lookingFor || profile.looking_for || "", 160),
     goal: cleanText(profile.goal || "", 160),
   };
@@ -350,6 +387,28 @@ function emailDeliveryError(notification) {
   if (notification?.queued) return "Verification email is not available yet. Please contact contact@fear.social for access.";
   return "Verification email could not be sent right now. Please try again shortly.";
 }
+
+const publicProfile = (user = {}) => {
+  const profile = normalizeProfile(user);
+  return {
+    id: cleanText(user.id || profile.id || "", 120),
+    name: profile.name,
+    username: profile.username,
+    handle: profile.handle,
+    location: profile.location,
+    industry: profile.industry,
+    stage: profile.stage,
+    bio: profile.bio,
+    privacy: profile.privacy,
+    avatarUrl: profile.avatarUrl,
+    coverUrl: profile.coverUrl,
+    headline: profile.headline,
+    website: profile.website,
+    lookingFor: profile.lookingFor,
+    goal: profile.goal,
+    verified: isVerifiedAccount(user),
+  };
+};
 
 async function sendEmailNotification(db, env, type, recipient, subject, payload) {
   const logId = await recordNotification(db, type, recipient, subject, payload);
@@ -663,7 +722,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
         `Signed in with ${providerLabel}.`,
         provider,
         profile.subject || "",
-        String(profile.picture || "").slice(0, 500)
+        cleanMediaUrl(profile.picture || "", "image", 500)
       )
       .run();
     await ensureUserFollowsOfficial(db, id);
@@ -678,7 +737,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
     await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
       provider,
       profile.subject || "",
-      String(profile.picture || "").slice(0, 500),
+      cleanMediaUrl(profile.picture || "", "image", 500),
       user.id,
     ]);
   }
@@ -711,11 +770,12 @@ const parseMediaList = (value) => {
     let totalUrlBytes = 0;
     return parsed
       .map((item) => {
-        const url = String(item?.url || "").trim();
+        const kind = item?.kind === "video" ? "video" : "image";
+        const url = cleanMediaUrl(item?.url || "", kind, kind === "video" ? MAX_MEDIA_URL_BYTES : 700000);
         totalUrlBytes += url.length;
         return {
           id: cleanText(item?.id || createId("media"), 80),
-          kind: item?.kind === "video" ? "video" : "image",
+          kind,
           url,
           alt: cleanText(item?.alt || "", 160),
         };
@@ -723,9 +783,7 @@ const parseMediaList = (value) => {
       .filter(
         (item) =>
           item.url &&
-          totalUrlBytes <= 6500000 &&
-          item.url.length <= (item.kind === "video" ? 5500000 : 1800000) &&
-          (/^https:\/\//.test(item.url) || /^data:(image|video)\//.test(item.url))
+          totalUrlBytes <= MAX_TOTAL_MEDIA_URL_BYTES
       )
       .slice(0, 4);
   } catch {
@@ -809,6 +867,15 @@ const DAILY_REEL_TEMPLATES = [
     cta: "Open fear.social and make your first move public today.",
   },
   {
+    tag: "Mindset",
+    title: "Quote Of The Day",
+    quote: "You do not have to be fearless. You have to be willing.",
+    hook: "Momentum usually starts before confidence catches up.",
+    feature: "fear.social gives that willingness somewhere to go with profiles, posts, DMs, groups, and first-step opportunities.",
+    beats: ["Write the move you have been avoiding.", "Post it or send it to one person.", "Let action become the proof."],
+    cta: "Use fear.social to turn today’s nerve into one visible action.",
+  },
+  {
     tag: "Networking",
     title: "Find People Before You Feel Ready",
     hook: "The network you need should not feel locked behind confidence you do not have yet.",
@@ -833,6 +900,14 @@ const DAILY_REEL_TEMPLATES = [
     cta: "Use Mentors or DMs to ask one better question today.",
   },
   {
+    tag: "Prompts",
+    title: "Daily Prompt: Name The Next Step",
+    hook: "Clarity gets easier when you stop hiding the next move in your head.",
+    feature: "fear.social works best when members post honest first-step prompts that other people can respond to, support, and build on.",
+    beats: ["Finish this sentence: I need help with...", "Add one deadline or blocker.", "Invite one useful reply from the community."],
+    cta: "Post today’s prompt and let someone meet you where you are.",
+  },
+  {
     tag: "Creative",
     title: "Post The Progress",
     hook: "You do not need a launch to start building in public.",
@@ -849,12 +924,37 @@ const DAILY_REEL_TEMPLATES = [
     cta: "Post the rough version. The polished version can come later.",
   },
   {
+    tag: "Product",
+    title: "Your Profile Should Open Doors",
+    hook: "A better profile makes it easier for the right people to find you before you have a big reputation.",
+    feature: "fear.social profiles let members show what they are building, what they need, where they are headed, and how to start a real conversation.",
+    beats: ["Update your headline.", "Add what you are looking for.", "Make your goal specific enough to answer."],
+    cta: "Tighten your profile so your next intro has context.",
+  },
+  {
     tag: "Community",
     title: "Join The fear. Group",
     hook: "Every member starts in the official fear. group so no one enters alone.",
     feature: "The fear. group is where product updates, prompts, feature drops, and community announcements live inside the app.",
     beats: ["Read the latest announcement.", "React to the prompt.", "Bring one person into the conversation."],
     cta: "Open Groups and check the official fear. room today.",
+  },
+  {
+    tag: "DMs",
+    title: "Send The First DM",
+    quote: "The right conversation can change your week faster than another hour of overthinking.",
+    hook: "A short direct message is often the fastest bridge between interest and motion.",
+    feature: "fear.social DMs are there for warm intros, follow-ups, mentor asks, opportunity questions, and honest first outreach.",
+    beats: ["Open one profile you respect.", "Send one clear sentence.", "Ask for the smallest useful next response."],
+    cta: "Send the message before you rewrite it into silence.",
+  },
+  {
+    tag: "Updates",
+    title: "What fear.social Is Posting For",
+    hook: "The official account should do more than advertise features. It should help members move.",
+    feature: "That means a mix of product updates, prompts, quotes, group nudges, profile tips, opportunity reminders, and first-step momentum inside the app.",
+    beats: ["Check what landed today.", "Use one feature right away.", "Come back tomorrow for a different angle."],
+    cta: "Follow @fear.social for daily momentum, not just announcements.",
   },
 ];
 
@@ -867,6 +967,7 @@ const officialReelContent = (dateKey) => {
     content: [
       `Daily fear.social Reel: ${reel.title}`,
       "",
+      ...(reel.quote ? [`Quote: ${reel.quote}`, ""] : []),
       `Hook: ${reel.hook}`,
       "",
       `Why fear.social: ${reel.feature}`,
@@ -985,7 +1086,7 @@ async function profileWithFollowerCount(db, user) {
     .prepare("SELECT COUNT(*) AS followers FROM user_connections WHERE target_user_id = ?")
     .bind(user.id)
     .first();
-  return { ...normalizeProfile(user), followers: Number(row?.followers || 0), verified: isVerifiedAccount(user) };
+  return { ...publicProfile(user), followers: Number(row?.followers || 0) };
 }
 
 const isAdminUser = (user = {}) =>
@@ -1198,10 +1299,59 @@ async function getOpportunities(db) {
   }
 }
 
+async function getConnectionDirectory(db) {
+  const rows = await db
+    .prepare(
+      `SELECT c.user_id, c.target_user_id,
+        follower.id AS follower_id, follower.name AS follower_name, follower.handle AS follower_handle,
+        follower.avatar_url AS follower_avatar_url, follower.industry AS follower_industry, follower.location AS follower_location,
+        follower.bio AS follower_bio, follower.verified_badge AS follower_verified_badge,
+        target.id AS target_id, target.name AS target_name, target.handle AS target_handle,
+        target.avatar_url AS target_avatar_url, target.industry AS target_industry, target.location AS target_location,
+        target.bio AS target_bio, target.verified_badge AS target_verified_badge
+       FROM user_connections c
+       JOIN users follower ON follower.id = c.user_id
+       JOIN users target ON target.id = c.target_user_id
+       WHERE follower.id <> 'demo-user'
+         AND target.id <> 'demo-user'
+         AND COALESCE(follower.privacy, 'public') = 'public'
+         AND COALESCE(target.privacy, 'public') = 'public'
+       ORDER BY datetime(COALESCE(target.created_at, '1970-01-01')) DESC
+       LIMIT 800`
+    )
+    .all();
+  const followersByUserId = {};
+  const followingByUserId = {};
+  const toPerson = (row, prefix) => ({
+    id: row[`${prefix}_id`],
+    name: row[`${prefix}_name`] || "Member",
+    handle: row[`${prefix}_handle`] || "",
+    av: initials(row[`${prefix}_name`]),
+    avatarUrl: row[`${prefix}_avatar_url`] || "",
+    industry: row[`${prefix}_industry`] || "Exploring",
+    loc: row[`${prefix}_location`] || "",
+    bio: row[`${prefix}_bio`] || "",
+    verified: isVerifiedAccount({
+      name: row[`${prefix}_name`],
+      handle: row[`${prefix}_handle`],
+      verified_badge: row[`${prefix}_verified_badge`],
+    }),
+  });
+  for (const row of rows.results || []) {
+    const follower = toPerson(row, "follower");
+    const target = toPerson(row, "target");
+    followersByUserId[row.target_user_id] ||= [];
+    followingByUserId[row.user_id] ||= [];
+    if (followersByUserId[row.target_user_id].length < 100) followersByUserId[row.target_user_id].push(follower);
+    if (followingByUserId[row.user_id].length < 100) followingByUserId[row.user_id].push(target);
+  }
+  return { followersByUserId, followingByUserId };
+}
+
 async function getBootstrap(db, user) {
   const userId = user.id;
   await ensureOfficialDailyReelPost(db);
-  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities] = await Promise.all([
+  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities, connections] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
@@ -1249,7 +1399,7 @@ async function getBootstrap(db, user) {
            WHEN c.user_b_id = ? THEN c.user_a_id
            ELSE NULL
          END
-         WHERE c.user_a_id IS NULL OR c.user_b_id IS NULL OR c.user_a_id = ? OR c.user_b_id = ?
+         WHERE (c.user_a_id = ? OR c.user_b_id = ?)
          ORDER BY datetime(COALESCE(c.updated_at, '1970-01-01')) DESC, c.id DESC`
       )
       .bind(userId, userId, userId, userId)
@@ -1258,6 +1408,7 @@ async function getBootstrap(db, user) {
     getNotifications(db, userId),
     getGroups(db, user),
     getOpportunities(db),
+    getConnectionDirectory(db),
   ]);
 
   const messages = await db
@@ -1265,7 +1416,7 @@ async function getBootstrap(db, user) {
       `SELECT m.*
        FROM messages m
        JOIN conversations c ON c.id = m.conversation_id
-       WHERE c.user_a_id IS NULL OR c.user_b_id IS NULL OR c.user_a_id = ? OR c.user_b_id = ?
+       WHERE (c.user_a_id = ? OR c.user_b_id = ?)
        ORDER BY datetime(m.created_at), m.id`
     )
     .bind(userId, userId)
@@ -1322,6 +1473,7 @@ async function getBootstrap(db, user) {
     notifications,
     groups,
     opportunities,
+    connections,
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
   };
 }
@@ -1560,7 +1712,7 @@ async function handleRequest({ request, env, params }) {
       {
         ok: true,
         token: sessionToken,
-        profile: { ...profile, id, followers: 0, verified: isVerifiedAccount(user) },
+        profile: { ...publicProfile({ ...user, id }), followers: 0 },
         emailStatus: {
           signupConfirmationSent: Boolean(signupEmail?.sent),
           verificationSent: Boolean(verification?.notification?.sent),
@@ -1951,36 +2103,7 @@ async function handleRequest({ request, env, params }) {
     if (handleOwner && (!duplicate || handleOwner.id !== duplicate.id)) {
       return json({ error: "Username is already taken" }, { status: 409 });
     }
-    if (duplicate) {
-      const mergedProfile = normalizeProfile({ ...duplicate, ...profile });
-      await db
-        .prepare(
-          `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?`
-        )
-        .bind(
-          mergedProfile.name,
-          mergedProfile.handle,
-          mergedProfile.email,
-          mergedProfile.location,
-          mergedProfile.industry,
-          mergedProfile.stage,
-          mergedProfile.bio,
-          mergedProfile.privacy,
-          mergedProfile.avatarUrl,
-          mergedProfile.coverUrl,
-          mergedProfile.headline,
-          mergedProfile.website,
-          mergedProfile.lookingFor,
-          mergedProfile.goal,
-          duplicate.id
-        )
-        .run();
-      if (!user.email && user.id !== duplicate.id) {
-        await db.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
-      }
-      return json({ token: duplicate.token, profile: await profileWithFollowerCount(db, { ...duplicate, ...mergedProfile }) });
-    }
+    if (duplicate) return json({ error: "That email already belongs to another account" }, { status: 409 });
 
     await db
       .prepare(
@@ -2148,18 +2271,20 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "posts" && segments[2] === "comments") {
     const limited = await enforceRateLimit(db, request, "comments", 30, 600);
     if (limited) return limited;
+    const postId = cleanText(segments[1] || "", 120);
+    const postOwner = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(postId).first();
+    if (!postOwner) return json({ error: "Post not found" }, { status: 404 });
     const text = cleanText(body.text || "", 600);
     if (!text) return json({ error: "Comment text required" }, { status: 400 });
     await db
       .prepare("INSERT INTO comments (id, post_id, user_id, text) VALUES (?, ?, ?, ?)")
-      .bind(createId("comment"), segments[1], user.id, text)
+      .bind(createId("comment"), postId, user.id, text)
       .run();
-    const postOwner = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(segments[1]).first();
     if (postOwner?.user_id && postOwner.user_id !== user.id) {
       await safeRun(
         db,
         "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [createId("notification"), postOwner.user_id, user.id, "comment", `${user.name} commented on your post.`, "post", segments[1]]
+        [createId("notification"), postOwner.user_id, user.id, "comment", `${user.name} commented on your post.`, "post", postId]
       );
     }
     return json({ posts: await getPosts(db, user.id) });
@@ -2202,15 +2327,25 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "posts" && (segments[2] === "like" || segments[2] === "save")) {
     const limited = await enforceRateLimit(db, request, "posts-react", 90, 600);
     if (limited) return limited;
+    const postId = cleanText(segments[1] || "", 120);
+    const post = await db.prepare("SELECT user_id FROM posts WHERE id = ?").bind(postId).first();
+    if (!post) return json({ error: "Post not found" }, { status: 404 });
     const kind = segments[2] === "like" ? "like" : "save";
     const existing = await db
       .prepare("SELECT 1 FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?")
-      .bind(segments[1], user.id, kind)
+      .bind(postId, user.id, kind)
       .first();
     if (existing) {
-      await db.prepare("DELETE FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?").bind(segments[1], user.id, kind).run();
+      await db.prepare("DELETE FROM post_reactions WHERE post_id = ? AND user_id = ? AND kind = ?").bind(postId, user.id, kind).run();
     } else {
-      await db.prepare("INSERT INTO post_reactions (post_id, user_id, kind) VALUES (?, ?, ?)").bind(segments[1], user.id, kind).run();
+      await db.prepare("INSERT INTO post_reactions (post_id, user_id, kind) VALUES (?, ?, ?)").bind(postId, user.id, kind).run();
+      if (kind === "like" && post.user_id && post.user_id !== user.id) {
+        await safeRun(
+          db,
+          "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [createId("notification"), post.user_id, user.id, "like", `${user.name} liked your post.`, "post", postId]
+        );
+      }
     }
     return json({ posts: await getPosts(db, user.id) });
   }
@@ -2224,6 +2359,8 @@ async function handleRequest({ request, env, params }) {
       await ensureUserFollowsOfficial(db, user.id);
       return json(await getBootstrap(db, user));
     }
+    const target = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND id = ? AND COALESCE(privacy, 'public') = 'public'").bind(targetUserId).first();
+    if (!target) return json({ error: "User not found" }, { status: 404 });
     const connected = await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
     if (connected) {
       await safeRun(
@@ -2240,6 +2377,8 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    const target = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
+    if (!target) return json({ error: "User not found" }, { status: 404 });
     await db.prepare("INSERT OR IGNORE INTO user_blocks (user_id, blocked_user_id) VALUES (?, ?)").bind(user.id, targetUserId).run();
     await safeRun(db, "DELETE FROM user_connections WHERE (user_id = ? AND target_user_id = ?) OR (user_id = ? AND target_user_id = ?)", [
       user.id,
@@ -2302,6 +2441,8 @@ async function handleRequest({ request, env, params }) {
     const targetType = cleanText(body.targetType || "", 40);
     const targetId = cleanText(body.targetId || "", 120);
     const reason = cleanText(body.reason || "", 600);
+    const allowedReportTargets = new Set(["post", "comment", "user", "message", "group", "opportunity"]);
+    if (!allowedReportTargets.has(targetType)) return json({ error: "Unsupported report target" }, { status: 400 });
     if (!targetType || !targetId || !reason) return json({ error: "Report target and reason required" }, { status: 400 });
     await db
       .prepare("INSERT INTO content_reports (id, reporter_user_id, target_type, target_id, reason) VALUES (?, ?, ?, ?, ?)")
@@ -2319,10 +2460,10 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/media") {
     const limited = await enforceRateLimit(db, request, "media", 20, 600);
     if (limited) return limited;
-    const url = String(body.url || "").trim().slice(0, 500);
-    const kind = cleanText(body.kind || "image", 40);
+    const kind = body.kind === "video" ? "video" : "image";
+    const url = cleanMediaUrl(body.url || "", kind, MAX_MEDIA_URL_BYTES);
     const alt = cleanText(body.alt || "", 240);
-    if (!/^https:\/\//.test(url)) return json({ error: "A secure media URL is required" }, { status: 400 });
+    if (!url || !isSafeHttpUrl(url, { max: MAX_MEDIA_URL_BYTES })) return json({ error: "A secure hosted media URL is required" }, { status: 400 });
     const id = createId("media");
     await db.prepare("INSERT INTO media_assets (id, user_id, kind, url, alt) VALUES (?, ?, ?, ?, ?)").bind(id, user.id, kind, url, alt).run();
     return json({ ok: true, media: { id, kind, url, alt } }, { status: 201 });
@@ -2341,14 +2482,21 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
     const limited = await enforceRateLimit(db, request, "events-rsvp", 60, 600);
     if (limited) return limited;
-    await toggleRow(db, "event_rsvps", user.id, "event_id", Number(segments[1]));
+    const eventId = Number(segments[1]);
+    if (!Number.isFinite(eventId)) return json({ error: "Invalid event" }, { status: 400 });
+    const event = await db.prepare("SELECT id FROM events WHERE id = ?").bind(eventId).first();
+    if (!event) return json({ error: "Event not found" }, { status: 404 });
+    await toggleRow(db, "event_rsvps", user.id, "event_id", eventId);
     return json(await getBootstrap(db, user));
   }
 
   if (method === "POST" && segments[0] === "mentors" && segments[2] === "request") {
     const limited = await enforceRateLimit(db, request, "mentors-request", 30, 600);
     if (limited) return limited;
-    await toggleRow(db, "mentor_requests", user.id, "mentor_id", segments[1]);
+    const mentorId = cleanText(segments[1] || "", 120);
+    const mentor = await db.prepare("SELECT id FROM mentors WHERE id = ?").bind(mentorId).first();
+    if (!mentor) return json({ error: "Mentor not found" }, { status: 404 });
+    await toggleRow(db, "mentor_requests", user.id, "mentor_id", mentorId);
     return json(await getBootstrap(db, user));
   }
 
@@ -2359,7 +2507,7 @@ async function handleRequest({ request, env, params }) {
     if (!text) return json({ error: "Message text required" }, { status: 400 });
     const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
     if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
-    if (conversation.user_a_id && conversation.user_b_id && conversation.user_a_id !== user.id && conversation.user_b_id !== user.id) {
+    if (!conversation.user_a_id || !conversation.user_b_id || (conversation.user_a_id !== user.id && conversation.user_b_id !== user.id)) {
       return json({ error: "Conversation access denied" }, { status: 403 });
     }
     await db
