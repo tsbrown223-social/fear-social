@@ -52,6 +52,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes ambientDrift{0%,100%{transform:translate3d(0,0,0) scale(1);}50%{transform:translate3d(18px,-24px,0) scale(1.08);}}
 @keyframes scanLine{0%{transform:translateY(-20%);opacity:0;}18%,72%{opacity:.65;}100%{transform:translateY(120%);opacity:0;}}
 @keyframes cardBreath{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg));}50%{transform:translateY(-8px) rotate(var(--tilt,0deg));}}
+@keyframes cinematicSweep{0%{transform:translateX(-120%) rotate(12deg);opacity:0;}18%,70%{opacity:.55;}100%{transform:translateX(120%) rotate(12deg);opacity:0;}}
+@keyframes pathFlow{0%{background-position:0% 0%;}100%{background-position:0% 100%;}}
+@keyframes haloPulse{0%,100%{transform:scale(.96);opacity:.44;}50%{transform:scale(1.08);opacity:.82;}}
+@keyframes sceneSlide{0%,100%{transform:translateY(0);opacity:.84;}50%{transform:translateY(-12px);opacity:1;}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -67,12 +71,23 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-orbit{animation:orbitSpin 34s linear infinite;transform-origin:center;}
 .landing-scan{animation:scanLine 5.5s ease-in-out infinite;}
 .landing-motion-card{animation:cardBreath 6s ease-in-out infinite;}
+.landing-cinematic-sweep{animation:cinematicSweep 8s ease-in-out infinite;}
+.landing-path-line{animation:pathFlow 11s linear infinite;background-size:100% 220%;}
+.landing-halo{animation:haloPulse 4.4s ease-in-out infinite;}
+.landing-scene-float{animation:sceneSlide 5.4s ease-in-out infinite;}
 .landing-magnetic{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-magnetic:hover{transform:translateY(-6px) scale(1.015);border-color:rgba(22,199,78,.36)!important;}
 .landing-scroll-step{opacity:.62;transition:opacity .2s ease,transform .2s ease,border-color .2s ease;}
 .landing-scroll-step:hover{opacity:1;transform:translateX(8px);border-color:rgba(22,199,78,.32)!important;}
 .landing-world-node{transition:transform .18s ease,background .18s ease,border-color .18s ease;}
 .landing-world-node:hover{transform:translateY(-6px) scale(1.02);background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.38)!important;}
+.landing-hero-float{position:absolute;z-index:1;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(18px);border-radius:22px;padding:16px;box-shadow:0 28px 90px rgba(0,0,0,.28);}
+.landing-hero-float b,.landing-cinema-card b{color:#fff;}
+.landing-hero-float p,.landing-cinema-card p{color:rgba(255,255,255,.58);}
+.landing-cinema-card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);border-radius:28px;box-shadow:0 34px 120px rgba(0,0,0,.3);}
+.landing-cinema-card:before{content:"";position:absolute;inset:-30% auto -30% -35%;width:32%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(12deg);animation:cinematicSweep 9s ease-in-out infinite;pointer-events:none;}
+.landing-story-button{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
+.landing-story-button:hover{transform:translateX(8px);border-color:rgba(22,199,78,.42)!important;background:rgba(22,199,78,.12)!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
 .bs{transition:all 0.15s ease;}.bs:hover{transform:translateY(-2px);filter:brightness(1.08);}.bs:active{transform:scale(0.96);}
@@ -173,6 +188,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .match-meter span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#16C74E,#8BFFAD);}
 .landing-root,.app-view,.signup-root,.verify-shell{min-height:100dvh;}
 .landing-root{background:#050506;padding-bottom:env(safe-area-inset-bottom);}
+.landing-section{scroll-margin-top:92px;}
 .landing-footer{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important;}
 @media(max-width:980px){
   [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
@@ -188,6 +204,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
   body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:pan-y;}
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
+  .landing-cinematic-sweep,.landing-path-line,.landing-halo,.landing-scene-float{animation:none!important;}
   .landing-cursor,.landing-progress{display:none!important;}
   .landing-magnetic:hover,.landing-scroll-step:hover,.landing-world-node:hover{transform:none!important;}
   .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
@@ -283,6 +300,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-hero{min-height:100dvh!important;padding:98px 16px 50px!important;justify-content:flex-start!important;}
   .landing-hero h1{font-size:42px!important;line-height:1.06!important;margin-bottom:20px!important;}
   .landing-hero p{font-size:15.5px!important;line-height:1.62!important;margin-bottom:24px!important;}
+  .landing-hero-float{display:none!important;}
   .landing-badge{max-width:100%!important;align-items:center!important;}
   .landing-badge span:last-child{white-space:normal!important;line-height:1.25!important;text-align:left!important;}
   .landing-email{flex-direction:column!important;gap:8px!important;border-radius:30px!important;padding:8px!important;}
@@ -291,8 +309,18 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-email button{padding:14px 18px!important;}
   .landing-section{padding:62px 16px!important;}
   .landing-section h2{font-size:34px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
+  .landing-scroll-step>div{display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;gap:10px!important;align-items:start!important;}
+  .landing-scroll-step>div>span:first-child{display:block!important;min-width:52px!important;font-size:28px!important;text-align:left!important;}
+  .landing-scroll-step>div>div{min-width:0!important;}
+  .landing-scroll-step p{margin-top:2px!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
-  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid,.landing-journey-grid,.landing-world-grid,.landing-reels-grid{grid-template-columns:1fr!important;}
+  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid,.landing-journey-grid,.landing-world-grid,.landing-reels-grid,.landing-cinema-grid{grid-template-columns:1fr!important;}
+  .landing-cinema-stage{min-height:auto!important;padding:18px!important;}
+  .landing-cinema-card{border-radius:22px!important;}
+  .landing-cinema-stage .landing-path-line{display:none!important;}
+  .landing-cinema-stage .landing-scene-float{margin-left:0!important;margin-right:0!important;}
+  .landing-cinema-stage>div:last-child{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;grid-template-columns:1fr!important;margin-top:14px!important;}
+  .landing-story-button:hover{transform:none!important;}
   .landing-signal-grid .landing-mini-card{transform:none!important;}
   .landing-immersive-stage{min-height:auto!important;padding:64px 16px!important;}
   .landing-sticky-world{position:relative!important;top:auto!important;min-height:520px!important;}
@@ -729,6 +757,19 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     {id:"deals",label:"Deals",icon:"briefcase",title:"See openings that make the next step real.",copy:"Find jobs, gigs, internships, collabs, pilot customers, and first career opportunities tuned to where you want to go.",metric:"Matches"},
   ];
   const demo=demoTabs.find(t=>t.id===activeDemo)||demoTabs[0];
+  const parallaxX=(cursor.x-50)/50;
+  const parallaxY=(cursor.y-50)/50;
+  const storyButtons=[
+    {id:"discover",label:"Find your people",copy:"Browse students, builders, mentors, and early professionals moving toward similar goals.",icon:"network"},
+    {id:"deals",label:"Find your opening",copy:"See jobs, gigs, volunteer roles, and starter opportunities that match where you want to go.",icon:"briefcase"},
+    {id:"messages",label:"Start the conversation",copy:"Message the person, ask the question, follow up, and make momentum feel real.",icon:"mail"},
+  ];
+  const cinematicPanels=[
+    ["Profile signal","I have an idea · Looking for collaborators","user"],
+    ["Opportunity match","91% fit · Beginner brand sprint","briefcase"],
+    ["New connection","A mentor replied to your first ask","bell"],
+    ["Group motion","fear. posted a new first-step prompt","network"],
+  ];
   const workflowRows=[
     ["Create your card","Show who you are becoming, what you care about, what you are learning, and what opportunity you are trying to earn.","user"],
     ["Make the first move","Ask for advice, share what you are building, look for feedback, or say out loud what you want next.","megaphone"],
@@ -802,6 +843,27 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <span style={{position:"absolute",left:"50%",top:-5,width:10,height:10,borderRadius:"50%",background:C.accent,boxShadow:"0 0 28px rgba(22,199,78,.8)"}}/>
           <span style={{position:"absolute",right:"7%",bottom:"18%",width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,.72)"}}/>
         </div>
+        <div className="landing-hero-float landing-scene-float" style={{left:"7%",top:"31%",width:220,transform:`translate3d(${parallaxX*-18}px,${parallaxY*-14}px,0)`}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <span style={{width:36,height:36,borderRadius:13,background:"rgba(22,199,78,.16)",color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="briefcase" size={18}/></span>
+            <b style={{fontSize:14}}>Opportunity found</b>
+          </div>
+          <p style={{fontSize:12,lineHeight:1.55}}>A beginner-friendly brand role is ready to save.</p>
+        </div>
+        <div className="landing-hero-float landing-scene-float" style={{right:"7%",top:"29%",width:238,animationDelay:"-2s",transform:`translate3d(${parallaxX*18}px,${parallaxY*-12}px,0)`}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <span style={{width:36,height:36,borderRadius:13,background:C.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="mail" size={18}/></span>
+            <b style={{fontSize:14}}>Mentor reply</b>
+          </div>
+          <p style={{fontSize:12,lineHeight:1.55}}>Someone answered the question you were nervous to ask.</p>
+        </div>
+        <div className="landing-hero-float landing-scene-float" style={{right:"14%",bottom:"21%",width:210,animationDelay:"-3.5s",transform:`translate3d(${parallaxX*12}px,${parallaxY*16}px,0)`}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <span style={{width:36,height:36,borderRadius:13,background:"rgba(255,255,255,.1)",color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="network" size={18}/></span>
+            <b style={{fontSize:14}}>New circle</b>
+          </div>
+          <p style={{fontSize:12,lineHeight:1.55}}>Join a group for the future you are trying to build.</p>
+        </div>
         <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
           <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
           <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
@@ -866,6 +928,51 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:12,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={12} color={C.accent}/> {t}</span>)}
         </div>
       </div>
+      <div className="landing-section" style={{padding:"120px 52px",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,.12), transparent 42%), #050506",borderBottom:"1px solid rgba(255,255,255,.08)",position:"relative",overflow:"hidden"}}>
+        <div className="landing-cinematic-sweep" style={{position:"absolute",inset:"-20% auto -20% -30%",width:"38%",background:"linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)",pointerEvents:"none"}}/>
+        <div className="landing-cinema-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"minmax(0,.92fr) minmax(0,1.08fr)",gap:28,alignItems:"center",position:"relative"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:16}}>Interactive World</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.4vw,86px)",lineHeight:.94,letterSpacing:0,color:"#fff",marginBottom:20}}>A social platform that feels like the beginning of something.</h2>
+            <p style={{fontSize:17,lineHeight:1.82,color:"rgba(255,255,255,.58)",maxWidth:560,marginBottom:28}}>fear.social should feel alive the second someone lands here: people moving, opportunities appearing, messages opening, and a clear sense that the next version of their life is closer than it felt yesterday.</p>
+            <div style={{display:"grid",gap:10}}>
+              {storyButtons.map(item=>(
+                <button
+                  key={item.id}
+                  onClick={()=>{setActiveDemo(item.id);scrollToSection("product-preview");}}
+                  className="landing-story-button"
+                  style={{display:"grid",gridTemplateColumns:"46px minmax(0,1fr) auto",gap:14,alignItems:"center",textAlign:"left",background:activeDemo===item.id?"rgba(22,199,78,.14)":"rgba(255,255,255,.055)",border:`1px solid ${activeDemo===item.id?"rgba(22,199,78,.36)":"rgba(255,255,255,.1)"}`,borderRadius:18,padding:14,color:"#fff"}}
+                >
+                  <span style={{width:46,height:46,borderRadius:15,background:activeDemo===item.id?C.accent:"rgba(22,199,78,.12)",color:activeDemo===item.id?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={item.icon} size={21}/></span>
+                  <span style={{minWidth:0}}>
+                    <b style={{display:"block",fontSize:16,marginBottom:4}}>{item.label}</b>
+                    <span style={{display:"block",fontSize:13,lineHeight:1.55,color:"rgba(255,255,255,.54)"}}>{item.copy}</span>
+                  </span>
+                  <Icon name="send" size={17} color={activeDemo===item.id?C.accent:"rgba(255,255,255,.35)"}/>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="landing-cinema-stage landing-cinema-card" style={{minHeight:650,padding:24}}>
+            <div className="landing-halo" style={{position:"absolute",left:"50%",top:"45%",width:330,height:330,marginLeft:-165,marginTop:-165,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,.28), transparent 68%)",pointerEvents:"none"}}/>
+            <div className="landing-path-line" style={{position:"absolute",left:"50%",top:52,bottom:52,width:2,background:"linear-gradient(180deg, transparent, rgba(22,199,78,.9), rgba(255,255,255,.18), transparent)",opacity:.72}}/>
+            <div style={{position:"relative",zIndex:1,display:"grid",gap:16}}>
+              {cinematicPanels.map(([label,copy,icon],i)=>(
+                <div key={label} className="landing-scene-float" style={{animationDelay:`-${i*1.1}s`,marginLeft:i%2?80:0,marginRight:i%2?0:80,background:i===1?"rgba(22,199,78,.14)":"rgba(255,255,255,.075)",border:`1px solid ${i===1?"rgba(22,199,78,.32)":"rgba(255,255,255,.12)"}`,borderRadius:24,padding:18,display:"grid",gridTemplateColumns:"54px minmax(0,1fr)",gap:14,alignItems:"center",boxShadow:"0 28px 90px rgba(0,0,0,.22)"}}>
+                  <span style={{width:54,height:54,borderRadius:18,background:i===1?C.accent:"rgba(22,199,78,.12)",color:i===1?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={icon} size={24}/></span>
+                  <span style={{minWidth:0}}>
+                    <b style={{display:"block",fontSize:17,marginBottom:5,color:"#fff"}}>{label}</b>
+                    <span style={{display:"block",fontSize:14,lineHeight:1.55,color:"rgba(255,255,255,.62)",overflowWrap:"anywhere"}}>{copy}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{position:"absolute",left:24,right:24,bottom:24,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              {["Post", "Connect", "Apply"].map((label,i)=><div key={label} style={{background:i===1?C.accent:"rgba(255,255,255,.08)",color:i===1?"#fff":"rgba(255,255,255,.68)",border:"1px solid rgba(255,255,255,.1)",borderRadius:16,padding:"13px 10px",textAlign:"center",fontSize:13,fontWeight:950}}>{label}</div>)}
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="landing-immersive-stage landing-section" style={{background:"#050506",padding:"128px 52px",position:"relative",overflow:"hidden"}}>
         <div className="landing-journey-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"minmax(0,0.9fr) minmax(0,1.1fr)",gap:34,alignItems:"start"}}>
           <div style={{position:"relative",zIndex:1}}>
@@ -896,7 +1003,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
-      <div className="landing-product-peek landing-section" style={{padding:"112px 52px",background:"#050506"}}>
+      <div id="product-preview" className="landing-product-peek landing-section" style={{padding:"112px 52px",background:"#050506"}}>
         <div className="landing-peek-grid" style={{maxWidth:1180,margin:"0 auto",display:"grid",gridTemplateColumns:"0.86fr 1.14fr",gap:34,alignItems:"center"}}>
           <div>
             <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>What You Can Do Here</div>
