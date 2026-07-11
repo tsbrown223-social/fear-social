@@ -54,6 +54,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes cardBreath{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg));}50%{transform:translateY(-8px) rotate(var(--tilt,0deg));}}
 @keyframes cinematicSweep{0%{transform:translateX(-120%) rotate(12deg);opacity:0;}18%,70%{opacity:.55;}100%{transform:translateX(120%) rotate(12deg);opacity:0;}}
 @keyframes haloPulse{0%,100%{transform:scale(.96);opacity:.44;}50%{transform:scale(1.08);opacity:.82;}}
+@keyframes typeReveal{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0 0 0);}}
+@keyframes caretBlink{0%,48%{opacity:1;}49%,100%{opacity:0;}}
+@keyframes cueFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -83,6 +86,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-cinema-card:before{content:"";position:absolute;inset:-30% auto -30% -35%;width:32%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(12deg);animation:cinematicSweep 9s ease-in-out infinite;pointer-events:none;}
 .landing-story-button{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-story-button:hover{transform:translateX(8px);border-color:rgba(22,199,78,.42)!important;background:rgba(22,199,78,.12)!important;}
+.landing-intro-copy{width:100%;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;}
+.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal .72s steps(16,end) forwards;}
+.landing-type-line-second{animation-delay:.78s;animation-duration:.5s;color:#16C74E;}
+.landing-type-line-caret{position:relative;}
+.landing-type-line-caret:after{content:"";display:inline-block;width:.08em;height:.82em;margin-left:.08em;background:#16C74E;vertical-align:-.05em;animation:caretBlink .78s steps(1,end) infinite;}
+.landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
+@media(prefers-reduced-motion:reduce){.landing-type-line{clip-path:none!important;}.landing-type-line-caret:after{display:none!important;}}
+.a11y-reduce-motion .landing-type-line{clip-path:none!important;}
+.a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
 .bs{transition:all 0.15s ease;}.bs:hover{transform:translateY(-2px);filter:brightness(1.08);}.bs:active{transform:scale(0.96);}
@@ -304,15 +316,27 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-nav-actions{gap:6px!important;flex-shrink:0;}
   .landing-nav-login,.landing-nav-join{padding:8px 10px!important;font-size:12px!important;min-height:38px!important;}
   .theme-toggle-label{display:none!important;}
-  .landing-hero{min-height:100dvh!important;padding:98px 16px 50px!important;justify-content:flex-start!important;}
-  .landing-hero h1{font-size:42px!important;line-height:1.06!important;margin-bottom:20px!important;}
-  .landing-hero p{font-size:15.5px!important;line-height:1.62!important;margin-bottom:24px!important;}
+  .landing-hero{min-height:112dvh!important;padding:104px 16px 54px!important;justify-content:flex-start!important;}
+  .landing-intro-copy{min-height:calc(100dvh - 158px)!important;justify-content:center!important;padding-bottom:16px!important;}
+  .landing-hero h1{font-size:43px!important;line-height:1.04!important;margin-bottom:18px!important;width:100%!important;}
+  .landing-type-line{white-space:nowrap!important;}
+  .landing-hero p{font-size:15px!important;line-height:1.58!important;margin-bottom:20px!important;}
+  .landing-subhead{font-size:16px!important;margin-bottom:8px!important;}
+  .landing-hero-copy{font-size:14.5px!important;max-width:355px!important;margin-left:auto!important;margin-right:auto!important;}
   .landing-badge{max-width:100%!important;align-items:center!important;}
   .landing-badge span:last-child{white-space:normal!important;line-height:1.25!important;text-align:left!important;}
   .landing-email{flex-direction:column!important;gap:8px!important;border-radius:30px!important;padding:8px!important;}
   .landing-email input,.landing-email button{width:100%!important;}
   .landing-email input{padding:13px 16px!important;}
   .landing-email button{padding:14px 18px!important;}
+  .landing-scroll-cue{margin-top:22px!important;min-height:44px!important;}
+  .landing-proof-row{margin-top:24px!important;gap:12px!important;}
+  .landing-proof-row>div:first-child>div{width:34px!important;height:34px!important;font-size:10px!important;margin-left:-10px!important;}
+  .landing-proof-row>div:first-child>div:first-child{margin-left:0!important;}
+  .landing-proof-row>div:last-child div:first-child{font-size:12px!important;}
+  .landing-proof-row>div:last-child div:last-child{font-size:11px!important;}
+  .landing-saved-card{width:100%!important;max-width:360px!important;display:grid!important;grid-template-columns:1fr!important;text-align:left!important;padding:18px!important;}
+  .landing-saved-card button{margin-left:0!important;width:100%!important;}
   .landing-section{padding:62px 16px!important;}
   .landing-section h2{font-size:34px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
   .landing-scroll-step>div{display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;gap:10px!important;align-items:start!important;}
@@ -332,6 +356,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-world-node{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin-bottom:10px!important;}
   .landing-orbit-ring{display:none!important;}
   .landing-mini-app{border-radius:22px!important;padding:12px!important;margin-top:34px!important;animation:none!important;}
+  .landing-hero-preview{margin-top:64px!important;}
   .landing-mini-topbar{overflow:hidden!important;}
   .landing-mini-topbar>span:first-child{font-size:16px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
   .landing-mini-topbar .mini-nav-pill,.landing-mini-topbar .mini-live{display:none!important;}
@@ -379,6 +404,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-nav>div>div:first-child{font-size:17px!important;flex:0 0 94px!important;max-width:94px!important;overflow:visible!important;text-overflow:clip!important;}
   .landing-nav-actions{gap:4px!important;}
   .landing-nav-login,.landing-nav-join{padding:7px 8px!important;font-size:11px!important;min-height:36px!important;}
+  .landing-hero{padding-left:12px!important;padding-right:12px!important;}
+  .landing-hero h1{font-size:37px!important;}
+  .landing-hero-copy{font-size:14px!important;}
+  .landing-badge{padding:8px 12px!important;}
+  .landing-badge span:last-child{font-size:12px!important;}
   .mobile-section-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;}
   .mobile-section-tabs button{font-size:12px!important;padding:9px 6px!important;}
   .mobile-bottom-nav{left:6px!important;right:6px!important;padding:5px!important;}
@@ -852,42 +882,49 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <span style={{position:"absolute",left:"50%",top:-5,width:10,height:10,borderRadius:"50%",background:C.accent,boxShadow:"0 0 28px rgba(22,199,78,.8)"}}/>
           <span style={{position:"absolute",right:"7%",bottom:"18%",width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,.72)"}}/>
         </div>
-        <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
-          <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-          <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
-        </div>
-        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="fu">
-          Your first step<br/><span style={{color:C.accent}}>is fear.</span>
-        </h1>
-        <p style={{fontSize:20,color:"rgba(255,255,255,0.76)",lineHeight:1.65,maxWidth:680,marginBottom:12,position:"relative",fontWeight:800}} className="fu">
-          Empowering tomorrow's founders today.
-        </p>
-        <p style={{fontSize:18,color:"rgba(255,255,255,0.56)",lineHeight:1.75,maxWidth:720,marginBottom:38,position:"relative"}} className="fu">
-          Find direction, people, opportunities, and momentum before you feel fully ready. Your future does not start after confidence. It starts with a first step.
-        </p>
-        {joined?(
-          <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}}>
-            <div style={{textAlign:"left"}}>
-              <div style={{fontWeight:800,color:"#fff",fontSize:19}}>Your first move is saved.</div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,0.48)",marginTop:3}}>Create your account when you are ready to find people, roles, and momentum.</div>
+        <div className="landing-intro-copy">
+          <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
+            <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
+          </div>
+          <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="landing-typed-headline">
+            <span className="landing-type-line"><span>Your first step</span></span>
+            <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is fear.</span></span>
+          </h1>
+          <p style={{fontSize:20,color:"rgba(255,255,255,0.76)",lineHeight:1.65,maxWidth:680,marginBottom:12,position:"relative",fontWeight:800}} className="fu landing-subhead">
+            Empowering tomorrow's founders today.
+          </p>
+          <p style={{fontSize:18,color:"rgba(255,255,255,0.56)",lineHeight:1.75,maxWidth:720,marginBottom:38,position:"relative"}} className="fu landing-hero-copy">
+            Find direction, people, opportunities, and momentum before you feel fully ready. Your future does not start after confidence. It starts with a first step.
+          </p>
+          {joined?(
+            <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"20px 28px",animation:"popIn 0.3s ease",position:"relative"}} className="landing-saved-card">
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:800,color:"#fff",fontSize:19}}>Your first move is saved.</div>
+                <div style={{fontSize:14,color:"rgba(255,255,255,0.48)",marginTop:3}}>Create your account when you are ready to find people, roles, and momentum.</div>
+              </div>
+              <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Create account</button>
             </div>
-            <button onClick={()=>setScreen("signup")} className="bs" style={{marginLeft:8,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"10px 16px",fontSize:13,fontWeight:900}}>Create account</button>
-          </div>
-        ):(
-          <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
-            <input aria-label="Email address for invite request" autoComplete="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
-            <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
-          </div>
-        )}
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Free to start · Built for first moves · No credit card required</div>
-        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:54,position:"relative"}} className="landing-proof-row fu">
-          <div style={{display:"flex"}}>{["NR","MV","JK","KM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for first-time business builders</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
+          ):(
+            <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
+              <input aria-label="Email address for invite request" autoComplete="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
+              <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
+            </div>
+          )}
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Free to start · Built for first moves · No credit card required</div>
+          <button type="button" onClick={()=>scrollToSection("landing-entry")} className="landing-scroll-cue bs" style={{marginTop:30,display:"inline-flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.72)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"10px 15px",fontSize:12,fontWeight:900,letterSpacing:0.2}}>
+            Scroll to enter
+            <span aria-hidden="true" style={{width:24,height:24,borderRadius:"50%",background:"rgba(22,199,78,.14)",color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Icon name="zap" size={13}/></span>
+          </button>
+          <div style={{display:"flex",alignItems:"center",gap:16,marginTop:38,position:"relative"}} className="landing-proof-row fu">
+            <div style={{display:"flex"}}>{["NR","MV","JK","KM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for first-time business builders</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
+            </div>
           </div>
         </div>
-        <div className="landing-mini-app preview-float" aria-label="fear.social product preview" style={{width:"min(980px,100%)",marginTop:54,background:"rgba(16,17,20,0.92)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:28,padding:14,boxShadow:"0 34px 110px rgba(0,0,0,0.45)",position:"relative",overflow:"hidden"}}>
+        <div className="landing-mini-app landing-hero-preview preview-float" aria-label="fear.social product preview" style={{width:"min(980px,100%)",marginTop:54,background:"rgba(16,17,20,0.92)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:28,padding:14,boxShadow:"0 34px 110px rgba(0,0,0,0.45)",position:"relative",overflow:"hidden"}}>
           <div className="preview-sweep" style={{position:"absolute",top:0,bottom:0,width:"38%",background:"linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)",pointerEvents:"none"}}/>
           <div className="landing-mini-topbar" style={{height:42,borderRadius:18,background:"#0B0C0E",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",gap:8,padding:"0 12px",color:"rgba(255,255,255,0.52)",fontSize:12,fontWeight:800}}>
             <span style={{fontFamily:"Georgia,serif",fontSize:18,color:"#fff",marginRight:8}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></span>
@@ -917,7 +954,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
-      <div className="landing-ticker" style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
+      <div id="landing-entry" className="landing-ticker" style={{borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",background:"#0B0C0E",padding:"14px 0",overflow:"hidden"}}>
         <div style={{display:"flex",width:"max-content"}} className="ticker">
           {[...ticker,...ticker].map((t,i)=><span key={i} style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap",paddingRight:12,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={12} color={C.accent}/> {t}</span>)}
         </div>
