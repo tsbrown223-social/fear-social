@@ -53,9 +53,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes scanLine{0%{transform:translateY(-20%);opacity:0;}18%,72%{opacity:.65;}100%{transform:translateY(120%);opacity:0;}}
 @keyframes cardBreath{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg));}50%{transform:translateY(-8px) rotate(var(--tilt,0deg));}}
 @keyframes cinematicSweep{0%{transform:translateX(-120%) rotate(12deg);opacity:0;}18%,70%{opacity:.55;}100%{transform:translateX(120%) rotate(12deg);opacity:0;}}
-@keyframes pathFlow{0%{background-position:0% 0%;}100%{background-position:0% 100%;}}
 @keyframes haloPulse{0%,100%{transform:scale(.96);opacity:.44;}50%{transform:scale(1.08);opacity:.82;}}
-@keyframes sceneSlide{0%,100%{transform:translateY(0);opacity:.84;}50%{transform:translateY(-12px);opacity:1;}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -72,18 +70,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-scan{animation:scanLine 5.5s ease-in-out infinite;}
 .landing-motion-card{animation:cardBreath 6s ease-in-out infinite;}
 .landing-cinematic-sweep{animation:cinematicSweep 8s ease-in-out infinite;}
-.landing-path-line{animation:pathFlow 11s linear infinite;background-size:100% 220%;}
 .landing-halo{animation:haloPulse 4.4s ease-in-out infinite;}
-.landing-scene-float{animation:sceneSlide 5.4s ease-in-out infinite;}
 .landing-magnetic{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-magnetic:hover{transform:translateY(-6px) scale(1.015);border-color:rgba(22,199,78,.36)!important;}
 .landing-scroll-step{opacity:.62;transition:opacity .2s ease,transform .2s ease,border-color .2s ease;}
 .landing-scroll-step:hover{opacity:1;transform:translateX(8px);border-color:rgba(22,199,78,.32)!important;}
 .landing-world-node{transition:transform .18s ease,background .18s ease,border-color .18s ease;}
 .landing-world-node:hover{transform:translateY(-6px) scale(1.02);background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.38)!important;}
-.landing-hero-float{position:absolute;z-index:1;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(18px);border-radius:22px;padding:16px;box-shadow:0 28px 90px rgba(0,0,0,.28);}
-.landing-hero-float b,.landing-cinema-card b{color:#fff;}
-.landing-hero-float p,.landing-cinema-card p{color:rgba(255,255,255,.58);}
+.landing-cinema-card b{color:#fff;}
+.landing-cinema-card p{color:rgba(255,255,255,.58);}
 .landing-cinema-card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);border-radius:28px;box-shadow:0 34px 120px rgba(0,0,0,.3);}
 .landing-cinema-card:before{content:"";position:absolute;inset:-30% auto -30% -35%;width:32%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(12deg);animation:cinematicSweep 9s ease-in-out infinite;pointer-events:none;}
 .landing-story-button{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
@@ -131,7 +126,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-light .landing-mini-card div,.theme-light .landing-mini-card p,.theme-light .landing-mini-card span:not([style*="background"]){color:#0D0F14!important;}
 .theme-light .landing-mini-card button:first-of-type{background:#FFFFFF!important;color:#0D0F14!important;border-color:#D9E0EA!important;}
 .theme-light .landing-mini-card button:last-of-type{background:#16C74E!important;color:#FFFFFF!important;border-color:#16C74E!important;}
-.theme-light .landing-mini-dark{background:#111318!important;color:#fff!important;}
 .theme-light .landing-platform p,.theme-light .landing-launch p,.theme-light .landing-cta p{color:#5C6675!important;}
 .theme-light .landing-feature-grid .ch,.theme-light .landing-testimonial-grid .ch{background:#FFFFFF!important;border-color:#E5E9F0!important;box-shadow:0 18px 55px rgba(13,15,20,0.06)!important;}
 .theme-light .landing-card-title{color:#0D0F14!important;}
@@ -217,7 +211,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
   body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:pan-y;}
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
-  .landing-cinematic-sweep,.landing-path-line,.landing-halo,.landing-scene-float{animation:none!important;}
+  .landing-cinematic-sweep,.landing-halo{animation:none!important;}
   .landing-cursor,.landing-progress{display:none!important;}
   .landing-magnetic:hover,.landing-scroll-step:hover,.landing-world-node:hover{transform:none!important;}
   .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
@@ -313,7 +307,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-hero{min-height:100dvh!important;padding:98px 16px 50px!important;justify-content:flex-start!important;}
   .landing-hero h1{font-size:42px!important;line-height:1.06!important;margin-bottom:20px!important;}
   .landing-hero p{font-size:15.5px!important;line-height:1.62!important;margin-bottom:24px!important;}
-  .landing-hero-float{display:none!important;}
   .landing-badge{max-width:100%!important;align-items:center!important;}
   .landing-badge span:last-child{white-space:normal!important;line-height:1.25!important;text-align:left!important;}
   .landing-email{flex-direction:column!important;gap:8px!important;border-radius:30px!important;padding:8px!important;}
@@ -327,18 +320,15 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-scroll-step>div>div{min-width:0!important;}
   .landing-scroll-step p{margin-top:2px!important;}
   .landing-feature-grid,.landing-testimonial-grid,.pricing-grid{grid-template-columns:1fr!important;}
-  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid,.landing-journey-grid,.landing-world-grid,.landing-reels-grid,.landing-cinema-grid{grid-template-columns:1fr!important;}
+  .landing-peek-grid,.landing-workflow-grid,.landing-proof-grid,.landing-community-cards,.landing-signal-grid,.landing-journey-grid,.landing-reels-grid,.landing-cinema-grid{grid-template-columns:1fr!important;}
   .landing-cinema-stage{min-height:auto!important;padding:18px!important;}
   .landing-cinema-card{border-radius:22px!important;}
-  .landing-cinema-stage .landing-path-line{display:none!important;}
-  .landing-cinema-stage .landing-scene-float{margin-left:0!important;margin-right:0!important;}
   .landing-cinema-stage>div:last-child{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;grid-template-columns:1fr!important;margin-top:14px!important;}
   .landing-story-button:hover{transform:none!important;}
   .landing-signal-grid .landing-mini-card{transform:none!important;}
   .landing-immersive-stage{min-height:auto!important;padding:64px 16px!important;}
   .landing-sticky-world{position:relative!important;top:auto!important;min-height:520px!important;}
   .landing-scroll-step{opacity:1!important;transform:none!important;}
-  .landing-world-board{min-height:620px!important;}
   .landing-world-node{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin-bottom:10px!important;}
   .landing-orbit-ring{display:none!important;}
   .landing-mini-app{border-radius:22px!important;padding:12px!important;margin-top:34px!important;animation:none!important;}
@@ -346,7 +336,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-mini-topbar>span:first-child{font-size:16px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
   .landing-mini-topbar .mini-nav-pill,.landing-mini-topbar .mini-live{display:none!important;}
   .landing-mini-shell{grid-template-columns:1fr!important;}
-  .landing-mini-side{display:none!important;}
   .landing-demo-tabs{display:grid!important;grid-template-columns:1fr 1fr!important;}
   .landing-demo-tabs button{width:100%!important;justify-content:center!important;min-width:0!important;padding:10px 8px!important;}
   .landing-mini-card{min-width:0!important;overflow:hidden!important;}
