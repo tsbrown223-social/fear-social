@@ -824,7 +824,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     }
   };
   const ticker=["First steps · ","Career starts · ","Warm intros · ","Mentor requests · ","Build updates · ","Entry opportunities · ","Private rooms · ","People who get it · "];
-  const statRows=[["Beta status","Open"],["Emails captured",fmt(stats.waitlist)],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
+  const statRows=[["Beta status","Open"],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
   const demoTabs=[
     {id:"feed",label:"Feed",icon:"home",title:"A feed for people trying to become somebody.",copy:"Post what you are learning, ask for direction, share progress, and find people who are taking their first real step too.",metric:"For You"},
     {id:"discover",label:"Discover",icon:"diamond",title:"Find the people your future needs.",copy:"Meet students, creators, mentors, early professionals, operators, collaborators, and people moving toward the same kind of future.",metric:"Profiles"},
@@ -952,7 +952,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             <div style={{display:"flex"}}>{["NR","MV","JK","KM"].map((ini,idx)=><div key={ini} style={{width:40,height:40,borderRadius:"50%",background:"#101114",border:"2.5px solid #050506",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",marginLeft:idx===0?0:-13}}>{ini}</div>)}</div>
             <div style={{textAlign:"left"}}>
               <div style={{fontSize:14,color:"rgba(255,255,255,0.65)",fontWeight:600}}>Built for anyone ready to begin</div>
-              <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>{fmt(stats.waitlist)} emails captured so far</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,0.28)"}}>Open for first-step members</div>
             </div>
           </div>
         </div>
