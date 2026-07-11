@@ -905,19 +905,25 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             {["Feed","Discover","Messages","Deals"].map(label=><span className="mini-nav-pill" key={label} style={{padding:"7px 10px",borderRadius:999,background:label==="Feed"?C.aLight:"transparent",color:label==="Feed"?C.accent:"rgba(255,255,255,0.42)"}}>{label}</span>)}
             <span className="mini-live" style={{marginLeft:"auto",display:"inline-flex",alignItems:"center",gap:6,color:"rgba(255,255,255,0.6)"}}><span className="soft-blink" style={{width:8,height:8,borderRadius:"50%",background:C.accent}}/> live product</span>
           </div>
-          <div className="landing-mini-shell" style={{display:"grid",gridTemplateColumns:"220px minmax(0,1fr) 230px",gap:12,marginTop:12}}>
-            <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:"50%",background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,color:"#fff"}}>NR</div><div><div style={{fontWeight:900,color:"#fff",fontSize:14}}>Nova Reed</div><div style={{fontSize:11,color:"rgba(255,255,255,0.38)"}}>first-step builder</div></div></div>
-              {["2 new follows","1 unread DM","3 saved deals"].map((row,i)=><div key={row} className="signal-rise" style={{animationDelay:`${i*0.55}s`,display:"flex",alignItems:"center",gap:8,padding:"9px 0",borderTop:i?`1px solid rgba(255,255,255,0.07)`:"none",fontSize:12,color:"rgba(255,255,255,0.66)"}}><Icon name={i===0?"heart":i===1?"mail":"bookmark"} size={14} color={C.accent}/>{row}</div>)}
-            </div>
-            <div className="landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}><div style={{width:38,height:38,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>MV</div><div style={{flex:1}}><div style={{fontWeight:900,color:"#fff"}}>Mara Vale <span style={{color:C.accent}}>●</span></div><div style={{fontSize:12,color:"rgba(255,255,255,0.42)"}}>Brand Management · career update</div></div><span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"6px 9px",fontWeight:900}}>Launch</span></div>
-              <div style={{fontSize:15,color:"rgba(255,255,255,0.78)",lineHeight:1.55,marginBottom:14}}>Looking for feedback on a first pitch deck before sending it to local boutiques. Anyone open to a quick review?</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>{["Comment","Message"].map((label,i)=><button key={label} style={{border:"1px solid rgba(255,255,255,0.1)",background:i?C.accent:"rgba(255,255,255,0.06)",color:i?"#fff":"rgba(255,255,255,0.74)",borderRadius:11,padding:"10px 12px",fontWeight:900}}>{label}</button>)}</div>
-            </div>
-            <div className="landing-mini-side landing-mini-card" style={{background:"#15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:16,textAlign:"left"}}>
-              <div style={{fontWeight:950,color:"#fff",marginBottom:12}}>Suggested next steps</div>
-              {["Join fear. group","Save a local gig","Ask for a mentor intro"].map((row,i)=><div key={row} style={{display:"flex",gap:9,alignItems:"center",marginTop:10,color:"rgba(255,255,255,0.66)",fontSize:12}}><span style={{width:25,height:25,borderRadius:8,background:i===1?C.accent:"rgba(22,199,78,0.12)",display:"flex",alignItems:"center",justifyContent:"center",color:i===1?"#fff":C.accent}}><Icon name={i===0?"network":i===1?"briefcase":"brain"} size={13}/></span>{row}</div>)}
+          <div className="landing-mini-shell" style={{display:"grid",gridTemplateColumns:"1fr",gap:12,marginTop:12}}>
+            <div className="landing-mini-card" style={{background:"radial-gradient(circle at 78% 18%, rgba(22,199,78,.18), transparent 34%), #15171C",border:"1px solid rgba(255,255,255,0.08)",borderRadius:22,padding:22,textAlign:"left",minHeight:250,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",right:22,top:22,width:90,height:90,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,.24), transparent 70%)"}}/>
+              <div style={{position:"relative",display:"flex",gap:12,alignItems:"flex-start",marginBottom:28}}>
+                <div style={{width:44,height:44,borderRadius:"50%",background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>MV</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><b style={{fontSize:17,color:"#fff"}}>Mara Vale</b><span style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/></div>
+                  <div style={{fontSize:12,color:"rgba(255,255,255,0.42)",marginTop:3}}>Brand Management · first pitch</div>
+                </div>
+                <span style={{fontSize:11,color:C.accent,background:"rgba(22,199,78,0.12)",borderRadius:999,padding:"7px 10px",fontWeight:950}}>Launch</span>
+              </div>
+              <p style={{position:"relative",fontFamily:"Georgia,serif",fontSize:"clamp(24px,3vw,42px)",lineHeight:1.04,color:"#fff",letterSpacing:0,maxWidth:710,marginBottom:26}}>Looking for feedback before I send my first real pitch.</p>
+              <div style={{position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+                {[
+                  ["Mentor replied","mail"],
+                  ["2 founders saved it","bookmark"],
+                  ["Brand gig matched","briefcase"],
+                ].map(([label,icon],i)=><div key={label} style={{border:"1px solid rgba(255,255,255,.09)",background:i===0?"rgba(22,199,78,.14)":"rgba(255,255,255,.055)",borderRadius:16,padding:"13px 12px",display:"flex",alignItems:"center",gap:9,color:i===0?C.accent:"rgba(255,255,255,.66)",fontSize:12,fontWeight:900}}><Icon name={icon} size={15}/>{label}</div>)}
+              </div>
             </div>
           </div>
         </div>
@@ -936,7 +942,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
             <p style={{fontSize:17,lineHeight:1.86,color:"rgba(255,255,255,.6)",maxWidth:560,marginBottom:34}}>The page should feel like entering a world, not reading a brochure. A profile, a feed, opportunities, and people all orbit one idea: your future starts before you feel ready.</p>
             <div style={{display:"grid",gap:12}}>
               {cinematicScenes.map(scene=>(
-                <button key={scene.id} onClick={()=>setActiveDemo(scene.id)} className="landing-story-button" aria-pressed={activeDemo===scene.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 40px",gap:14,alignItems:"center",textAlign:"left",background:activeDemo===scene.id?"rgba(22,199,78,.12)":"rgba(255,255,255,.045)",border:`1px solid ${activeDemo===scene.id?"rgba(22,199,78,.38)":"rgba(255,255,255,.095)"}`,borderRadius:18,padding:"17px 18px",color:"#fff"}}>
+                <button key={scene.id} onMouseEnter={()=>setActiveDemo(scene.id)} onFocus={()=>setActiveDemo(scene.id)} onClick={()=>setActiveDemo(scene.id)} className="landing-story-button" aria-pressed={activeDemo===scene.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 40px",gap:14,alignItems:"center",textAlign:"left",background:activeDemo===scene.id?"rgba(22,199,78,.12)":"rgba(255,255,255,.045)",border:`1px solid ${activeDemo===scene.id?"rgba(22,199,78,.38)":"rgba(255,255,255,.095)"}`,borderRadius:18,padding:"17px 18px",color:"#fff"}}>
                   <span style={{minWidth:0}}>
                     <span style={{display:"block",fontSize:11,letterSpacing:1.7,fontWeight:950,color:activeDemo===scene.id?C.accent:"rgba(255,255,255,.36)",marginBottom:7}}>{scene.label}</span>
                     <b style={{display:"block",fontSize:18,lineHeight:1.15,marginBottom:7}}>{scene.title}</b>
@@ -953,7 +959,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <span style={{fontFamily:"Georgia,serif",fontSize:18,color:"#fff",fontWeight:900}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></span>
               <span style={{marginLeft:"auto",display:"inline-flex",alignItems:"center",gap:7,fontSize:12,fontWeight:900,color:"rgba(255,255,255,.52)"}}><span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> live preview</span>
             </div>
-            <div style={{position:"relative",minHeight:520,borderRadius:26,overflow:"hidden",background:"radial-gradient(circle at 65% 20%, rgba(22,199,78,.2), transparent 34%), #101114",border:"1px solid rgba(255,255,255,.08)",padding:24}}>
+            <div style={{position:"relative",minHeight:520,borderRadius:26,overflow:"hidden",background:`radial-gradient(circle at ${62+parallaxX*10}% ${22+parallaxY*8}%, rgba(22,199,78,.22), transparent 34%), #101114`,border:"1px solid rgba(255,255,255,.08)",padding:24}}>
               <div className="landing-cinematic-sweep" style={{position:"absolute",inset:"-20% auto -20% -35%",width:"38%",background:"linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent)",pointerEvents:"none"}}/>
               <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",gap:12,marginBottom:34}}>
                 <span style={{width:52,height:52,borderRadius:18,background:C.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={demo.icon} size={24}/></span>
