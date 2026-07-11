@@ -54,9 +54,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes cardBreath{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg));}50%{transform:translateY(-8px) rotate(var(--tilt,0deg));}}
 @keyframes cinematicSweep{0%{transform:translateX(-120%) rotate(12deg);opacity:0;}18%,70%{opacity:.55;}100%{transform:translateX(120%) rotate(12deg);opacity:0;}}
 @keyframes haloPulse{0%,100%{transform:scale(.96);opacity:.44;}50%{transform:scale(1.08);opacity:.82;}}
-@keyframes typeReveal{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0 0 0);}}
+@keyframes typeReveal{from{clip-path:inset(0 100% 0 0);filter:blur(5px);}70%{filter:blur(0);}to{clip-path:inset(0 0 0 0);filter:blur(0);}}
 @keyframes caretBlink{0%,48%{opacity:1;}49%,100%{opacity:0;}}
 @keyframes cueFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
+@keyframes introBloom{0%{opacity:0;transform:scale(.92);filter:blur(18px);}45%{opacity:.85;}100%{opacity:1;transform:scale(1);filter:blur(0);}}
+@keyframes cinematicFog{0%,100%{transform:translate3d(-2%,1%,0) scale(1);opacity:.68;}50%{transform:translate3d(2%,-2%,0) scale(1.08);opacity:.9;}}
+@keyframes navReveal{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -66,7 +69,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .landing-root{cursor:default;}
 .landing-cursor{position:fixed;z-index:2;width:460px;height:460px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle, rgba(22,199,78,.13), rgba(22,199,78,.045) 38%, transparent 67%);filter:blur(10px);mix-blend-mode:screen;will-change:left,top;}
-.landing-progress{position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
+.landing-progress{display:none;position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
 .landing-progress span{display:block;width:100%;border-radius:999px;background:linear-gradient(180deg,#16C74E,#B8F5CE);box-shadow:0 0 22px rgba(22,199,78,.5);}
 .landing-ambient{animation:ambientDrift 9s ease-in-out infinite;}
 .landing-orbit{animation:orbitSpin 34s linear infinite;transform-origin:center;}
@@ -86,12 +89,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-cinema-card:before{content:"";position:absolute;inset:-30% auto -30% -35%;width:32%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(12deg);animation:cinematicSweep 9s ease-in-out infinite;pointer-events:none;}
 .landing-story-button{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-story-button:hover{transform:translateX(8px);border-color:rgba(22,199,78,.42)!important;background:rgba(22,199,78,.12)!important;}
-.landing-intro-copy{width:100%;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;}
-.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal .72s steps(16,end) forwards;}
-.landing-type-line-second{animation-delay:.78s;animation-duration:.5s;color:#16C74E;}
+.landing-intro-copy{width:100%;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;padding:0 16px;}
+.landing-intro-copy:before{content:"";position:absolute;inset:18% auto auto 50%;width:min(720px,92vw);aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle, rgba(22,199,78,.2), rgba(22,199,78,.06) 42%, transparent 70%);filter:blur(18px);animation:introBloom 2.8s ease both, cinematicFog 9s ease-in-out infinite;pointer-events:none;}
+.landing-intro-copy:after{content:"";position:absolute;left:50%;bottom:7vh;width:1px;height:72px;background:linear-gradient(180deg, transparent, rgba(22,199,78,.65), transparent);opacity:.7;animation:introBloom 2.8s ease 2.3s both;pointer-events:none;}
+.landing-typed-headline{z-index:1;text-shadow:0 0 44px rgba(22,199,78,.13),0 24px 80px rgba(0,0,0,.62);}
+.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.45s steps(18,end) forwards;}
+.landing-type-line-second{animation-delay:1.55s;animation-duration:1.05s;color:#16C74E;}
 .landing-type-line-caret{position:relative;}
 .landing-type-line-caret:after{content:"";display:inline-block;width:.08em;height:.82em;margin-left:.08em;background:#16C74E;vertical-align:-.05em;animation:caretBlink .78s steps(1,end) infinite;}
 .landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
+.landing-after-intro{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;padding:64px 0 0;}
+.landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;}
 @media(prefers-reduced-motion:reduce){.landing-type-line{clip-path:none!important;}.landing-type-line-caret:after{display:none!important;}}
 .a11y-reduce-motion .landing-type-line{clip-path:none!important;}
 .a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
@@ -316,10 +324,13 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-nav-actions{gap:6px!important;flex-shrink:0;}
   .landing-nav-login,.landing-nav-join{padding:8px 10px!important;font-size:12px!important;min-height:38px!important;}
   .theme-toggle-label{display:none!important;}
-  .landing-hero{min-height:112dvh!important;padding:104px 16px 54px!important;justify-content:flex-start!important;}
-  .landing-intro-copy{min-height:calc(100dvh - 158px)!important;justify-content:center!important;padding-bottom:16px!important;}
-  .landing-hero h1{font-size:43px!important;line-height:1.04!important;margin-bottom:18px!important;width:100%!important;}
+  .landing-hero{min-height:auto!important;padding:0 16px 54px!important;justify-content:flex-start!important;}
+  .landing-intro-copy{min-height:100dvh!important;justify-content:center!important;padding:0 2px!important;}
+  .landing-intro-copy:before{width:112vw!important;filter:blur(16px)!important;}
+  .landing-intro-copy:after{bottom:6vh!important;height:54px!important;}
+  .landing-hero h1{font-size:43px!important;line-height:1.04!important;margin-bottom:0!important;width:100%!important;}
   .landing-type-line{white-space:nowrap!important;}
+  .landing-after-intro{padding-top:56px!important;}
   .landing-hero p{font-size:15px!important;line-height:1.58!important;margin-bottom:20px!important;}
   .landing-subhead{font-size:16px!important;margin-bottom:8px!important;}
   .landing-hero-copy{font-size:14.5px!important;max-width:355px!important;margin-left:auto!important;margin-right:auto!important;}
@@ -356,7 +367,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-world-node{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;margin-bottom:10px!important;}
   .landing-orbit-ring{display:none!important;}
   .landing-mini-app{border-radius:22px!important;padding:12px!important;margin-top:34px!important;animation:none!important;}
-  .landing-hero-preview{margin-top:64px!important;}
+  .landing-hero-preview{margin-top:42px!important;}
   .landing-mini-topbar{overflow:hidden!important;}
   .landing-mini-topbar>span:first-child{font-size:16px!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
   .landing-mini-topbar .mini-nav-pill,.landing-mini-topbar .mini-live{display:none!important;}
@@ -406,6 +417,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-nav-login,.landing-nav-join{padding:7px 8px!important;font-size:11px!important;min-height:36px!important;}
   .landing-hero{padding-left:12px!important;padding-right:12px!important;}
   .landing-hero h1{font-size:37px!important;}
+  .landing-intro-copy{padding-left:0!important;padding-right:0!important;}
   .landing-hero-copy{font-size:14px!important;}
   .landing-badge{padding:8px 12px!important;}
   .landing-badge span:last-child{font-size:12px!important;}
@@ -721,8 +733,8 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
   useEffect(()=>{const h=()=>setScrolled(window.scrollY>20);window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
   const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Join","cta"]];
   return(
-    <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none"}}>
-      <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:scrolled?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:"auto"}}>
+    <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none",opacity:scrolled?1:0,transform:scrolled?"translateY(0)":"translateY(-16px)",transition:"opacity .35s ease, transform .35s ease"}}>
+      <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:scrolled?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:scrolled?"auto":"none"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:21,color:"#050506",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span>social</div>
       <div className="landing-nav-links" style={{display:"flex",gap:2,marginRight:14}}>
         {links.map(([label,id])=>(
@@ -883,14 +895,16 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <span style={{position:"absolute",right:"7%",bottom:"18%",width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,.72)"}}/>
         </div>
         <div className="landing-intro-copy">
-          <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
-            <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-            <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
-          </div>
           <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="landing-typed-headline">
             <span className="landing-type-line"><span>Your first step</span></span>
             <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is fear.</span></span>
           </h1>
+        </div>
+        <div className="landing-after-intro">
+          <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
+            <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
+          </div>
           <p style={{fontSize:20,color:"rgba(255,255,255,0.76)",lineHeight:1.65,maxWidth:680,marginBottom:12,position:"relative",fontWeight:800}} className="fu landing-subhead">
             Empowering tomorrow's founders today.
           </p>
