@@ -64,7 +64,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .signal-rise{animation:signalRise 5s ease-in-out infinite;}
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .landing-root{cursor:default;}
-.landing-cursor{position:fixed;z-index:2;width:460px;height:460px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle, rgba(22,199,78,.13), rgba(22,199,78,.045) 38%, transparent 67%);filter:blur(10px);mix-blend-mode:screen;transition:left .18s ease,top .18s ease;}
+.landing-cursor{position:fixed;z-index:2;width:460px;height:460px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle, rgba(22,199,78,.13), rgba(22,199,78,.045) 38%, transparent 67%);filter:blur(10px);mix-blend-mode:screen;will-change:left,top;}
 .landing-progress{position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
 .landing-progress span{display:block;width:100%;border-radius:999px;background:linear-gradient(180deg,#16C74E,#B8F5CE);box-shadow:0 0 22px rgba(22,199,78,.5);}
 .landing-ambient{animation:ambientDrift 9s ease-in-out infinite;}
@@ -714,6 +714,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const [activeDemo,setActiveDemo]=useState("feed");
   const [cursor,setCursor]=useState({x:50,y:24});
   const [scrollProgress,setScrollProgress]=useState(0);
+  const cursorRef=useRef(null);
+  const cursorFrame=useRef(0);
   useEffect(()=>{
     let active=true;
     fetch("/api/stats").then(res=>res.json()).then(data=>{if(active)setStats(data.stats||REAL_STATS);}).catch(()=>{});
@@ -723,7 +725,17 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     const move=e=>{
       const w=window.innerWidth||1;
       const h=window.innerHeight||1;
-      setCursor({x:(e.clientX/w)*100,y:(e.clientY/h)*100});
+      const next={x:(e.clientX/w)*100,y:(e.clientY/h)*100};
+      if(cursorRef.current){
+        cursorRef.current.style.left=`${next.x}%`;
+        cursorRef.current.style.top=`${next.y}%`;
+      }
+      if(!cursorFrame.current){
+        cursorFrame.current=requestAnimationFrame(()=>{
+          cursorFrame.current=0;
+          setCursor(next);
+        });
+      }
     };
     const scroll=()=>{
       const doc=document.documentElement;
@@ -736,6 +748,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     return()=>{
       window.removeEventListener("pointermove",move);
       window.removeEventListener("scroll",scroll);
+      if(cursorFrame.current)cancelAnimationFrame(cursorFrame.current);
     };
   },[]);
   const joinWaitlist=async()=>{
@@ -833,7 +846,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   return(
     <div className="landing-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
-      <div className="landing-cursor" style={{left:`${cursor.x}%`,top:`${cursor.y}%`}}/>
+      <div ref={cursorRef} className="landing-cursor" style={{left:`${cursor.x}%`,top:`${cursor.y}%`}}/>
       <div className="landing-progress" aria-hidden="true"><span style={{height:`${scrollProgress}%`}}/></div>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
         <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
