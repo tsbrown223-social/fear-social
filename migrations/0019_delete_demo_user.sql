@@ -1,0 +1,18 @@
+DELETE FROM conversations WHERE id IN (SELECT conversation_id FROM messages WHERE user_id = 'demo-user');
+DELETE FROM messages WHERE user_id = 'demo-user';
+DELETE FROM user_notifications WHERE user_id = 'demo-user' OR actor_user_id = 'demo-user';
+DELETE FROM group_members WHERE user_id = 'demo-user';
+DELETE FROM group_invites WHERE inviter_user_id = 'demo-user' OR invitee_user_id = 'demo-user';
+DELETE FROM group_announcements WHERE user_id = 'demo-user';
+DELETE FROM opportunities WHERE user_id = 'demo-user';
+DELETE FROM content_reports WHERE reporter_user_id = 'demo-user';
+DELETE FROM user_blocks WHERE user_id = 'demo-user' OR blocked_user_id = 'demo-user';
+DELETE FROM media_assets WHERE user_id = 'demo-user';
+DELETE FROM comments WHERE user_id = 'demo-user' OR post_id IN (SELECT id FROM posts WHERE user_id = 'demo-user');
+DELETE FROM post_reactions WHERE user_id = 'demo-user' OR post_id IN (SELECT id FROM posts WHERE user_id = 'demo-user');
+DELETE FROM posts WHERE user_id = 'demo-user';
+DELETE FROM user_connections WHERE user_id = 'demo-user' OR target_user_id = 'demo-user';
+DELETE FROM event_rsvps WHERE user_id = 'demo-user';
+DELETE FROM mentor_requests WHERE user_id = 'demo-user';
+DELETE FROM user_sessions WHERE user_id = 'demo-user';
+DELETE FROM users WHERE id = 'demo-user' OR token = 'demo-token';

@@ -253,7 +253,4 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON api_rate_limits(expires_at
 CREATE INDEX IF NOT EXISTS idx_reports_status ON content_reports(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_user_notifications_user ON user_notifications(user_id, read_at, created_at);
 CREATE INDEX IF NOT EXISTS idx_media_assets_user ON media_assets(user_id, created_at);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle_unique ON users(handle) WHERE id <> 'demo-user';
-
-INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio)
-VALUES ('demo-user', 'demo-token', 'Your Name', '@yourhandle', '', 'Denver, CO', 'Tech', 'I''m actively building', 'Building in public, meeting ambitious founders, and turning fear into useful momentum.');
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle_unique ON users(handle);

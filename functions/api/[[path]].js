@@ -547,7 +547,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
   if (!token && !body.profile) {
     return { error: "Authentication required", status: 401 };
   }
-  const existing = await db.prepare("SELECT * FROM users WHERE token = ?").bind(token).first();
+  const existing = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND token = ?").bind(token).first();
   if (existing) return { user: existing, token, created: false };
   const session = token
     ? await db
