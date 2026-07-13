@@ -64,6 +64,7 @@ const SESSION_TTL_DAYS = 30;
 const TERMS_VERSION = "2026-07-10";
 const FEAR_GROUP_ID = "fear-official";
 const OFFICIAL_USER_ID = "fear-social-official";
+const OFFICIAL_AVATAR_URL = "https://fear.social/fear-official-avatar.png";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
 const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
@@ -1012,9 +1013,9 @@ async function ensureOfficialDailyReelPost(db) {
   await db
     .prepare(
       `INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, role, headline, website, looking_for, goal, verified_badge, email_verified_at)
-       VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', '', 'admin', 'Official fear.social daily reels and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
+       VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', ?, 'admin', 'Official fear.social daily reels and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
     )
-    .bind(OFFICIAL_USER_ID, `official-${OFFICIAL_USER_ID}`)
+    .bind(OFFICIAL_USER_ID, `official-${OFFICIAL_USER_ID}`, OFFICIAL_AVATAR_URL)
     .run();
   await db
     .prepare(
@@ -1027,6 +1028,7 @@ async function ensureOfficialDailyReelPost(db) {
            stage = 'Building',
            bio = 'Official fear.social account for daily prompts, product updates, and first-step momentum.',
            privacy = 'public',
+           avatar_url = ?,
            role = 'admin',
            headline = 'Official fear.social daily reels and platform notes.',
            website = 'https://fear.social',
@@ -1037,7 +1039,7 @@ async function ensureOfficialDailyReelPost(db) {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`
     )
-    .bind(OFFICIAL_USER_ID)
+    .bind(OFFICIAL_AVATAR_URL, OFFICIAL_USER_ID)
     .run();
   await db
     .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, 'Reel', ?, 'Daily', ?, '[]', CURRENT_TIMESTAMP)")
