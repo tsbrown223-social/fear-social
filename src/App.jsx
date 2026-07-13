@@ -571,6 +571,17 @@ const safeMediaUrl=(url,kind="image")=>{
     return parsed.protocol==="https:"?value:"";
   }catch{return "";}
 };
+const OBJECTIONABLE_PATTERNS=[
+  {label:"hate or slur",pattern:/\b(nigger|faggot|kike|chink|spic|wetback|tranny|retard)\b/i},
+  {label:"violent threat",pattern:/\b(kill yourself|kys|i will kill|i'm going to kill|shoot up|bomb threat)\b/i},
+  {label:"explicit sexual content",pattern:/\b(porn|onlyfans|nude|nudes|blowjob|handjob|cumshot|deepthroat|hardcore sex)\b/i},
+  {label:"sexual exploitation",pattern:/\b(child porn|cp\b|underage sex|minor sex)\b/i},
+  {label:"harassment",pattern:/\b(doxx|dox|swat you|leak your address)\b/i},
+];
+const moderationIssue=value=>{
+  const text=String(value||"");
+  return OBJECTIONABLE_PATTERNS.find(entry=>entry.pattern.test(text))?.label||"";
+};
 const readImageFile=(file,maxSize=720,maxBytes=680000)=>new Promise((resolve,reject)=>{
   if(!file?.type?.startsWith("image/"))return reject(new Error("Choose an image file"));
   const reader=new FileReader();
@@ -1526,7 +1537,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
     if(!valid)return;
     try{
       const nextProfile={name:form.name.trim(),username:form.username,handle:`@${form.username}`,email:form.email.trim().toLowerCase()};
-      const saved=await api("/auth/signup",{method:"POST",body:JSON.stringify({email:nextProfile.email,username:form.username,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-10"})});
+      const saved=await api("/auth/signup",{method:"POST",body:JSON.stringify({email:nextProfile.email,username:form.username,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-13-safety"})});
       setProfile(p=>({...p,...saved.profile}));
       setScreen("app");
       notify(saved.emailStatus?.signupConfirmationSent?"Account created. Confirmation email sent.":"Account created. You are signed in.");
@@ -1570,7 +1581,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   const enterApp=async()=>{
     const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
     try{
-      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-10"})});
+      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-13-safety"})});
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       notify(err.message||"Could not verify email","error");
@@ -1671,7 +1682,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
             </div>
             <label style={{display:"flex",alignItems:"flex-start",gap:10,border:`1px solid ${acceptedTerms?C.aSoft:C.border}`,background:acceptedTerms?C.aLight:C.bg,borderRadius:12,padding:13,cursor:"pointer"}}>
               <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)} style={{marginTop:2,accentColor:C.accent,flexShrink:0}}/>
-              <span style={{fontSize:12,color:C.muted,lineHeight:1.55}}>I agree to the <button type="button" onClick={e=>{e.preventDefault();setShowTerms(true);}} style={{background:"none",border:"none",padding:0,color:C.accent,fontWeight:900,textDecoration:"underline",cursor:"pointer"}}>Terms and Conditions</button> and understand fear.social's privacy and community rules.</span>
+              <span style={{fontSize:12,color:C.muted,lineHeight:1.55}}>I agree to the <button type="button" onClick={e=>{e.preventDefault();setShowTerms(true);}} style={{background:"none",border:"none",padding:0,color:C.accent,fontWeight:900,textDecoration:"underline",cursor:"pointer"}}>Terms and Conditions</button>, including the community rules prohibiting abusive, hateful, explicit, harassing, or otherwise objectionable content.</span>
             </label>
             <GBtn full disabled={!valid} onClick={requestCode}>Create account →</GBtn>
             <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
@@ -1760,6 +1771,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [profileMetric,setProfileMetric]=useState("Posts");
   const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
+  const [blockedUserIds,setBlockedUserIds]=useLocalState("fear-blocked-user-ids",[]);
   useEffect(()=>setProfileDraft(profile),[profile]);
   const applyBackendState=useCallback((data)=>{
     if(data.profile){
@@ -1812,6 +1824,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const followedIds=new Set(people.filter(p=>p.connected).map(p=>p.id));
   const followedHandles=new Set(people.filter(p=>p.connected&&p.handle).map(p=>p.handle));
   const ownPost=p=>(profile.id&&p.userId===profile.id)||(profile.handle&&p.handle===profile.handle);
+  const blockedIds=new Set(blockedUserIds);
+  const isBlockedUser=p=>Boolean((p?.userId&&blockedIds.has(p.userId))||(p?.id&&blockedIds.has(p.id)));
+  const filteredPosts=posts
+    .filter(p=>!isBlockedUser(p))
+    .map(p=>({...p,comments:(p.comments||[]).filter(comment=>!isBlockedUser(comment))}));
   const algorithmTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3&&!STOP_WORDS.has(term));
   const searchTerm=query.trim().toLowerCase();
   const matchesSearch=(parts=[])=>!searchTerm||parts.filter(Boolean).join(" ").toLowerCase().includes(searchTerm);
@@ -1839,12 +1856,12 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     score+=algorithmTerms.reduce((total,term)=>total+(haystack.includes(term)?5:0),0);
     return score;
   };
-  const visiblePosts=posts
+  const visiblePosts=filteredPosts
     .filter(p=>(filter==="All"||p.tag===filter)&&matchesSearch([p.user,p.handle,p.content,p.tag,p.type,...(p.comments||[]).map(c=>`${c.user} ${c.text}`)]))
     .filter(p=>feedMode==="forYou"||isFollowingPost(p)||ownPost(p))
     .map((p,index)=>({...p,_score:postScore(p)+postRecencyBoost(p,index),_index:index}))
     .sort((a,b)=>feedMode==="forYou"?(b._score-a._score)||(a._index-b._index):a._index-b._index);
-  const ownProfilePosts=posts.filter(ownPost);
+  const ownProfilePosts=filteredPosts.filter(ownPost);
   const opportunityTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>2&&!STOP_WORDS.has(term));
   const opportunityScore=deal=>{
     const haystack=[deal.title,deal.company,deal.type,deal.tag,deal.location,deal.level,deal.desc,...(deal.skills||[]),...(deal.fit||[])].join(" ").toLowerCase();
@@ -1907,7 +1924,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     ["Posts",fmt(ownProfilePosts.length)],
     ["Followers",fmt(followerCount)],
     ["Following",fmt(ownFollowing.length)],
-    ["Saved",fmt(posts.filter(p=>p.saved).length)],
+    ["Saved",fmt(filteredPosts.filter(p=>p.saved).length)],
     ["RSVPs",fmt(events.filter(e=>e.going).length)],
   ];
   const toPublicProfile=person=>({
@@ -1946,7 +1963,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   };
   const activePublicProfile=selectedProfile&&(people.find(p=>p.id===selectedProfile.id)||selectedProfile);
   const publicProfile=activePublicProfile?toPublicProfile(activePublicProfile):null;
-  const publicProfilePosts=publicProfile?posts.filter(p=>(publicProfile.id&&p.userId===publicProfile.id)||(publicProfile.handle&&p.handle===publicProfile.handle)):[];
+  const publicProfilePosts=publicProfile?filteredPosts.filter(p=>(publicProfile.id&&p.userId===publicProfile.id)||(publicProfile.handle&&p.handle===publicProfile.handle)):[];
   const addComposerMedia=async event=>{
     const files=Array.from(event.target.files||[]).slice(0,4-composerMedia.length);
     event.target.value="";
@@ -1971,6 +1988,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const publish=async()=>{
     const media=composerMedia.filter(item=>safeMediaUrl(item.url,item.kind));
     if(!composer.trim()&&media.length===0)return notify("Write something or attach media before publishing","error");
+    const issue=moderationIssue(composer);
+    if(issue)return notify(`This post was blocked by the safety filter for ${issue}. Edit it before publishing.`,"error");
     const optimistic={
       id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",verified:isVerifiedIdentity(profile),
       tag:profile.industry||"Exploring",
@@ -1989,6 +2008,22 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const connect=async id=>{
     setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
     try{await callBackend(`/people/${id}/connect`,{method:"POST"});}catch{}
+  };
+  const blockUser=async person=>{
+    const id=person?.id||person?.userId;
+    if(!id||id===profile.id)return;
+    const name=person?.name||person?.user||"this user";
+    if(!window.confirm(`Block ${name}? Their posts, comments, profile, and future content will be hidden from you.`))return;
+    setBlockedUserIds(ids=>ids.includes(id)?ids:[...ids,id]);
+    setPosts(ps=>ps.filter(post=>post.userId!==id).map(post=>({...post,comments:(post.comments||[]).filter(comment=>comment.userId!==id)})));
+    setPeople(ps=>ps.filter(p=>p.id!==id));
+    if(selectedProfile?.id===id){setSelectedProfile(null);setView("feed");}
+    try{
+      await callBackend(`/people/${id}/block`,{method:"POST"});
+      notify(`${name} blocked`);
+    }catch(err){
+      notify("Blocked locally. Cloud sync failed.","error");
+    }
   };
   const startMessage=async person=>{
     if(!person?.id)return;
@@ -2072,7 +2107,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const addComment=async id=>{
     const text=commentInputs[id]?.trim();
     if(!text)return;
-    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{user:profile.name||"You",handle:profile.handle||"@you",av:initials,avatarUrl:profile.avatarUrl||"",verified:isVerifiedIdentity(profile),text,time:"Just now"}]}:p));
+    const issue=moderationIssue(text);
+    if(issue)return notify(`This comment was blocked by the safety filter for ${issue}. Edit it before posting.`,"error");
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{id:`local-comment-${Date.now()}`,userId:profile.id||"",user:profile.name||"You",handle:profile.handle||"@you",av:initials,avatarUrl:profile.avatarUrl||"",verified:isVerifiedIdentity(profile),text,time:"Just now"}]}:p));
     setCommentInputs(ci=>({...ci,[id]:""}));
     try{
       await callBackend(`/posts/${id}/comments`,{method:"POST",body:JSON.stringify({text})});
@@ -2081,18 +2118,19 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify("Comment saved locally. Cloud sync failed.","error");
     }
   };
-  const reportPost=async post=>{
-    if(!post?.id)return;
-    const reason=window.prompt("What should fear.social review about this post?");
+  const reportContent=async(targetType,targetId,label="content")=>{
+    if(!targetId)return;
+    const reason=window.prompt(`What should fear.social review about this ${label}?`);
     const cleanReason=String(reason||"").trim();
     if(!cleanReason)return;
     try{
-      await callBackend("/reports",{method:"POST",body:JSON.stringify({targetType:"post",targetId:String(post.id),reason:cleanReason})});
-      notify("Report sent. Thank you for helping keep fear.social safe.");
+      await callBackend("/reports",{method:"POST",body:JSON.stringify({targetType,targetId:String(targetId),reason:cleanReason})});
+      notify("Report sent. Our moderation queue is set for 24-hour review.");
     }catch(err){
       notify(err.message||"Could not send report","error");
     }
   };
+  const reportPost=post=>reportContent("post",post?.id,"post");
   const beginEditPost=post=>setEditingPost({id:post.id,content:post.content,type:post.type||"Update",tag:post.tag||profile.industry||"Exploring"});
   const cancelEditPost=()=>setEditingPost(null);
   const savePostEdit=async id=>{
@@ -2100,6 +2138,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if(!draft||draft.id!==id)return;
     const content=draft.content.trim();
     if(!content)return notify("Post cannot be empty","error");
+    const issue=moderationIssue(content);
+    if(issue)return notify(`This edit was blocked by the safety filter for ${issue}. Edit it before saving.`,"error");
     setPosts(ps=>ps.map(p=>p.id===id?{...p,content,type:draft.type,tag:draft.tag,edited:true}:p));
     setEditingPost(null);
     try{
@@ -2211,6 +2251,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     const username=cleanUsername(profileDraft.username||profileDraft.handle||profileDraft.name)||cleanUsername(profileDraft.name||"member")||"member";
     const oldProfile=profile;
     const nextDraft={...oldProfile,...profileDraft,username,handle:`@${username}`};
+    const issue=moderationIssue([nextDraft.name,nextDraft.headline,nextDraft.bio,nextDraft.lookingFor,nextDraft.goal].filter(Boolean).join("\n"));
+    if(issue)return notify(`This profile update was blocked by the safety filter for ${issue}. Edit it before saving.`,"error");
     const applyProfileLocally=next=>{
       setProfile(next);
       setProfileDraft(next);
@@ -2316,6 +2358,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                 {[["forYou","For You","Ranked for your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
               </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
+                <div style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:12,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={15} color="currentColor"/> Posts must follow the community rules. Abusive, hateful, explicit, threatening, or harassing content may be filtered, reported, removed, or banned.</div>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                   <Av i={initials} src={profile.avatarUrl} size={44} grad/>
                   <div style={{flex:1}}>
@@ -2341,7 +2384,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <div className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
                       <Av i={p.av} src={p.avatarUrl} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
                       <div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text,minWidth:0}}><NameWithVerified name={p.user} person={p} size={15}/></b><Tag label={p.type||"Update"} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago{p.edited?" · edited":""}</div></div>
-                      {isOwner?<div style={{display:"flex",gap:6,flexShrink:0}}><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></div>:<button onClick={e=>{e.stopPropagation();reportPost(p);}} className="bs post-report-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.muted,flexShrink:0}}>Report</button>}
+                      <div style={{display:"flex",gap:6,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                        {isOwner&&<><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></>}
+                        <button onClick={e=>{e.stopPropagation();reportPost(p);}} className="bs post-report-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.muted}}>Report</button>
+                        {!isOwner&&p.userId&&<button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Block</button>}
+                      </div>
                     </div>
                     {isEditing?(
                       <div style={{display:"grid",gap:10}}>
@@ -2354,7 +2401,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     ):<>
                       {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:p.type==="Reel"?"pre-line":"normal"}}>{p.content}</p>}
                       <OfficialReelCard post={p}/>
-                      <MediaPreviewGrid media={p.media}/>
+                      <MediaPreviewGrid media={p.media} onReport={item=>reportContent("media",item.id||p.id,`${item.kind||"media"} attachment`)}/>
                     </>}
                   </div>
                   <div className="post-actions" style={{borderTop:`1px solid ${C.border}`,padding:"11px 20px",display:"flex",gap:16,alignItems:"center"}}>
@@ -2362,17 +2409,17 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} aria-label={`Comment on post by ${p.user}`} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> Comment {fmt((p.comments||[]).length)}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}><Icon name="bookmark" size={17} color="currentColor" filled={p.saved}/> {p.saved?"Saved":"Save"}</button>
                   </div>
-                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><b style={{fontSize:12}}><NameWithVerified name={c.user} person={c} size={13}/></b><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input aria-label={`Write a comment on ${p.user}'s post`} value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
+                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={c.id||i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",justifyContent:"space-between"}}><b style={{fontSize:12}}><NameWithVerified name={c.user} person={c} size={13}/></b><button onClick={e=>{e.stopPropagation();reportContent("comment",c.id||`${p.id}-${i}`,"comment");}} className="bs" style={{background:"transparent",border:"none",fontSize:11,fontWeight:900,color:C.muted}}>Report</button></div><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input aria-label={`Write a comment on ${p.user}'s post`} value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
               );})}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested people</b>{people.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.slice(0,4).map(p=><div key={p.id} className="uh profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={p.name} person={p} size={14}/></div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry||"Exploring"}</div></div><button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>View</button><button onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested people</b>{people.filter(p=>!blockedIds.has(p.id)).length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.filter(p=>!blockedIds.has(p.id)).slice(0,4).map(p=><div key={p.id} className="uh profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px",flexWrap:"wrap"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={p.name} person={p} size={14}/></div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry||"Exploring"}</div></div><button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>Block</button><button onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:900,color:C.text}}>View profile</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId}/>}
@@ -2380,7 +2427,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
-        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
+        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} aria-label={id==="notifications"?`${label}, ${unread} unread`:label}><span><Icon name={icon} size={18} color="currentColor" filled={id==="notifications"&&unread>0}/></span>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
@@ -2427,12 +2474,12 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22,overflow:"hidden",minWidth:0};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
-function MediaPreviewGrid({media=[],onRemove}){
+function MediaPreviewGrid({media=[],onRemove,onReport}){
   const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
   if(safe.length===0)return null;
-  return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><MediaPreviewItem key={item.id||item.url} item={item} single={safe.length===1} onRemove={onRemove}/>)}</div>;
+  return <div className="post-media-grid" style={{display:"grid",gridTemplateColumns:safe.length===1?"1fr":"repeat(2,minmax(0,1fr))",gap:8,marginTop:12}}>{safe.map(item=><MediaPreviewItem key={item.id||item.url} item={item} single={safe.length===1} onRemove={onRemove} onReport={onReport}/>)}</div>;
 }
-function MediaPreviewItem({item,single,onRemove}){
+function MediaPreviewItem({item,single,onRemove,onReport}){
   const [videoError,setVideoError]=useState(false);
   return <div style={{position:"relative",border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden",background:item.kind==="video"?"#000":C.bg,minHeight:single?260:170}}>
     {item.kind==="video"&&!videoError?<video src={item.url} controls playsInline preload="metadata" onLoadedData={()=>setVideoError(false)} onError={()=>setVideoError(true)} style={{display:"block",width:"100%",height:"100%",maxHeight:420,objectFit:"cover",background:"#000"}}/>:item.kind==="video"?<div style={{minHeight:single?320:190,display:"grid",placeItems:"center",textAlign:"center",padding:24,color:"rgba(255,255,255,.72)",background:"#000"}}>
@@ -2443,6 +2490,7 @@ function MediaPreviewItem({item,single,onRemove}){
       </div>
     </div>:<img src={item.url} alt={item.alt||"Post photo"} style={{display:"block",width:"100%",height:"100%",maxHeight:520,objectFit:"cover"}}/>}
     {onRemove&&<button type="button" aria-label="Remove media" onClick={()=>onRemove(item.id)} className="bs" style={{position:"absolute",top:8,right:8,width:32,height:32,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.5)",background:"rgba(13,15,20,0.78)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="close" size={16}/></button>}
+    {!onRemove&&onReport&&<button type="button" aria-label="Report media" onClick={()=>onReport(item)} className="bs" style={{position:"absolute",top:8,right:8,borderRadius:999,border:"1px solid rgba(255,255,255,0.55)",background:"rgba(13,15,20,0.78)",color:"#fff",padding:"7px 10px",fontSize:11,fontWeight:900}}>Report</button>}
   </div>;
 }
 function CameraCaptureModal({onClose,onCapture,notify}){
@@ -2717,7 +2765,7 @@ function ProfilePanel({profile,setEditProfile,stats,posts=[],followers=[],follow
     <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} events={activeMetric==="RSVPs"?rsvps:[]} emptyName="You" openProfile={openProfile}/>
   </div>;
 }
-function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,openProfile}){
+function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,onReport,onBlock,openProfile}){
   const [activeMetric,setActiveMetric]=useState("Posts");
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
   const stats=[
@@ -2741,6 +2789,8 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
           {profile.id&&<div className="profile-action-row" style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end",alignSelf:"center"}}>
             <button onClick={onMessage} className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap"}}><Icon name="send" size={15}/> Message</button>
             <GBtn onClick={onConnect} style={{background:profile.connected?"#fff":GR,color:profile.connected?C.accent:"#fff",boxShadow:"none",whiteSpace:"nowrap"}}>{profile.connected?"Connected":"Connect"}</GBtn>
+            <button onClick={onReport} className="bs" style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Report</button>
+            <button onClick={onBlock} className="bs" style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Block</button>
           </div>}
         </div>
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
@@ -2801,8 +2851,8 @@ function TermsConditionsPanel({onClose}){
   const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
   return (
     <ModalShell title="Terms and Conditions" eyebrow="Legal" onClose={onClose}>
-      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 10, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
-      {section("Acceptance of Terms","By creating an account, checking the agreement box, accessing the platform, or using any fear.social feature, you agree to these Terms, the Privacy Policy, and any community or safety rules shown in the product. If you do not agree, do not create an account or use the service.")}
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 13, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
+      {section("Acceptance of Terms and Community Rules","By creating an account, checking the agreement box, accessing the platform, posting, commenting, messaging, uploading media, or using any fear.social feature, you agree to these Terms, the Privacy Policy, and all community and safety rules shown in the product. You explicitly agree not to post, upload, message, or promote abusive, hateful, harassing, threatening, sexually explicit, exploitative, illegal, fraudulent, or otherwise objectionable content. If you do not agree, do not create an account or use the service.")}
       {section("Purpose of the Platform","fear.social is designed to help people take practical first steps into careers, projects, networking, mentorship, professional collaboration, and the future they want to build. The service may include profiles, posts, comments, messaging, notifications, directories, events, rooms, opportunities, and future paid tools.")}
       {section("Eligibility and COPPA","You must be legally able to agree to these Terms. fear.social is not directed to children under 13, and children under 13 may not create accounts or submit personal information. If we learn that a child under 13 provided personal information without required verifiable parental consent, we may close the account and delete the information. If you are under the age of majority where you live, use the service only with permission from a parent or guardian.")}
       {section("Accounts and Security","You are responsible for accurate account information, keeping your password secure, and activity that happens through your account. Do not impersonate anyone, create misleading accounts, sell or transfer accounts without permission, or use another person's account. Notify contact@fear.social if you believe your account has been compromised.")}
@@ -2811,9 +2861,9 @@ function TermsConditionsPanel({onClose}){
       {section("Copyright, Trademark, and IP Complaints","If you believe content on fear.social infringes your copyright, trademark, privacy, publicity, or other rights, contact contact@fear.social with the specific URL or content, your contact information, proof of rights, and a statement explaining the issue. For copyright notices, include enough information for us to identify the copyrighted work and the allegedly infringing material, a good-faith statement, an accuracy statement, and your physical or electronic signature. We may remove or restrict disputed content, notify the user, preserve records, terminate repeat infringers, or request more information before acting.")}
       {section("Direct Messages and Communications","Direct messages are part of the service and may be stored, processed, moderated, or reviewed when needed for safety, abuse prevention, legal compliance, support, or platform operations. Do not use messages for harassment, spam, scams, unlawful offers, or unwanted solicitation.")}
       {section("Community Conduct","Do not harass, threaten, exploit, spam, deceive, discriminate against, or abuse other users. Do not post or send content that is hateful, sexually exploitative, pornographic, violent, illegal, invasive of privacy, infringing, defamatory, malicious, fraudulent, predatory, or designed to manipulate users or the platform. Do not post another person's private information, intimate imagery, financial information, credentials, or content involving minors in an unsafe or exploitative way.")}
-      {section("Prohibited Uses","You may not scrape the service, attack the infrastructure, bypass security, upload malware, reverse engineer non-public systems, automate abusive activity, interfere with other users, misrepresent business opportunities, or use fear.social for unlawful, fraudulent, or harmful purposes.")}
+      {section("Prohibited Uses and Content","You may not scrape the service, attack the infrastructure, bypass security, upload malware, reverse engineer non-public systems, automate abusive activity, interfere with other users, misrepresent business opportunities, or use fear.social for unlawful, fraudulent, exploitative, abusive, hateful, threatening, sexually explicit, harassing, spammy, or harmful purposes. Content that targets protected classes, encourages self-harm, threatens violence, sexually exploits anyone, doxxes users, impersonates others, or attempts to evade moderation may be removed and may result in account limits or bans.")}
       {section("Security Testing and Reports","If you believe you found a vulnerability, report it to contact@fear.social with steps to reproduce, affected URLs, timestamps, and any request IDs. Do not access other users' data, run denial-of-service testing, spam the service, or publicly disclose an issue before we have had a reasonable chance to investigate and fix it.")}
-      {section("Content Reports and Enforcement","Users can report posts, messages, profiles, groups, opportunities, or other content that may violate these Terms. Reports may be reviewed by fear.social, and we may remove content, limit distribution, suspend accounts, preserve evidence, contact affected users, notify service providers, or report matters to law enforcement when appropriate. Reporting content does not guarantee removal, and not reporting content does not mean fear.social endorses it.")}
+      {section("Content Filtering, Reports, Blocks, and 24-Hour Review","fear.social may use automated filters and manual review queues to catch and hide highly objectionable content before or shortly after it goes live. Users can report posts, comments, media, profiles, messages, groups, opportunities, or other content that may violate these Terms. Users can block abusive users; blocking hides that user's historical and future posts and comments from the blocking user's feed where technically feasible. Open reports are routed to a moderation queue intended for review and action within 24 hours. We may remove content, limit distribution, suspend accounts, ban users, preserve evidence, contact affected users, notify service providers, or report matters to law enforcement when appropriate. Reporting content does not guarantee removal, and not reporting content does not mean fear.social endorses it.")}
       {section("Opportunities and User Interactions","Users are responsible for evaluating collaborators, mentors, jobs, gigs, investments, services, advice, and opportunities they discover through fear.social. We do not guarantee any user's identity, qualifications, results, funding, employment, partnership, or career or business outcome.")}
       {section("No Professional Advice","fear.social does not provide legal, financial, tax, investment, medical, employment, or other professional advice. Content on the platform is for general community and informational purposes. Verify important decisions with qualified professionals.")}
       {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. Pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after paid tools launch. Any paid feature will be presented before purchase.")}

@@ -61,7 +61,7 @@ const CONTACT_EMAIL = "contact@fear.social";
 const DEFAULT_EMAIL_FROM = `fear.social <${CONTACT_EMAIL}>`;
 const NOTIFICATION_EMAIL = CONTACT_EMAIL;
 const SESSION_TTL_DAYS = 30;
-const TERMS_VERSION = "2026-07-10";
+const TERMS_VERSION = "2026-07-13-safety";
 const FEAR_GROUP_ID = "fear-official";
 const OFFICIAL_USER_ID = "fear-social-official";
 const OFFICIAL_AVATAR_URL = "https://fear.social/fear-official-avatar.png";
@@ -69,6 +69,31 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
 const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
 const VERIFIED_NAMES = new Set(["taylor brown", "fear.social"]);
+const OBJECTIONABLE_PATTERNS = [
+  { label: "hate or slur", pattern: /\b(nigger|faggot|kike|chink|spic|wetback|tranny|retard)\b/i },
+  { label: "violent threat", pattern: /\b(kill yourself|kys|i will kill|i'm going to kill|shoot up|bomb threat)\b/i },
+  { label: "explicit sexual content", pattern: /\b(porn|onlyfans|nude|nudes|blowjob|handjob|cumshot|deepthroat|hardcore sex)\b/i },
+  { label: "sexual exploitation", pattern: /\b(child porn|cp\b|underage sex|minor sex)\b/i },
+  { label: "harassment", pattern: /\b(doxx|dox|swat you|leak your address)\b/i },
+];
+const moderationIssue = (value = "") => {
+  const text = String(value || "");
+  const hit = OBJECTIONABLE_PATTERNS.find((entry) => entry.pattern.test(text));
+  return hit?.label || "";
+};
+async function queueModerationReview(db, userId, targetType, targetId, reason) {
+  await safeRun(
+    db,
+    "INSERT INTO content_reports (id, reporter_user_id, target_type, target_id, reason, status) VALUES (?, ?, ?, ?, ?, 'open')",
+    [createId("report"), userId || OFFICIAL_USER_ID, targetType, targetId, reason]
+  );
+}
+async function rejectObjectionableContent(db, userId, targetType, text) {
+  const issue = moderationIssue(text);
+  if (!issue) return null;
+  await queueModerationReview(db, userId, targetType, createId("auto_review"), `Automated content filter flagged ${issue}. Review within 24 hours.`);
+  return json({ error: "This content was flagged by the safety filter and was not published. Edit it or contact contact@fear.social if you think this was a mistake." }, { status: 422 });
+}
 
 const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim()) && String(value || "").length <= 120;
 const isSafeHttpUrl = (value, { allowHttp = false, max = 500 } = {}) => {
@@ -801,9 +826,10 @@ async function getPosts(db, userId) {
        FROM posts p
        JOIN users u ON u.id = p.user_id
        WHERE p.user_id <> 'demo-user' AND u.id <> 'demo-user'
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = p.user_id)
        ORDER BY datetime(p.created_at) DESC`
     )
-    .bind(userId, userId, userId)
+    .bind(userId, userId, userId, userId)
     .all();
 
   const comments = await db
@@ -812,8 +838,10 @@ async function getPosts(db, userId) {
        FROM comments c
        JOIN users u ON u.id = c.user_id
        WHERE c.user_id <> 'demo-user' AND u.id <> 'demo-user'
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = c.user_id)
        ORDER BY datetime(c.created_at) ASC`
     )
+    .bind(userId)
     .all();
 
   const grouped = new Map();
@@ -2065,6 +2093,8 @@ async function handleRequest({ request, env, params }) {
       return json({ error: "Username is already taken" }, { status: 409 });
     }
     if (duplicate) return json({ error: "That email already belongs to another account" }, { status: 409 });
+    const profileSafety = await rejectObjectionableContent(db, user.id, "profile", [profile.name, profile.headline, profile.bio, profile.lookingFor, profile.goal].join("\n"));
+    if (profileSafety) return profileSafety;
 
     await db
       .prepare(
@@ -2102,6 +2132,8 @@ async function handleRequest({ request, env, params }) {
     const content = cleanText(body.content || "", 1200);
     const media = parseMediaList(body.media);
     if (!content && media.length === 0) return json({ error: "Write something or attach media before posting" }, { status: 400 });
+    const postSafety = await rejectObjectionableContent(db, user.id, "post", content);
+    if (postSafety) return postSafety;
     const id = createId("post");
     const tag = cleanText(body.tag || user.industry || "Exploring", 40);
     const type = cleanText(body.type || "Update", 40);
@@ -2237,6 +2269,8 @@ async function handleRequest({ request, env, params }) {
     if (!postOwner) return json({ error: "Post not found" }, { status: 404 });
     const text = cleanText(body.text || "", 600);
     if (!text) return json({ error: "Comment text required" }, { status: 400 });
+    const commentSafety = await rejectObjectionableContent(db, user.id, "comment", text);
+    if (commentSafety) return commentSafety;
     await db
       .prepare("INSERT INTO comments (id, post_id, user_id, text) VALUES (?, ?, ?, ?)")
       .bind(createId("comment"), postId, user.id, text)
@@ -2261,6 +2295,8 @@ async function handleRequest({ request, env, params }) {
     const content = cleanText(body.content || "", 1200);
     const media = body.media === undefined ? parseMediaList(post.media) : parseMediaList(body.media);
     if (!content && media.length === 0) return json({ error: "Post needs text or media" }, { status: 400 });
+    const editSafety = await rejectObjectionableContent(db, user.id, "post", content);
+    if (editSafety) return editSafety;
     const type = cleanText(body.type || post.type || "Update", 40);
     const tag = cleanText(body.tag || post.tag || user.industry || "Exploring", 40);
     const stage = cleanText(body.stage || post.stage || "Building", 40);
@@ -2398,7 +2434,7 @@ async function handleRequest({ request, env, params }) {
     const targetType = cleanText(body.targetType || "", 40);
     const targetId = cleanText(body.targetId || "", 120);
     const reason = cleanText(body.reason || "", 600);
-    const allowedReportTargets = new Set(["post", "comment", "user", "message", "group", "opportunity"]);
+    const allowedReportTargets = new Set(["post", "comment", "user", "media", "message", "group", "opportunity", "auto_filter"]);
     if (!allowedReportTargets.has(targetType)) return json({ error: "Unsupported report target" }, { status: 400 });
     if (!targetType || !targetId || !reason) return json({ error: "Report target and reason required" }, { status: 400 });
     await db
@@ -2410,8 +2446,9 @@ async function handleRequest({ request, env, params }) {
       targetType,
       targetId,
       reason,
+      priority: "Review and act within 24 hours",
     });
-    return json({ ok: true });
+    return json({ ok: true, moderationSlaHours: 24 });
   }
 
   if (method === "POST" && path === "/media") {
