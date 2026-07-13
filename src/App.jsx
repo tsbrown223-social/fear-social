@@ -700,38 +700,6 @@ const IconBadge=({name,pro=false,style={}})=>(
     <Icon name={name} size={24}/>
   </div>
 );
-const ThemeToggle=({themeMode,setThemeMode,compact=false,style={}})=>{
-  const dark=themeMode==="dark";
-  const next=dark?"light":"dark";
-  return (
-    <button
-      onClick={()=>setThemeMode(next)}
-      className="bs"
-      aria-label={`Switch to ${next} mode`}
-      title={`Switch to ${next} mode`}
-      style={{
-        background:dark?"rgba(255,255,255,0.08)":"#fff",
-        border:`1px solid ${dark?"rgba(255,255,255,0.16)":"#E4E7EC"}`,
-        borderRadius:999,
-        padding:compact?"9px 11px":"9px 14px",
-        color:dark?"#fff":"#111318",
-        fontSize:13,
-        fontWeight:900,
-        display:"inline-flex",
-        alignItems:"center",
-        justifyContent:"center",
-        gap:8,
-        whiteSpace:"nowrap",
-        boxShadow:dark?"none":"0 8px 28px rgba(13,15,20,0.08)",
-        ...style,
-      }}
-    >
-      <Icon name={dark?"sun":"moon"} size={16} color="currentColor"/>
-      {!compact&&<span className="theme-toggle-label">{dark?"Light":"Dark"}</span>}
-    </button>
-  );
-};
-
 function useToast(){
   const [toasts,setToasts]=useState([]);
   const notify=useCallback((msg,type="success")=>{const id=Date.now()+Math.random();setToasts(ts=>[...ts,{id,msg,type}]);setTimeout(()=>setToasts(ts=>ts.filter(t=>t.id!==id)),3500);},[]);
@@ -896,7 +864,7 @@ const GROUPS=[{
 }];
 const INITIAL_MESSAGES=[];
 
-function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode,forceVisible=false}){
+function Navbar({setScreen,notify,onOpenPanel,forceVisible=false}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{
     const h=()=>setScrolled(window.scrollY>(window.innerHeight||720)*0.72);
@@ -926,7 +894,6 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode,forceVisibl
         ))}
       </div>
       <div className="landing-nav-actions" style={{display:"flex",gap:8}}>
-        <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>setScreen(hasSessionToken()?"app":"login")} className="bs landing-nav-login" style={{background:"#fff",border:"1px solid #E4E7EC",borderRadius:999,padding:"9px 17px",color:"#111318",fontSize:13,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>Log in</button>
         <button onClick={()=>setScreen("signup")} className="bs landing-nav-join" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
       </div>
@@ -1551,7 +1518,7 @@ function WhyFearPage({setScreen}){
 }
 
 
-function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,setThemeMode}){
+function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   const [mode,setMode]=useState(initialMode);
   useEffect(()=>{
     setMode(initialMode);
@@ -1674,7 +1641,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   );
   return(
     <div className="signup-root" style={{minHeight:"100vh",background:C.dark,display:"flex"}}>
-      <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} style={{position:"fixed",top:18,right:18,zIndex:20}}/>
       <div className="signup-copy" style={{flex:1,background:GR2,display:"flex",alignItems:"center",justifyContent:"center",padding:72}}>
         <div style={{maxWidth:520}}>
           <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>The community<br/>you've been<br/>looking for.</div>
@@ -1778,7 +1744,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup",themeMode,
   );
 }
 
-function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setThemeMode}){
+function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
   const [view,setView]=useLocalState("fear-view","feed");
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
@@ -2378,7 +2344,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
         <input type="search" aria-label="Search people, posts, tags, groups, and deals" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
-        <ThemeToggle themeMode={themeMode} setThemeMode={setThemeMode} compact/>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
@@ -3146,7 +3111,7 @@ function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
   );
 }
 
-function AccessibilityPanel({settings,setSettings,onClose}){
+function AccessibilityPanel({settings,setSettings,themeMode,setThemeMode,onClose}){
   const toggle=(key)=>setSettings(s=>({...s,[key]:!s[key]}));
   const row=(key,title,text)=>(
     <button role="switch" aria-checked={settings[key]} onClick={()=>toggle(key)} className="bs" style={{width:"100%",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:settings[key]?C.aLight:"#fff",border:`1.5px solid ${settings[key]?C.aSoft:C.border}`,borderRadius:14,padding:16,marginBottom:12}}>
@@ -3154,9 +3119,17 @@ function AccessibilityPanel({settings,setSettings,onClose}){
       <span><b style={{display:"block",color:C.text,fontSize:15,marginBottom:3}}>{title}</b><span style={{display:"block",color:C.muted,fontSize:13,lineHeight:1.5}}>{text}</span></span>
     </button>
   );
+  const darkMode=themeMode==="dark";
+  const themeRow=(
+    <button role="switch" aria-checked={darkMode} onClick={()=>setThemeMode(darkMode?"light":"dark")} className="bs" style={{width:"100%",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:darkMode?C.aLight:"#fff",border:`1.5px solid ${darkMode?C.aSoft:C.border}`,borderRadius:14,padding:16,marginBottom:12}}>
+      <span aria-hidden="true" style={{width:44,height:24,borderRadius:999,background:darkMode?C.accent:"#D7DCE5",position:"relative",flexShrink:0}}><span style={{position:"absolute",top:3,left:darkMode?23:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .15s"}}/></span>
+      <span style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}><Icon name={darkMode?"moon":"sun"} size={18} color={darkMode?C.accent:C.muted}/><span><b style={{display:"block",color:C.text,fontSize:15,marginBottom:3}}>{darkMode?"Dark mode":"Light mode"}</b><span style={{display:"block",color:C.muted,fontSize:13,lineHeight:1.5}}>Switches the full site between light and dark display modes.</span></span></span>
+    </button>
+  );
   return (
     <ModalShell title="Accessibility Settings" eyebrow="Display" onClose={onClose}>
       <p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginBottom:18}}>These settings are saved in this browser and can be changed any time.</p>
+      {themeRow}
       {row("largeText","Larger text","Increases readable text and form control sizing across the app.")}
       {row("highContrast","Higher contrast","Boosts visual contrast for users who need stronger separation.")}
       {row("reduceMotion","Reduce motion","Turns off animated transitions, ticker movement, and hover motion where possible.")}
@@ -3272,15 +3245,15 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode} forceVisible={screen==="agency"||screen==="why"}/>}
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="agency"||screen==="why"}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
         {screen==="agency"&&<AgencyComingSoonPage setScreen={setScreen}/>}
         {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
-        {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"} themeMode={themeMode} setThemeMode={setThemeMode}/>}
-        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} themeMode={themeMode} setThemeMode={setThemeMode}/>}
+        {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
+        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
         {openPanel==="privacy"&&<PrivacyPolicyPanel onClose={()=>setOpenPanel(null)} onOpenAccessibility={()=>setOpenPanel("accessibility")}/>}
-        {openPanel==="accessibility"&&<AccessibilityPanel settings={accessibility} setSettings={setAccessibility} onClose={()=>setOpenPanel(null)}/>}
+        {openPanel==="accessibility"&&<AccessibilityPanel settings={accessibility} setSettings={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} onClose={()=>setOpenPanel(null)}/>}
         {openPanel==="cookies"&&<CookieSettingsPanel consent={cookieConsent} setConsent={setCookieConsent} onClose={()=>setOpenPanel(null)}/>}
       </div>
     </>
