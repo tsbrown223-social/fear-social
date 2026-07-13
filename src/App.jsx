@@ -499,9 +499,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-pricing .pricing-feature-list>div:nth-child(n+5){display:none!important;}
   .landing-pricing .pricing-feature-list span:last-child{font-size:13px!important;line-height:1.35!important;}
   .landing-pricing .pricing-price-row{margin-bottom:4px!important;}
-  .landing-agency>div{grid-template-columns:1fr!important;text-align:center!important;gap:18px!important;}
+  .landing-why>div,.landing-agency>div{grid-template-columns:1fr!important;text-align:center!important;gap:18px!important;}
+  .landing-why p,.landing-why .why-acronym-row{margin-left:auto!important;margin-right:auto!important;}
   .landing-agency p{margin-left:auto!important;margin-right:auto!important;}
   .landing-agency button{width:100%!important;max-width:260px!important;margin:0 auto!important;}
+  .why-page-grid{grid-template-columns:1fr!important;gap:24px!important;}
+  .why-page-grid h1,.why-page-grid p{text-align:left!important;}
   .landing-footer{padding:24px 16px calc(28px + env(safe-area-inset-bottom))!important;gap:12px!important;justify-content:center!important;text-align:center!important;}
   .cookie-notice{left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;}
   .cookie-card{max-width:none!important;border-radius:18px!important;}
@@ -866,14 +869,20 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode,forceVisibl
     };
   },[]);
   const visible=forceVisible||scrolled;
-  const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Agency","agency"],["Join","cta"]];
+  const links=[["Product","platform"],["Why fear","why-fear"],["Proof","activity"],["Pricing","pricing"],["Agency","agency"],["Join","cta"]];
+  const navTo=id=>{
+    if(id==="why-fear") return setScreen("why");
+    if(document.getElementById(id)) return scrollToSection(id);
+    setScreen("landing");
+    window.setTimeout(()=>scrollToSection(id),60);
+  };
   return(
     <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(-16px)",transition:"opacity .35s ease, transform .35s ease"}}>
       <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:visible?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:visible?"auto":"none"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:21,color:"#050506",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span>social</div>
       <div className="landing-nav-links" style={{display:"flex",gap:2,marginRight:14}}>
         {links.map(([label,id])=>(
-          <button key={label} onClick={()=>scrollToSection(id)} className="nl bs" style={{background:"none",border:"none",color:"#555B66",fontSize:13,fontWeight:700,padding:"9px 13px",cursor:"pointer",borderRadius:999}}>{label}</button>
+          <button key={label} onClick={()=>navTo(id)} className="nl bs" style={{background:"none",border:"none",color:"#555B66",fontSize:13,fontWeight:700,padding:"9px 13px",cursor:"pointer",borderRadius:999}}>{label}</button>
         ))}
       </div>
       <div className="landing-nav-actions" style={{display:"flex",gap:8}}>
@@ -1340,6 +1349,28 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
+      <div id="why-fear" className="landing-why landing-section" style={{background:"#050506",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"auto -10% -35%",height:440,background:"radial-gradient(circle at 50% 50%, rgba(22,199,78,.13), transparent 62%)",pointerEvents:"none"}}/>
+        <div style={{maxWidth:1080,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,1.05fr) minmax(280px,.95fr)",gap:40,alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:16}}>Why the name</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,6vw,84px)",lineHeight:.95,letterSpacing:0,color:"#fff",marginBottom:22}}>False evidence<br/>appearing real.</h2>
+            <p style={{fontSize:18,lineHeight:1.75,color:"rgba(255,255,255,.6)",maxWidth:640}}>fear is named for the moment when doubt feels like fact. The outcomes are unknown, the first message feels too exposed, and the next step can look bigger than it really is.</p>
+          </div>
+          <div className="ch" style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:24,padding:"28px",boxShadow:"0 28px 90px rgba(0,0,0,.24)"}}>
+            <div className="why-acronym-row" style={{display:"grid",gap:12,maxWidth:390}}>
+              {["False","Evidence","Appearing","Real"].map((word,i)=>(
+                <div key={word} style={{display:"grid",gridTemplateColumns:"42px minmax(0,1fr)",gap:14,alignItems:"center",color:"#fff"}}>
+                  <span style={{width:42,height:42,borderRadius:14,background:i===0?C.accent:"rgba(22,199,78,.12)",color:i===0?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:950}}>{word[0]}</span>
+                  <span style={{fontSize:20,fontWeight:900,letterSpacing:0}}>{word}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{fontSize:15,lineHeight:1.7,color:"rgba(255,255,255,.58)",margin:"24px 0 0"}}>fear.social is the place to put yourself out there before confidence catches up, find the people and opportunities that make the future feel reachable, and take the first step anyway.</p>
+            <button onClick={()=>setScreen("why")} className="bs" style={{marginTop:24,background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"13px 18px",fontSize:14,fontWeight:950}}>Read the story</button>
+          </div>
+        </div>
+      </div>
       <div id="activity" className="landing-launch landing-section" style={{padding:"110px 52px",maxWidth:1200,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:64}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>What Changes When You Join</div>
@@ -1403,6 +1434,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · The first leap into the future you want.</div>
         <div style={{display:"flex",gap:20}}>
+          <button onClick={()=>setScreen("why")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Why fear?</button>
           <button onClick={()=>setScreen("agency")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">fear.agency</button>
           <button onClick={()=>onOpenPanel("privacy")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Privacy</button>
           <button onClick={()=>onOpenPanel("accessibility")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Accessibility</button>
@@ -1426,6 +1458,42 @@ function AgencyComingSoonPage({setScreen}){
         <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
           <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Join fear.social</button>
           <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Back to fear.social</button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function WhyFearPage({setScreen}){
+  const acronym=["False","Evidence","Appearing","Real"];
+  return (
+    <main className="why-page" style={{minHeight:"100dvh",background:"radial-gradient(circle at 18% 16%, rgba(22,199,78,.16), transparent 30%), radial-gradient(circle at 82% 72%, rgba(22,199,78,.12), transparent 34%), #050506",color:"#fff",padding:"122px 18px 58px",position:"relative",overflow:"hidden"}}>
+      <section style={{width:"min(1060px,100%)",margin:"0 auto",position:"relative",zIndex:1}}>
+        <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"rgba(255,255,255,.78)",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,marginBottom:40}}>Back to fear.social</button>
+        <div className="why-page-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)",gap:42,alignItems:"start"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:950,letterSpacing:2.7,color:C.accent,textTransform:"uppercase",marginBottom:18}}>The reason behind fear</div>
+            <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(56px,9vw,118px)",lineHeight:.9,letterSpacing:0,marginBottom:26}}>Your first step is <span style={{color:C.accent}}>fear</span>.</h1>
+            <p style={{fontSize:"clamp(18px,2.1vw,24px)",lineHeight:1.62,color:"rgba(255,255,255,.72)",maxWidth:720,margin:"0 0 22px"}}>fear comes from the acronym <strong style={{color:"#fff"}}>False Evidence Appearing Real</strong>.</p>
+            <p style={{fontSize:17,lineHeight:1.8,color:"rgba(255,255,255,.58)",maxWidth:760,margin:"0 0 18px"}}>A lot of people never take the first step into the career, community, opportunity, or future they want because the unknown starts to look like proof that they should stay quiet. They do not know what will happen if they post, reach out, apply, ask, build, or put themselves in front of people, so fear fills in the blank.</p>
+            <p style={{fontSize:17,lineHeight:1.8,color:"rgba(255,255,255,.58)",maxWidth:760,margin:"0 0 30px"}}>fear.social is built for that exact moment. It gives people a place to be seen, find direction, meet the right people, and take that first visible step without feeling like they have to already be fearless.</p>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Take your first step</button>
+              <button onClick={()=>setScreen("agency")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>See fear.agency</button>
+            </div>
+          </div>
+          <aside className="ch" style={{background:"rgba(255,255,255,.065)",border:"1px solid rgba(255,255,255,.12)",borderRadius:28,padding:"28px",boxShadow:"0 30px 90px rgba(0,0,0,.28)"}}>
+            <div style={{fontSize:12,fontWeight:950,letterSpacing:2,color:C.accent,textTransform:"uppercase",marginBottom:18}}>F.E.A.R.</div>
+            <div style={{display:"grid",gap:14}}>
+              {acronym.map((word,i)=>(
+                <div key={word} style={{display:"grid",gridTemplateColumns:"48px minmax(0,1fr)",gap:14,alignItems:"center",padding:"12px",borderRadius:18,background:i===0?"rgba(22,199,78,.14)":"rgba(255,255,255,.055)",border:"1px solid rgba(255,255,255,.08)"}}>
+                  <span style={{width:48,height:48,borderRadius:16,background:i===0?C.accent:"rgba(22,199,78,.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:950,color:i===0?"#fff":C.accent}}>{word[0]}</span>
+                  <span style={{fontSize:22,fontWeight:950,color:"#fff",letterSpacing:0}}>{word}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{fontSize:14,lineHeight:1.75,color:"rgba(255,255,255,.55)",margin:"24px 0 0"}}>The name is a reminder: fear can feel real before it is true. The platform exists to help people move anyway, with community, proof, and opportunity around them.</p>
+          </aside>
         </div>
       </section>
     </main>
@@ -2865,7 +2933,7 @@ export default function App(){
     window.addEventListener("hashchange",onHashChange);
     return()=>window.removeEventListener("hashchange",onHashChange);
   },[]);
-  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":routeHash.startsWith("#agency")?"agency":"landing";
+  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":routeHash.startsWith("#agency")?"agency":routeHash.startsWith("#why-fear")?"why":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
     if(initialScreen!==screenState) setScreenState(initialScreen);
@@ -2882,7 +2950,7 @@ export default function App(){
   const setScreen=useCallback((next)=>{
     setScreenState(next);
     window.scrollTo({top:0,left:0,behavior:"auto"});
-    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="agency"?"#agency":"";
+    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="agency"?"#agency":next==="why"?"#why-fear":"";
     if(nextHash){
       window.history.replaceState(null,"",nextHash);
       setRouteHash(nextHash);
@@ -2904,7 +2972,7 @@ export default function App(){
   useEffect(()=>{
     const bg=screen==="app"
       ? (themeMode==="light"?C.bg:"#050506")
-      : (screen==="landing"||screen==="agency")
+      : (screen==="landing"||screen==="agency"||screen==="why")
         ? (themeMode==="light"?"#F7F8FA":"#050506")
         : C.dark;
     document.documentElement.style.background=bg;
@@ -2916,9 +2984,10 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode} forceVisible={screen==="agency"}/>}
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode} forceVisible={screen==="agency"||screen==="why"}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
         {screen==="agency"&&<AgencyComingSoonPage setScreen={setScreen}/>}
+        {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
