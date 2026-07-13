@@ -768,6 +768,32 @@ function clearSessionToken(){
   }catch{}
 }
 
+function clearAccountLocalData(){
+  try{
+    [
+      "fear-session-token",
+      "fear-screen",
+      "fear-profile",
+      "fear-view",
+      "fear-posts",
+      "fear-people",
+      "fear-events",
+      "fear-mentors",
+      "fear-messages",
+      "fear-groups",
+      "fear-notifications",
+      "fear-unread-notifications",
+      "fear-stats",
+      "fear-connections",
+      "fear-user-deals",
+      "fear-saved-deals",
+      "fear-feed-mode",
+      "fear-blocked-user-ids",
+      "fear-data-version",
+    ].forEach(key=>localStorage.removeItem(key));
+  }catch{}
+}
+
 function consumeOAuthToken(){
   try{
     const hash=window.location.hash||"";
@@ -1800,6 +1826,24 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>notify("Offline mode: changes are saved in this browser","info"));
     return()=>{active=false;};
   },[applyBackendState,notify]);
+  const deleteAccount=async()=>{
+    const first=window.confirm("Delete your fear.social account? This removes your profile, posts, messages, follows, groups, media, and sessions. This cannot be undone.");
+    if(!first)return;
+    const confirmation=window.prompt("Type DELETE to permanently delete your account.");
+    if(confirmation!=="DELETE"){
+      notify("Account deletion cancelled","info");
+      return;
+    }
+    try{
+      await api("/account",{method:"DELETE",body:JSON.stringify({confirmation})});
+      clearAccountLocalData();
+      setProfile({});
+      setScreen("landing");
+      notify("Your account has been deleted");
+    }catch(err){
+      notify(err.message||"Could not delete account","error");
+    }
+  };
   useEffect(()=>{
     if(view==="publicProfile"&&!selectedProfile) setView("discover");
   },[selectedProfile,setView,view]);
@@ -2441,7 +2485,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
-        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
+        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
@@ -2904,7 +2948,7 @@ const SectionHead=({eyebrow,title,count})=>(
   </div>
 );
 
-function ProfilePanel({profile,setEditProfile,stats,posts=[],followers=[],following=[],savedPosts=[],rsvps=[],openProfile,initialMetric="Posts"}){
+function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],followers=[],following=[],savedPosts=[],rsvps=[],openProfile,initialMetric="Posts"}){
   const [activeMetric,setActiveMetric]=useState(initialMetric);
   useEffect(()=>setActiveMetric(initialMetric),[initialMetric]);
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
@@ -2931,6 +2975,16 @@ function ProfilePanel({profile,setEditProfile,stats,posts=[],followers=[],follow
     </div>
     <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
     <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} events={activeMetric==="RSVPs"?rsvps:[]} emptyName="You" openProfile={openProfile}/>
+    <section aria-label="Delete account" style={{marginTop:20,background:"#fff",border:`1px solid ${C.border}`,borderRadius:18,padding:18}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        <div style={{minWidth:0,maxWidth:560}}>
+          <div style={{fontSize:11,fontWeight:900,letterSpacing:1.6,textTransform:"uppercase",color:C.coral,marginBottom:6}}>Danger zone</div>
+          <h2 style={{fontSize:20,lineHeight:1.15,color:C.text}}>Delete your account</h2>
+          <p style={{fontSize:13,color:C.muted,lineHeight:1.6,marginTop:8}}>Permanently removes your profile, posts, messages, follows, group membership, media, and active sessions. This cannot be undone.</p>
+        </div>
+        <button onClick={onDeleteAccount} className="bs" style={{background:C.coral,color:"#fff",border:"none",borderRadius:999,padding:"11px 15px",fontSize:13,fontWeight:950,whiteSpace:"nowrap"}}>Delete account</button>
+      </div>
+    </section>
   </div>;
 }
 function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,onReport,onBlock,openProfile}){
@@ -3065,7 +3119,7 @@ function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
       {section("Direct Messages: Storage, Visibility, and Review","Direct messages are stored in fear.social systems so conversations can be delivered, synced between sessions, displayed to conversation participants, supported, investigated when reported, and protected from abuse. Message content is visible to the sender and recipient participants in that conversation. Authorized fear.social operators and infrastructure/service providers may access message records only when needed for safety review, abuse reports, legal compliance, security, debugging, support, or platform operations. Direct messages are not public, but they should not be treated as end-to-end encrypted or unreadable by the platform.")}
       {section("Photos, Videos, and Camera Capture","If you upload media or use the in-app camera, your browser may request camera and microphone permission. Captured photos and videos are attached to your post only after you choose to capture and publish them. Media may be stored and displayed in the app as part of your post, profile, message, or other feature. You can delete posts where available or request account deletion by contacting contact@fear.social.")}
       {section("California Privacy Rights","California residents may have rights to know what personal information is collected, access specific pieces of information, delete personal information, correct inaccurate information, opt out of sale or sharing, limit certain uses of sensitive personal information, and avoid discrimination for exercising privacy rights. fear.social does not currently sell personal information or share it for cross-context behavioral advertising. To exercise privacy rights, email contact@fear.social with the request and enough information to verify your account. Some deletion requests may be limited by legal, security, fraud-prevention, backup, dispute, or operational exceptions.")}
-      {section("How Users Can Delete or Correct Data","Users can edit profile information in the app and delete their own posts where the feature is available. Users can request access, correction, export, or deletion of account data by contacting contact@fear.social. We may need to verify identity before fulfilling access, correction, or deletion requests. If an account is deleted, public content may be removed or de-identified where feasible, but some records may be retained for security, legal compliance, abuse prevention, backups, dispute resolution, or audit purposes.")}
+      {section("How Users Can Delete or Correct Data","Users can edit profile information in the app, delete their own posts where the feature is available, and delete their account from their profile danger zone. Users can also request access, correction, export, or deletion help by contacting contact@fear.social. We may need to verify identity before fulfilling access, correction, or deletion requests. If an account is deleted, profile content, posts, messages, follows, group membership, media, and active sessions are removed where feasible, but some records may be retained for security, legal compliance, abuse prevention, backups, dispute resolution, or audit purposes.")}
       {section("Cookies and Local Storage","fear.social uses essential local storage and cookies for sign-in state, session continuity, cookie preference storage, accessibility preferences, theme settings, and basic app functionality. Optional analytics or marketing cookies should remain off unless those services are added and consent is collected where required. Browser settings may let you clear local storage, but doing so may sign you out or reset preferences.")}
       {section("Sharing and Processors","Information may be processed by infrastructure and service providers used to run the site, including Cloudflare services for hosting, database, serverless functions, security, and delivery, and email providers used for verification or transactional messages. We may disclose information if required by law, to enforce Terms, to investigate abuse or security issues, to respond to user requests, to protect users or the public, or as part of a merger, acquisition, financing, or business transfer with appropriate protections.")}
       {section("Public Content and Other Users","Profiles, posts, comments, groups, opportunities, follower activity, and other social features may be visible to other users or the public depending on product settings. Direct messages are intended for the conversation participants but may be stored and reviewed when needed for safety, support, abuse prevention, or legal compliance. Do not share information you are not comfortable making available through the service.")}

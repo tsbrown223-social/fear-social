@@ -328,6 +328,31 @@ async function safeRun(db, sql, bindings = []) {
   }
 }
 
+async function deleteUserAccount(db, userId) {
+  const userPosts = "SELECT id FROM posts WHERE user_id = ?";
+  const userConversations = "SELECT id FROM conversations WHERE user_a_id = ? OR user_b_id = ?";
+  await safeRun(db, "DELETE FROM messages WHERE conversation_id IN (" + userConversations + ") OR user_id = ?", [userId, userId, userId]);
+  await safeRun(db, "DELETE FROM conversations WHERE user_a_id = ? OR user_b_id = ?", [userId, userId]);
+  await safeRun(db, "DELETE FROM comments WHERE user_id = ? OR post_id IN (" + userPosts + ")", [userId, userId]);
+  await safeRun(db, "DELETE FROM post_reactions WHERE user_id = ? OR post_id IN (" + userPosts + ")", [userId, userId]);
+  await safeRun(db, "DELETE FROM user_notifications WHERE user_id = ? OR actor_user_id = ? OR target_id = ?", [userId, userId, userId]);
+  await safeRun(db, "DELETE FROM group_members WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM group_invites WHERE inviter_user_id = ? OR invitee_user_id = ?", [userId, userId]);
+  await safeRun(db, "DELETE FROM group_announcements WHERE user_id = ?", [userId]);
+  await safeRun(db, "UPDATE groups SET owner_user_id = NULL WHERE owner_user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM opportunities WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM content_reports WHERE reporter_user_id = ? OR target_id = ?", [userId, userId]);
+  await safeRun(db, "DELETE FROM user_blocks WHERE user_id = ? OR blocked_user_id = ?", [userId, userId]);
+  await safeRun(db, "DELETE FROM media_assets WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM posts WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM user_connections WHERE user_id = ? OR target_user_id = ?", [userId, userId]);
+  await safeRun(db, "DELETE FROM connections WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM event_rsvps WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM mentor_requests WHERE user_id = ?", [userId]);
+  await safeRun(db, "DELETE FROM user_sessions WHERE user_id = ?", [userId]);
+  await db.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
+}
+
 async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 300) {
   const bucket = Math.floor(Date.now() / (windowSeconds * 1000));
   const id = `${key}:${getClientKey(request)}:${bucket}`;
@@ -2055,6 +2080,18 @@ async function handleRequest({ request, env, params }) {
     return json(
       { token, profile: await profileWithFollowerCount(db, user), ...(await getBootstrap(db, user)) },
       { headers: { "set-cookie": sessionCookie(token) } }
+    );
+  }
+
+  if (method === "DELETE" && path === "/account") {
+    const limited = await enforceRateLimit(db, request, "account-delete", 3, 3600);
+    if (limited) return limited;
+    if (user.id === OFFICIAL_USER_ID) return json({ error: "Official platform account cannot be deleted from the app." }, { status: 403 });
+    if (body.confirmation !== "DELETE") return json({ error: "Type DELETE to confirm account deletion." }, { status: 400 });
+    await deleteUserAccount(db, user.id);
+    return json(
+      { ok: true, deleted: true },
+      { headers: { "set-cookie": sessionCookie("", 0) } }
     );
   }
 
