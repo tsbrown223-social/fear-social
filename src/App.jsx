@@ -507,6 +507,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-agency button{width:100%!important;max-width:260px!important;margin:0 auto!important;}
   .why-page-grid{grid-template-columns:1fr!important;gap:24px!important;}
   .why-page-grid h1,.why-page-grid p{text-align:left!important;}
+  .why-about-grid{grid-template-columns:1fr!important;gap:18px!important;margin-top:36px!important;padding-top:24px!important;}
   .landing-footer{padding:24px 16px calc(28px + env(safe-area-inset-bottom))!important;gap:12px!important;justify-content:center!important;text-align:center!important;}
   .cookie-notice{left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;}
   .cookie-card{max-width:none!important;border-radius:18px!important;}
@@ -1534,6 +1535,16 @@ function WhyFearPage({setScreen}){
             <p style={{fontSize:14,lineHeight:1.75,color:"rgba(255,255,255,.55)",margin:"24px 0 0"}}>The name is a reminder: fear can feel real before it is true. The platform exists to help people move anyway, with community, proof, and opportunity around them.</p>
           </aside>
         </div>
+        <section className="why-about-grid" aria-label="About fear.social" style={{marginTop:58,borderTop:"1px solid rgba(255,255,255,.1)",paddingTop:34,display:"grid",gridTemplateColumns:"minmax(0,.58fr) minmax(0,1fr)",gap:28,alignItems:"start"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:950,letterSpacing:2.6,color:C.accent,textTransform:"uppercase",marginBottom:12}}>About us</div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,5vw,64px)",lineHeight:.98,letterSpacing:0,color:"#fff"}}>Built for the first step.</h2>
+          </div>
+          <div style={{background:"rgba(255,255,255,.055)",border:"1px solid rgba(255,255,255,.1)",borderRadius:24,padding:"clamp(20px,3vw,30px)"}}>
+            <p style={{fontSize:16,lineHeight:1.8,color:"rgba(255,255,255,.66)",margin:0}}>fear.social was founded by <strong style={{color:"#fff"}}>Taylor Brown</strong>, a student at the University of Colorado Boulder, to help people through one of the most common and difficult moments in life: knowing they want more for their future, but not knowing where to begin.</p>
+            <p style={{fontSize:16,lineHeight:1.8,color:"rgba(255,255,255,.58)",margin:"16px 0 0"}}>The platform is built for anyone trying to take their first real step into the career field they want. It gives people a place to find direction, meet others facing the same uncertainty, and move toward their goals without feeling like they have to go through the process alone or wait until the fear disappears.</p>
+          </div>
+        </section>
       </section>
     </main>
   );
