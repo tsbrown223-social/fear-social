@@ -853,6 +853,7 @@ async function getPosts(db, userId) {
     saved: Boolean(post.saved),
     liked: Boolean(post.liked),
     followingAuthor: Boolean(post.following_author),
+    officialFear: post.user_id === OFFICIAL_USER_ID || post.handle === "@fear.social",
   }));
 }
 

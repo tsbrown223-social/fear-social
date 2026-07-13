@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const GR = "linear-gradient(135deg, #111318 0%, #16C74E 100%)";
 const GR2 = "linear-gradient(135deg, #0a0c0f 0%, #0d2018 60%, #16C74E 100%)";
 const GRT = { background:GR, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" };
+const OFFICIAL_FEAR_USER_ID = "fear-social-official";
+const OFFICIAL_FEAR_HANDLE = "@fear.social";
 const C = {
   bg:"#F0F2F5", card:"#FFFFFF", border:"#E2E6EE", accent:"#16C74E",
   aLight:"#E8FBF0", aSoft:"#B8F5CE", text:"#0D0F14", tSoft:"#2A2D38",
@@ -1813,7 +1815,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const algorithmTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3&&!STOP_WORDS.has(term));
   const searchTerm=query.trim().toLowerCase();
   const matchesSearch=(parts=[])=>!searchTerm||parts.filter(Boolean).join(" ").toLowerCase().includes(searchTerm);
-  const isFollowingPost=p=>Boolean(p.followingAuthor||followedIds.has(p.userId)||followedHandles.has(p.handle));
+  const isOfficialFearPost=p=>Boolean(p.officialFear||p.userId===OFFICIAL_FEAR_USER_ID||p.handle===OFFICIAL_FEAR_HANDLE);
+  const isFollowingPost=p=>Boolean(!isOfficialFearPost(p)&&(p.followingAuthor||followedIds.has(p.userId)||followedHandles.has(p.handle)));
   const postRecencyBoost=(post,index)=>{
     const value=String(post.time||"").toLowerCase();
     if(value.includes("just now"))return 18;
@@ -1832,7 +1835,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     if((p.media||[]).length)score+=8;
     if(p.type==="Ask")score+=5;
     if(p.type==="Milestone")score+=4;
-    if(p.handle==="@fear.social")score+=algorithmTerms.some(term=>haystack.includes(term))?8:2;
+    if(isOfficialFearPost(p))score+=algorithmTerms.some(term=>haystack.includes(term))?8:2;
     score+=algorithmTerms.reduce((total,term)=>total+(haystack.includes(term)?5:0),0);
     return score;
   };
