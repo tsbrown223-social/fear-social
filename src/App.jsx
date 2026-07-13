@@ -83,6 +83,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-scroll-step:hover{opacity:1;transform:translateX(8px);border-color:rgba(22,199,78,.32)!important;}
 .landing-world-node{transition:transform .18s ease,background .18s ease,border-color .18s ease;}
 .landing-world-node:hover{transform:translateY(-6px) scale(1.02);background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.38)!important;}
+.landing-immersive-stage .landing-sticky-world{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-content:center!important;min-height:560px!important;padding:26px!important;}
+.landing-immersive-stage .landing-world-core{position:relative!important;left:auto!important;top:auto!important;transform:none!important;grid-column:1/-1!important;margin:0 auto 8px!important;width:132px!important;height:132px!important;font-size:31px!important;}
+.landing-immersive-stage .landing-world-node{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:100%!important;min-height:145px!important;margin:0!important;background:rgba(255,255,255,.065)!important;}
+.landing-immersive-stage .landing-orbit-ring{display:none!important;}
+.landing-immersive-stage .landing-scroll-step{opacity:1;}
+.landing-immersive-stage h2{max-width:720px;}
 .landing-cinema-card b{color:#fff;}
 .landing-cinema-card p{color:rgba(255,255,255,.58);}
 .landing-cinema-card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);border-radius:28px;box-shadow:0 34px 120px rgba(0,0,0,.3);}
@@ -1686,23 +1692,38 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
   const followedIds=new Set(people.filter(p=>p.connected).map(p=>p.id));
+  const followedHandles=new Set(people.filter(p=>p.connected&&p.handle).map(p=>p.handle));
   const ownPost=p=>(profile.id&&p.userId===profile.id)||(profile.handle&&p.handle===profile.handle);
-  const algorithmTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3);
+  const algorithmTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>3&&!STOP_WORDS.has(term));
   const searchTerm=query.trim().toLowerCase();
   const matchesSearch=(parts=[])=>!searchTerm||parts.filter(Boolean).join(" ").toLowerCase().includes(searchTerm);
+  const isFollowingPost=p=>Boolean(p.followingAuthor||followedIds.has(p.userId)||followedHandles.has(p.handle));
+  const postRecencyBoost=(post,index)=>{
+    const value=String(post.time||"").toLowerCase();
+    if(value.includes("just now"))return 18;
+    if(value.includes("min"))return 14;
+    if(value.includes("hour"))return 10;
+    if(value.includes("day"))return 5;
+    return Math.max(0,8-Math.min(index,8));
+  };
   const postScore=p=>{
     const haystack=`${p.user} ${p.handle} ${p.content} ${p.tag} ${p.type}`.toLowerCase();
-    let score=Number(p.likes||0)*2+(p.comments?.length||0)*3+(p.saved?4:0);
-    if(ownPost(p))score+=8;
-    if(p.followingAuthor||followedIds.has(p.userId))score+=28;
-    if(profile.industry&&p.tag===profile.industry)score+=18;
-    score+=algorithmTerms.reduce((total,term)=>total+(haystack.includes(term)?4:0),0);
+    let score=Number(p.likes||0)*2+(p.comments?.length||0)*4+(p.saved?6:0);
+    if(ownPost(p))score+=10;
+    if(isFollowingPost(p))score+=24;
+    if(profile.industry&&p.tag===profile.industry)score+=22;
+    if(profile.location&&haystack.includes(String(profile.location).split(",")[0].toLowerCase()))score+=7;
+    if((p.media||[]).length)score+=8;
+    if(p.type==="Ask")score+=5;
+    if(p.type==="Milestone")score+=4;
+    if(p.handle==="@fear.social")score+=algorithmTerms.some(term=>haystack.includes(term))?8:2;
+    score+=algorithmTerms.reduce((total,term)=>total+(haystack.includes(term)?5:0),0);
     return score;
   };
   const visiblePosts=posts
     .filter(p=>(filter==="All"||p.tag===filter)&&matchesSearch([p.user,p.handle,p.content,p.tag,p.type,...(p.comments||[]).map(c=>`${c.user} ${c.text}`)]))
-    .filter(p=>feedMode==="forYou"||p.followingAuthor||followedIds.has(p.userId)||ownPost(p))
-    .map((p,index)=>({...p,_score:postScore(p),_index:index}))
+    .filter(p=>feedMode==="forYou"||isFollowingPost(p)||ownPost(p))
+    .map((p,index)=>({...p,_score:postScore(p)+postRecencyBoost(p,index),_index:index}))
     .sort((a,b)=>feedMode==="forYou"?(b._score-a._score)||(a._index-b._index):a._index-b._index);
   const ownProfilePosts=posts.filter(ownPost);
   const opportunityTerms=[profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location].filter(Boolean).join(" ").toLowerCase().split(/[^a-z0-9]+/).filter(term=>term.length>2&&!STOP_WORDS.has(term));
@@ -2157,8 +2178,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
                   <button onClick={()=>setEditProfile(true)} style={{background:C.aLight,color:C.accent,border:"none",borderRadius:9,padding:"8px 11px",fontSize:12,fontWeight:900}}>Edit</button>
                 </div>
               </div>
-              <div role="tablist" aria-label="Feed mode" style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:14}}>
-                {[["forYou","For You"],["following","Following"]].map(([id,label])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"11px 14px",fontSize:14,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</button>)}
+              <div role="tablist" aria-label="Feed mode" style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:8}}>
+                {[["forYou","For You","Ranked for your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
               </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
