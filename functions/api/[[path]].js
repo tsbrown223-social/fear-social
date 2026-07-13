@@ -2414,6 +2414,8 @@ async function handleRequest({ request, env, params }) {
       conversation = { id: result?.meta?.last_row_id || created?.id };
     }
     if (text) {
+      const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+      if (messageSafety) return messageSafety;
       await db
         .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
         .bind(createId("message"), Number(conversation.id), user.id, text)
@@ -2499,6 +2501,8 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const text = cleanText(body.text || "", 800);
     if (!text) return json({ error: "Message text required" }, { status: 400 });
+    const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+    if (messageSafety) return messageSafety;
     const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
     if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
     if (!conversation.user_a_id || !conversation.user_b_id || (conversation.user_a_id !== user.id && conversation.user_b_id !== user.id)) {
