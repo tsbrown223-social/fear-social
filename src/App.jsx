@@ -2072,6 +2072,19 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
       notify(err.message||"Could not join group","error");
     }
   };
+  const leaveGroup=async id=>{
+    const group=groups.find(g=>g.id===id);
+    if(!group?.member)return;
+    if(!window.confirm(`Leave ${group.name}? You can rejoin later if the group is public or you are invited again.`))return;
+    const nextCount=Math.max(0,Number(group.memberCount||0)-1);
+    setGroups(gs=>gs.map(g=>g.id===id?{...g,member:false,role:"",canInvite:false,canAnnounce:false,memberCount:nextCount,active:`${nextCount} ${nextCount===1?"member":"members"}`}:g));
+    try{
+      await callBackend(`/groups/${id}/leave`,{method:"POST"});
+      notify(`Left ${group.name}`);
+    }catch(err){
+      notify(err.message||"Left locally. Cloud sync failed.","error");
+    }
+  };
   const inviteToGroup=async(groupId,userIds)=>{
     const ids=[...new Set((Array.isArray(userIds)?userIds:[userIds]).filter(Boolean))];
     if(ids.length===0)return notify("Choose someone to invite","error");
@@ -2424,9 +2437,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
-        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId}/>}
+        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
-        {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement}/>}
+        {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
@@ -2656,7 +2669,7 @@ function SearchResultsPanel({term,results,onClear}){
   const visible=results.slice(0,12);
   return <section aria-label={`Search results for ${term}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:18,marginBottom:20,boxShadow:"0 18px 54px rgba(13,15,20,0.06)"}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}><div style={{minWidth:0}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:5}}>Search</div><h2 style={{fontFamily:"Georgia,serif",fontSize:28,lineHeight:1.05,letterSpacing:0,color:C.text,overflowWrap:"anywhere"}}>{visible.length?`${visible.length} results for "${term}"`:`No results for "${term}"`}</h2></div><button onClick={onClear} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7}}><Icon name="close" size={14}/> Clear</button></div>{visible.length===0?<EmptyState title="Nothing matched yet" text="Try a person, field, tag, post topic, group, event, message, or opportunity."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>{visible.map(result=><button key={result.id} onClick={result.action} className="ch" style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,textAlign:"left",display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:12,color:C.text,minWidth:0}}><span style={{width:38,height:38,borderRadius:12,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={result.icon} size={18}/></span><span style={{minWidth:0}}><span style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1,color:C.accent}}>{result.kind}</span><span style={{fontSize:12,color:C.dim,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{result.subtitle}</span></span><span style={{display:"block",fontSize:15,fontWeight:950,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{result.title}</span><span style={{fontSize:13,color:C.muted,lineHeight:1.45,marginTop:4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{result.meta}</span></span></button>)}</div>}</section>;
 }
-function GroupsView({groups,people,createGroup,joinGroup,inviteToGroup,postAnnouncement}){
+function GroupsView({groups,people,createGroup,joinGroup,leaveGroup,inviteToGroup,postAnnouncement,reportContent}){
   const [draft,setDraft]=useState({name:"",description:""});
   const [inviteDraft,setInviteDraft]=useState({});
   const [announcementDraft,setAnnouncementDraft]=useState({});
@@ -2667,7 +2680,109 @@ function GroupsView({groups,people,createGroup,joinGroup,inviteToGroup,postAnnou
   };
   const usableGroups=Array.isArray(groups)&&groups.length?groups:GROUPS;
   const invitePeople=(Array.isArray(people)?people:[]).slice(0,24);
-  return <div className="directory-wrap"><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,marginBottom:22,flexWrap:"wrap"}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Rooms</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Groups</h1></div><div style={{fontSize:13,color:C.muted,maxWidth:430,lineHeight:1.6}}>Create focused rooms, invite members, and keep everyone aligned with announcements.</div></div><div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:18,marginBottom:18}}><div className="groups-create-grid" style={{display:"grid",gridTemplateColumns:"minmax(180px,0.8fr) minmax(220px,1.2fr) auto",gap:10,alignItems:"end"}}><label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>Group name<input aria-label="Group name" value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))} placeholder="NYC creatives, Finance starters..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/></label><label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>Purpose<input aria-label="Group purpose" value={draft.description} onChange={e=>setDraft(d=>({...d,description:e.target.value}))} placeholder="What should people use this group for?" className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/></label><GBtn onClick={submitGroup} style={{height:42,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="network" size={16} color="#fff"/> Create group</GBtn></div></div><div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>{usableGroups.map(group=>{const selectedInvite=inviteDraft[group.id]||"";const announce=announcementDraft[group.id]||{title:"",body:""};return <article key={group.id} className="ch" style={{...cardStyle,padding:0,borderColor:group.official?C.aSoft:C.border}}><div style={{padding:20,background:group.official?GR:"transparent",color:group.official?"#fff":C.text}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><b style={{fontSize:22,overflowWrap:"anywhere"}}>{group.name}</b>{group.official&&<Tag label="Official" style={{background:"rgba(255,255,255,0.18)",color:"#fff"}}/>}{group.invited&&<Tag label="Invited" style={{background:"#fff",color:C.accent}}/>}</div><div style={{fontSize:12,opacity:group.official?0.82:1,color:group.official?"rgba(255,255,255,0.78)":C.muted,marginTop:5}}>{group.active}</div></div><div style={{width:44,height:44,borderRadius:14,background:group.official?"rgba(255,255,255,0.14)":C.aLight,color:group.official?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={group.official?"sparkle":"network"} size={22} color="currentColor"/></div></div><p style={{fontSize:14,lineHeight:1.65,marginTop:14,color:group.official?"rgba(255,255,255,0.82)":C.tSoft}}>{group.desc}</p></div><div style={{padding:20,display:"grid",gap:16}}>{!group.member&&<GBtn onClick={()=>joinGroup(group.id)} full>{group.invited?"Accept invite":"Join group"}</GBtn>}{group.canInvite&&<div style={{display:"grid",gap:9}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Invite users</div><div style={{display:"flex",gap:8}}><select aria-label={`Choose a person to invite to ${group.name}`} value={selectedInvite} onChange={e=>setInviteDraft(d=>({...d,[group.id]:e.target.value}))} className="if" style={{flex:1,minWidth:0,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,background:"#fff"}}><option value="">Choose a person</option>{invitePeople.map(person=><option key={person.id} value={person.id}>{person.name} · {person.industry||"Exploring"}</option>)}</select><button onClick={()=>selectedInvite&&inviteToGroup(group.id,[selectedInvite])} className="bs" style={{border:"none",background:C.aLight,color:C.accent,borderRadius:10,padding:"10px 13px",fontSize:12,fontWeight:900,whiteSpace:"nowrap"}}>Invite</button></div>{invitePeople.length===0&&<MiniEmpty text="More invite options will appear as real users join."/>}</div>}{group.canAnnounce&&<div style={{display:"grid",gap:9}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Announcement</div><input aria-label={`Announcement title for ${group.name}`} value={announce.title} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,title:e.target.value}}))} placeholder={group.official?"New fear feature, launch note...":"Announcement title"} className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text}}/><textarea aria-label={`Announcement body for ${group.name}`} value={announce.body} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,body:e.target.value}}))} placeholder="Share the update with this group..." className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,minHeight:86,resize:"vertical",lineHeight:1.5}}/><GBtn sm onClick={()=>{postAnnouncement(group.id,announce);setAnnouncementDraft(d=>({...d,[group.id]:{title:"",body:""}}));}}>Post announcement</GBtn></div>}<div><div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:9}}>Latest announcements</div>{(group.announcements||[]).length===0?<MiniEmpty text={group.official?"Admin feature updates will appear here.":"No announcements yet."}/>:<div style={{display:"grid",gap:8}}>{group.announcements.map(a=><div key={a.id} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:12,background:C.bg}}><div style={{fontWeight:900,color:C.text,marginBottom:5,overflowWrap:"anywhere"}}>{a.title}</div><p style={{fontSize:13,lineHeight:1.55,color:C.tSoft,overflowWrap:"anywhere"}}>{a.body}</p><div style={{fontSize:11,color:C.dim,marginTop:8}}>{a.author} · {a.time} ago</div></div>)}</div>}</div></div></article>;})}</div></div>;
+  return (
+    <div className="directory-wrap">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,marginBottom:22,flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Rooms</div>
+          <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Groups</h1>
+        </div>
+        <div style={{fontSize:13,color:C.muted,maxWidth:430,lineHeight:1.6}}>Create focused rooms, invite members, and keep everyone aligned with announcements.</div>
+      </div>
+
+      <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:18,marginBottom:18}}>
+        <div className="groups-create-grid" style={{display:"grid",gridTemplateColumns:"minmax(180px,0.8fr) minmax(220px,1.2fr) auto",gap:10,alignItems:"end"}}>
+          <label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>
+            Group name
+            <input aria-label="Group name" value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))} placeholder="NYC creatives, Finance starters..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/>
+          </label>
+          <label style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1,color:C.muted}}>
+            Purpose
+            <input aria-label="Group purpose" value={draft.description} onChange={e=>setDraft(d=>({...d,description:e.target.value}))} placeholder="What should people use this group for?" className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"11px 13px",fontSize:14,color:C.text}}/>
+          </label>
+          <GBtn onClick={submitGroup} style={{height:42,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="network" size={16} color="#fff"/> Create group</GBtn>
+        </div>
+      </div>
+
+      <div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:16}}>
+        {usableGroups.map(group=>{
+          const selectedInvite=inviteDraft[group.id]||"";
+          const announce=announcementDraft[group.id]||{title:"",body:""};
+          return (
+            <article key={group.id} className="ch" style={{...cardStyle,padding:0,borderColor:group.official?C.aSoft:C.border}}>
+              <div style={{padding:20,background:group.official?GR:"transparent",color:group.official?"#fff":C.text}}>
+                <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                      <b style={{fontSize:22,overflowWrap:"anywhere"}}>{group.name}</b>
+                      {group.official&&<Tag label="Official" style={{background:"rgba(255,255,255,0.18)",color:"#fff"}}/>}
+                      {group.invited&&<Tag label="Invited" style={{background:"#fff",color:C.accent}}/>}
+                    </div>
+                    <div style={{fontSize:12,opacity:group.official?0.82:1,color:group.official?"rgba(255,255,255,0.78)":C.muted,marginTop:5}}>{group.active}</div>
+                  </div>
+                  <div style={{width:44,height:44,borderRadius:14,background:group.official?"rgba(255,255,255,0.14)":C.aLight,color:group.official?"#fff":C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Icon name={group.official?"sparkle":"network"} size={22} color="currentColor"/>
+                  </div>
+                </div>
+                <p style={{fontSize:14,lineHeight:1.65,marginTop:14,color:group.official?"rgba(255,255,255,0.82)":C.tSoft}}>{group.desc}</p>
+              </div>
+
+              <div style={{padding:20,display:"grid",gap:16}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {!group.member&&<GBtn onClick={()=>joinGroup(group.id)}>{group.invited?"Accept invite":"Join group"}</GBtn>}
+                  {group.member&&<button onClick={()=>leaveGroup?.(group.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:12,fontWeight:900,color:C.coral}}>Leave group</button>}
+                  <button onClick={()=>reportContent?.("group",group.id,`${group.name} group`)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:12,fontWeight:900,color:C.muted}}>Report group</button>
+                </div>
+
+                {group.canInvite&&(
+                  <div style={{display:"grid",gap:9}}>
+                    <div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Invite users</div>
+                    <div style={{display:"flex",gap:8}}>
+                      <select aria-label={`Choose a person to invite to ${group.name}`} value={selectedInvite} onChange={e=>setInviteDraft(d=>({...d,[group.id]:e.target.value}))} className="if" style={{flex:1,minWidth:0,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,background:"#fff"}}>
+                        <option value="">Choose a person</option>
+                        {invitePeople.map(person=><option key={person.id} value={person.id}>{person.name} · {person.industry||"Exploring"}</option>)}
+                      </select>
+                      <button onClick={()=>selectedInvite&&inviteToGroup(group.id,[selectedInvite])} className="bs" style={{border:"none",background:C.aLight,color:C.accent,borderRadius:10,padding:"10px 13px",fontSize:12,fontWeight:900,whiteSpace:"nowrap"}}>Invite</button>
+                    </div>
+                    {invitePeople.length===0&&<MiniEmpty text="More invite options will appear as real users join."/>}
+                  </div>
+                )}
+
+                {group.canAnnounce&&(
+                  <div style={{display:"grid",gap:9}}>
+                    <div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted}}>Announcement</div>
+                    <input aria-label={`Announcement title for ${group.name}`} value={announce.title} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,title:e.target.value}}))} placeholder={group.official?"New fear feature, launch note...":"Announcement title"} className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text}}/>
+                    <textarea aria-label={`Announcement body for ${group.name}`} value={announce.body} onChange={e=>setAnnouncementDraft(d=>({...d,[group.id]:{...announce,body:e.target.value}}))} placeholder="Share the update with this group..." className="if" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.text,minHeight:86,resize:"vertical",lineHeight:1.5}}/>
+                    <GBtn sm onClick={()=>{postAnnouncement(group.id,announce);setAnnouncementDraft(d=>({...d,[group.id]:{title:"",body:""}}));}}>Post announcement</GBtn>
+                  </div>
+                )}
+
+                <div>
+                  <div style={{fontSize:11,fontWeight:900,letterSpacing:1,textTransform:"uppercase",color:C.muted,marginBottom:9}}>Latest announcements</div>
+                  {(group.announcements||[]).length===0?(
+                    <MiniEmpty text={group.official?"Admin feature updates will appear here.":"No announcements yet."}/>
+                  ):(
+                    <div style={{display:"grid",gap:8}}>
+                      {group.announcements.map(a=>(
+                        <div key={a.id} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:12,background:C.bg}}>
+                          <div style={{fontWeight:900,color:C.text,marginBottom:5,overflowWrap:"anywhere"}}>{a.title}</div>
+                          <p style={{fontSize:13,lineHeight:1.55,color:C.tSoft,overflowWrap:"anywhere"}}>{a.body}</p>
+                          <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"center",marginTop:8,flexWrap:"wrap"}}>
+                            <div style={{fontSize:11,color:C.dim}}>{a.author} · {a.time} ago</div>
+                            <button onClick={()=>reportContent?.("message",a.id||`${group.id}-announcement`,"group announcement")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"5px 8px",fontSize:11,fontWeight:900,color:C.muted}}>Report</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 function OpportunitiesView({deals,savedDeals,toggleSave,signalInterest,postOpportunity,profile}){
   const [mode,setMode]=useState("matched");
@@ -2689,7 +2804,7 @@ function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
   return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
-function MessagesView({messages,setMessages,sendMessage,activeConversationId}){
+function MessagesView({messages,setMessages,sendMessage,activeConversationId,onBlockUser,onReport}){
   const messageInitials=name=>String(name||"Conversation").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"DM";
   const safeMessages=(Array.isArray(messages)?messages:[]).map((message,index)=>{
     const source=message&&typeof message==="object"?message:{};
@@ -2712,7 +2827,58 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId}){
   const messageText=msg=>typeof msg==="string"?msg:String(msg?.text||"");
   const messageAuthor=msg=>typeof msg==="string"?"them":msg?.author||"them";
   if(safeMessages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
-  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:12,color:C.text}}>Direct messages</h1><div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>Messages are stored to deliver conversations and support safety review. They are protected in transit, but fear.social does not currently offer end-to-end encrypted DMs.</div><div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}><div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>{safeMessages.map(m=><button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}><Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1])||"Start the conversation"}</div></div></button>)}</div>{thread&&<div className="message-panel" role="tabpanel" aria-label={`Conversation with ${thread.name}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}><div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`}}><Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/><div><b><NameWithVerified name={thread.name} person={thread} size={15}/></b><div style={{fontSize:12,color:C.dim}}>{thread.online?"Online now":thread.handle||"Direct message"}</div></div></div><div aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>{thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}{thread.thread.map((msg,i)=>{const mine=messageAuthor(msg)==="you";return <div className="message-bubble" key={typeof msg==="string"?i:msg.id||i} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5}}>{messageText(msg)}</div>;})}</div><div style={{display:"flex",gap:10}}><input aria-label={`Message ${thread.name}`} value={thread.draft||""} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/><GBtn onClick={()=>sendMessage(thread.id)} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="send" size={15} color="#fff"/> Send</GBtn></div></div>}</div></div>;
+  return (
+    <div className="directory-wrap">
+      <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div>
+      <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:12,color:C.text}}>Direct messages</h1>
+      <div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>Messages are stored to deliver conversations and support safety review. They are protected in transit, but fear.social does not currently offer end-to-end encrypted DMs.</div>
+      <div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}>
+        <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
+          {safeMessages.map(m=>(
+            <button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
+              <Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/>
+              <div style={{minWidth:0}}>
+                <div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
+                <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1])||"Start the conversation"}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+        {thread&&(
+          <div className="message-panel" role="tabpanel" aria-label={`Conversation with ${thread.name}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`,flexWrap:"wrap"}}>
+              <Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/>
+              <div style={{flex:1,minWidth:0}}>
+                <b><NameWithVerified name={thread.name} person={thread} size={15}/></b>
+                <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{thread.online?"Online now":thread.handle||"Direct message"}</div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                <button onClick={()=>onReport?.("chat_thread",thread.id,`chat with ${thread.name}`)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.muted}}>Report chat</button>
+                {thread.userId&&<button onClick={()=>onBlockUser?.(thread)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button>}
+              </div>
+            </div>
+            <div aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>
+              {thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}
+              {thread.thread.map((msg,i)=>{
+                const mine=messageAuthor(msg)==="you";
+                const messageId=typeof msg==="string"?`${thread.id}-${i}`:msg.id||`${thread.id}-${i}`;
+                return (
+                  <div key={messageId} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
+                    <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere"}}>{messageText(msg)}</div>
+                    <button onClick={()=>onReport?.("message",messageId,"message")} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Report</button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <input aria-label={`Message ${thread.name}`} value={thread.draft||""} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/>
+              <GBtn onClick={()=>sendMessage(thread.id)} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="send" size={15} color="#fff"/> Send</GBtn>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 const ProfileStatButton=({label,value,active,onClick})=>(
   <button onClick={onClick} aria-pressed={active} className="bs profile-stat-button" style={{...cardStyle,padding:18,borderRadius:16,textAlign:"left",background:active?C.aLight:C.card,border:`1px solid ${active?C.aSoft:C.border}`,color:C.text}}>

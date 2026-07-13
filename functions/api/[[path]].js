@@ -2210,6 +2210,17 @@ async function handleRequest({ request, env, params }) {
     return json({ groups: await getGroups(db, user) });
   }
 
+  if (method === "POST" && segments[0] === "groups" && segments[2] === "leave") {
+    const limited = await enforceRateLimit(db, request, "groups-leave", 30, 600);
+    if (limited) return limited;
+    const groupId = segments[1];
+    const group = await db.prepare("SELECT * FROM groups WHERE id = ?").bind(groupId).first();
+    if (!group) return json({ error: "Group not found" }, { status: 404 });
+    await db.prepare("UPDATE group_members SET status = 'left' WHERE group_id = ? AND user_id = ?").bind(groupId, user.id).run();
+    await safeRun(db, "UPDATE group_invites SET status = 'declined', responded_at = CURRENT_TIMESTAMP WHERE group_id = ? AND invitee_user_id = ?", [groupId, user.id]);
+    return json({ groups: await getGroups(db, user) });
+  }
+
   if (method === "POST" && segments[0] === "groups" && segments[2] === "invite") {
     const limited = await enforceRateLimit(db, request, "groups-invite", 15, 600);
     if (limited) return limited;
@@ -2436,7 +2447,7 @@ async function handleRequest({ request, env, params }) {
     const targetType = cleanText(body.targetType || "", 40);
     const targetId = cleanText(body.targetId || "", 120);
     const reason = cleanText(body.reason || "", 600);
-    const allowedReportTargets = new Set(["post", "comment", "user", "media", "message", "group", "opportunity", "auto_filter"]);
+    const allowedReportTargets = new Set(["post", "comment", "user", "media", "message", "chat_thread", "group", "opportunity", "auto_filter"]);
     if (!allowedReportTargets.has(targetType)) return json({ error: "Unsupported report target" }, { status: 400 });
     if (!targetType || !targetId || !reason) return json({ error: "Report target and reason required" }, { status: 400 });
     await db
