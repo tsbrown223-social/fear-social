@@ -563,7 +563,7 @@ const safeMediaUrl=(url,kind="image")=>{
     return parsed.protocol==="https:"?value:"";
   }catch{return "";}
 };
-const readImageFile=(file,maxSize=720)=>new Promise((resolve,reject)=>{
+const readImageFile=(file,maxSize=720,maxBytes=680000)=>new Promise((resolve,reject)=>{
   if(!file?.type?.startsWith("image/"))return reject(new Error("Choose an image file"));
   const reader=new FileReader();
   reader.onerror=()=>reject(new Error("Could not read image"));
@@ -571,15 +571,25 @@ const readImageFile=(file,maxSize=720)=>new Promise((resolve,reject)=>{
     const img=new Image();
     img.onerror=()=>reject(new Error("Could not load image"));
     img.onload=()=>{
-      const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
-      const width=Math.max(1,Math.round(img.width*scale));
-      const height=Math.max(1,Math.round(img.height*scale));
       const canvas=document.createElement("canvas");
-      canvas.width=width;
-      canvas.height=height;
       const ctx=canvas.getContext("2d");
-      ctx.drawImage(img,0,0,width,height);
-      resolve(canvas.toDataURL("image/jpeg",0.82));
+      let scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+      let quality=0.82;
+      let dataUrl="";
+      for(let attempt=0;attempt<10;attempt+=1){
+        const width=Math.max(1,Math.round(img.width*scale));
+        const height=Math.max(1,Math.round(img.height*scale));
+        canvas.width=width;
+        canvas.height=height;
+        ctx.clearRect(0,0,width,height);
+        ctx.drawImage(img,0,0,width,height);
+        dataUrl=canvas.toDataURL("image/jpeg",quality);
+        if(dataUrl.length<=maxBytes)break;
+        if(quality>0.58)quality-=0.08;
+        else scale*=0.82;
+      }
+      if(dataUrl.length>maxBytes)return reject(new Error("That image is too large. Try a smaller photo."));
+      resolve(dataUrl);
     };
     img.src=reader.result;
   };
@@ -591,7 +601,7 @@ const readPostMediaFile=file=>new Promise((resolve,reject)=>{
   const isVideo=file.type?.startsWith("video/");
   if(!isImage&&!isVideo)return reject(new Error("Only photos and videos can be posted"));
   if(isVideo&&file.size>4*1024*1024)return reject(new Error("Videos need to be under 4 MB for now"));
-  if(isImage)return readImageFile(file,1280).then(url=>resolve({id:`media_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"image",url,alt:file.name||"Post photo"})).catch(reject);
+  if(isImage)return readImageFile(file,1280,680000).then(url=>resolve({id:`media_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"image",url,alt:file.name||"Post photo"})).catch(reject);
   const reader=new FileReader();
   reader.onerror=()=>reject(new Error("Could not read video"));
   reader.onload=()=>resolve({id:`media_${Date.now()}_${Math.random().toString(16).slice(2)}`,kind:"video",url:String(reader.result||""),alt:file.name||"Post video"});
@@ -1643,6 +1653,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
   const [profileMetric,setProfileMetric]=useState("Posts");
   const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
+  useEffect(()=>setProfileDraft(profile),[profile]);
   const applyBackendState=useCallback((data)=>{
     if(data.profile){
       setProfile(p=>({...p,...data.profile}));
@@ -2089,13 +2100,28 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     })),
   ]:[];
   const saveProfile=async()=>{
-    const username=cleanUsername(profileDraft.username||profileDraft.handle||profileDraft.name);
-    const nextDraft={...profileDraft,username,handle:`@${username}`};
-    setProfile(nextDraft);
+    const username=cleanUsername(profileDraft.username||profileDraft.handle||profileDraft.name)||cleanUsername(profileDraft.name||"member")||"member";
+    const oldProfile=profile;
+    const nextDraft={...oldProfile,...profileDraft,username,handle:`@${username}`};
+    const applyProfileLocally=next=>{
+      setProfile(next);
+      setProfileDraft(next);
+      setPosts(ps=>ps.map(post=>{
+        const isMine=(oldProfile.id&&post.userId===oldProfile.id)||(oldProfile.handle&&post.handle===oldProfile.handle)||(post.handle===next.handle);
+        const updatedComments=(post.comments||[]).map(comment=>{
+          const commentIsMine=(oldProfile.handle&&comment.handle===oldProfile.handle)||(comment.handle===next.handle);
+          return commentIsMine?{...comment,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",verified:isVerifiedIdentity(next)}:comment;
+        });
+        return isMine?{...post,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",verified:isVerifiedIdentity(next),comments:updatedComments}:{...post,comments:updatedComments};
+      }));
+      setPeople(ps=>ps.map(person=>person.id===next.id||person.handle===oldProfile.handle?{...person,name:next.name,handle:next.handle,avatarUrl:next.avatarUrl||"",coverUrl:next.coverUrl||"",industry:next.industry,loc:next.location,location:next.location,bio:next.bio,headline:next.headline,lookingFor:next.lookingFor,goal:next.goal}:person));
+    };
+    applyProfileLocally(nextDraft);
     setEditProfile(false);
     try{
       const data=await callBackend("/profile",{method:"PUT",body:JSON.stringify({profile:nextDraft})});
-      setProfile(p=>({...p,...data.profile}));
+      const saved={...nextDraft,...(data.profile||{})};
+      applyProfileLocally(saved);
       notify("Profile updated");
     }catch{
       notify("Profile saved locally. Cloud sync failed.","error");
@@ -2105,7 +2131,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
     const file=event.target.files?.[0];
     if(!file)return;
     try{
-      const dataUrl=await readImageFile(file,key==="coverUrl"?1200:720);
+      const dataUrl=await readImageFile(file,key==="coverUrl"?1400:720,key==="coverUrl"?860000:620000);
       setProfileDraft(p=>({...p,[key]:dataUrl}));
       notify(key==="coverUrl"?"Cover photo ready":"Profile picture ready");
     }catch(err){
@@ -2256,10 +2282,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,themeMode,setT
         <div className="edit-modal" role="dialog" aria-modal="true" aria-label="Edit your profile" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)} onKeyDown={e=>e.key==="Escape"&&setEditProfile(false)}>
           <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
             <SectionTitle eyebrow="Profile" title="Edit your profile"/>
-            <div style={{height:116,borderRadius:18,background:safeImageUrl(profileDraft.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profileDraft.coverUrl)}")`:GR,border:`1px solid ${C.border}`,marginBottom:44,position:"relative",overflow:"visible"}}>
+            <div style={{height:132,borderRadius:20,background:safeImageUrl(profileDraft.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profileDraft.coverUrl)}")`:GR,border:`1px solid ${C.border}`,marginBottom:56,position:"relative",overflow:"visible",boxShadow:"inset 0 -60px 80px rgba(0,0,0,.18)"}}>
               <div style={{position:"absolute",left:16,bottom:-34}}><Av i={initials} src={profileDraft.avatarUrl} size={78} grad style={{border:"4px solid #fff"}}/></div>
-              <label className="bs" style={{position:"absolute",right:12,top:12,background:"rgba(255,255,255,0.92)",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Cover<input aria-label="Upload cover photo" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"coverUrl")} style={{display:"none"}}/></label>
-              <label className="bs" style={{position:"absolute",left:100,bottom:-26,background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Photo<input aria-label="Upload profile picture" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"avatarUrl")} style={{display:"none"}}/></label>
+              <div style={{position:"absolute",right:12,top:12,display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                <label className="bs" style={{background:"rgba(255,255,255,0.94)",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Change banner<input aria-label="Upload profile banner" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"coverUrl")} style={{display:"none"}}/></label>
+                {profileDraft.coverUrl&&<button type="button" className="bs" onClick={()=>setProfileDraft(p=>({...p,coverUrl:""}))} style={{background:"rgba(13,15,20,.72)",color:"#fff",border:"1px solid rgba(255,255,255,.22)",borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>Remove</button>}
+              </div>
+              <div style={{position:"absolute",left:100,bottom:-34,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                <label className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer",boxShadow:"0 10px 28px rgba(15,23,42,.12)"}}><Icon name="camera" size={15}/> Change photo<input aria-label="Upload profile picture" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"avatarUrl")} style={{display:"none"}}/></label>
+                {profileDraft.avatarUrl&&<button type="button" className="bs" onClick={()=>setProfileDraft(p=>({...p,avatarUrl:""}))} style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>Remove</button>}
+              </div>
             </div>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>name<input aria-label="Name" autoComplete="name" value={profileDraft.name||""} onChange={e=>setProfileDraft(p=>({...p,name:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>username<input aria-label="Username" autoComplete="username" value={cleanUsername(profileDraft.username||profileDraft.handle||"")} onChange={e=>setProfileDraft(p=>{const username=cleanUsername(e.target.value);return {...p,username,handle:`@${username}`};})} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/><span style={{display:"block",fontSize:12,color:C.dim,textTransform:"none",fontWeight:600,marginTop:6}}>Your profile URL name is @{cleanUsername(profileDraft.username||profileDraft.handle||"username")}</span></label>
