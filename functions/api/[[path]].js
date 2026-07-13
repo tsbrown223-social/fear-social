@@ -860,7 +860,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Exploring",
     title: "Your First Move Lives Here",
-    hook: "fear.social is built for the moment before you know exactly where to start.",
     feature: "Create a profile, say what you are trying to become, and let the app turn that first step into something visible.",
     beats: ["Post what you are exploring.", "Save one opportunity in Deals.", "Find one person building near your lane."],
     cta: "Open fear.social and make your first move public today.",
@@ -869,7 +868,6 @@ const DAILY_REEL_TEMPLATES = [
     tag: "Mindset",
     title: "Quote Of The Day",
     quote: "You do not have to be fearless. You have to be willing.",
-    hook: "Momentum usually starts before confidence catches up.",
     feature: "fear.social gives that willingness somewhere to go with profiles, posts, DMs, groups, and first-step opportunities.",
     beats: ["Write the move you have been avoiding.", "Post it or send it to one person.", "Let action become the proof."],
     cta: "Use fear.social to turn today’s nerve into one visible action.",
@@ -877,7 +875,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Networking",
     title: "Find People Before You Feel Ready",
-    hook: "The network you need should not feel locked behind confidence you do not have yet.",
     feature: "Discover founders, creators, mentors, students, operators, and first-time builders who are also figuring it out.",
     beats: ["Search by field.", "Open a profile.", "Send one real message."],
     cta: "Use Discover to find one person who makes your next step feel possible.",
@@ -885,7 +882,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Opportunities",
     title: "Deals Is Your Opportunity Board",
-    hook: "Jobs, gigs, volunteer roles, internships, and collabs all count as momentum.",
     feature: "fear.social matches opportunities to your field, goals, skills, and location so the next door is easier to spot.",
     beats: ["Check For You in Deals.", "Save the best fit.", "Post an opportunity if you have one."],
     cta: "Go to Deals and find one opening worth chasing.",
@@ -893,7 +889,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Mentors",
     title: "Ask The Question",
-    hook: "A mentor request does not need to be perfect. It needs to be clear.",
     feature: "fear.social helps you find people, start useful conversations, and ask for the kind of guidance that creates motion.",
     beats: ["Write the thing you are stuck on.", "Ask for one piece of advice.", "Keep the next action small."],
     cta: "Use Mentors or DMs to ask one better question today.",
@@ -901,7 +896,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Prompts",
     title: "Daily Prompt: Name The Next Step",
-    hook: "Clarity gets easier when you stop hiding the next move in your head.",
     feature: "fear.social works best when members post honest first-step prompts that other people can respond to, support, and build on.",
     beats: ["Finish this sentence: I need help with...", "Add one deadline or blocker.", "Invite one useful reply from the community."],
     cta: "Post today’s prompt and let someone meet you where you are.",
@@ -909,7 +903,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Creative",
     title: "Post The Progress",
-    hook: "You do not need a launch to start building in public.",
     feature: "The fear.social feed is for updates, asks, milestones, hiring notes, launches, photos, videos, and honest first steps.",
     beats: ["Share what you tried.", "Add what you learned.", "Tell people what you need next."],
     cta: "Publish one update so your momentum has a place to live.",
@@ -917,7 +910,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Finance",
     title: "Make The Idea Concrete",
-    hook: "Business gets less scary when the next step becomes measurable.",
     feature: "Use fear.social to track your idea, find feedback, meet collaborators, and turn loose ambition into actual motion.",
     beats: ["Name the offer.", "Ask for feedback.", "Find one possible customer or collaborator."],
     cta: "Post the rough version. The polished version can come later.",
@@ -925,7 +917,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Product",
     title: "Your Profile Should Open Doors",
-    hook: "A better profile makes it easier for the right people to find you before you have a big reputation.",
     feature: "fear.social profiles let members show what they are building, what they need, where they are headed, and how to start a real conversation.",
     beats: ["Update your headline.", "Add what you are looking for.", "Make your goal specific enough to answer."],
     cta: "Tighten your profile so your next intro has context.",
@@ -933,7 +924,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Community",
     title: "Join The fear. Group",
-    hook: "Every member starts in the official fear. group so no one enters alone.",
     feature: "The fear. group is where product updates, prompts, feature drops, and community announcements live inside the app.",
     beats: ["Read the latest announcement.", "React to the prompt.", "Bring one person into the conversation."],
     cta: "Open Groups and check the official fear. room today.",
@@ -942,7 +932,6 @@ const DAILY_REEL_TEMPLATES = [
     tag: "DMs",
     title: "Send The First DM",
     quote: "The right conversation can change your week faster than another hour of overthinking.",
-    hook: "A short direct message is often the fastest bridge between interest and motion.",
     feature: "fear.social DMs are there for warm intros, follow-ups, mentor asks, opportunity questions, and honest first outreach.",
     beats: ["Open one profile you respect.", "Send one clear sentence.", "Ask for the smallest useful next response."],
     cta: "Send the message before you rewrite it into silence.",
@@ -950,7 +939,6 @@ const DAILY_REEL_TEMPLATES = [
   {
     tag: "Updates",
     title: "What fear.social Is Posting For",
-    hook: "The official account should do more than advertise features. It should help members move.",
     feature: "That means a mix of product updates, prompts, quotes, group nudges, profile tips, opportunity reminders, and first-step momentum inside the app.",
     beats: ["Check what landed today.", "Use one feature right away.", "Come back tomorrow for a different angle."],
     cta: "Follow @fear.social for daily momentum, not just announcements.",
@@ -967,8 +955,6 @@ const officialReelContent = (dateKey) => {
       `Daily fear.social Reel: ${reel.title}`,
       "",
       ...(reel.quote ? [`Quote: ${reel.quote}`, ""] : []),
-      `Hook: ${reel.hook}`,
-      "",
       `Why fear.social: ${reel.feature}`,
       "",
       "Reel beats:",

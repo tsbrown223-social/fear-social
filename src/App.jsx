@@ -499,6 +499,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-pricing .pricing-feature-list>div:nth-child(n+5){display:none!important;}
   .landing-pricing .pricing-feature-list span:last-child{font-size:13px!important;line-height:1.35!important;}
   .landing-pricing .pricing-price-row{margin-bottom:4px!important;}
+  .landing-agency>div{grid-template-columns:1fr!important;text-align:center!important;gap:18px!important;}
+  .landing-agency p{margin-left:auto!important;margin-right:auto!important;}
+  .landing-agency button{width:100%!important;max-width:260px!important;margin:0 auto!important;}
   .landing-footer{padding:24px 16px calc(28px + env(safe-area-inset-bottom))!important;gap:12px!important;justify-content:center!important;text-align:center!important;}
   .cookie-notice{left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;}
   .cookie-card{max-width:none!important;border-radius:18px!important;}
@@ -850,7 +853,7 @@ const GROUPS=[{
 }];
 const INITIAL_MESSAGES=[];
 
-function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
+function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode,forceVisible=false}){
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{
     const h=()=>setScrolled(window.scrollY>(window.innerHeight||720)*0.72);
@@ -862,10 +865,11 @@ function Navbar({setScreen,notify,onOpenPanel,themeMode,setThemeMode}){
       window.removeEventListener("resize",h);
     };
   },[]);
-  const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Join","cta"]];
+  const visible=forceVisible||scrolled;
+  const links=[["Product","platform"],["Proof","activity"],["Pricing","pricing"],["Agency","agency"],["Join","cta"]];
   return(
-    <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none",opacity:scrolled?1:0,transform:scrolled?"translateY(0)":"translateY(-16px)",transition:"opacity .35s ease, transform .35s ease"}}>
-      <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:scrolled?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:scrolled?"auto":"none"}}>
+    <div className="landing-nav" style={{position:"fixed",top:18,left:0,right:0,zIndex:100,padding:"0 32px",display:"flex",justifyContent:"center",pointerEvents:"none",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(-16px)",transition:"opacity .35s ease, transform .35s ease"}}>
+      <div style={{width:"min(1120px,100%)",height:58,borderRadius:999,background:visible?"rgba(255,255,255,0.94)":"rgba(255,255,255,0.86)",backdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.22)",boxShadow:"0 24px 70px rgba(0,0,0,0.22)",display:"flex",alignItems:"center",padding:"0 10px 0 22px",transition:"all 0.3s",pointerEvents:visible?"auto":"none"}}>
       <div style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:21,color:"#050506",letterSpacing:0,flex:1}}>fear<span style={{color:C.accent}}>.</span>social</div>
       <div className="landing-nav-links" style={{display:"flex",gap:2,marginRight:14}}>
         {links.map(([label,id])=>(
@@ -1373,6 +1377,19 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
+      <div id="agency" className="landing-agency landing-section" style={{background:"#050506",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"-20% -10% auto",height:420,background:"radial-gradient(circle at 50% 50%, rgba(22,199,78,.15), transparent 62%)",pointerEvents:"none"}}/>
+        <div style={{maxWidth:940,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:28,alignItems:"center"}}>
+          <div>
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(22,199,78,.28)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"8px 12px",fontSize:12,fontWeight:950,letterSpacing:.2,color:C.accent,marginBottom:18}}>
+              <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming soon
+            </div>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,6vw,82px)",lineHeight:.95,letterSpacing:0,color:"#fff",marginBottom:18}}>fear<span style={{color:C.accent}}>.</span>agency</h2>
+            <p style={{fontSize:17,lineHeight:1.75,color:"rgba(255,255,255,.58)",maxWidth:640}}>A future space inside fear for people building a personal brand, growing their own following, and showing the world what they are becoming.</p>
+          </div>
+          <button onClick={()=>setScreen("agency")} className="bs" style={{background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"14px 20px",fontSize:14,fontWeight:950,whiteSpace:"nowrap"}}>Preview page</button>
+        </div>
+      </div>
       <div id="cta" className="landing-cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
         <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:18,position:"relative"}}>Community</div>
         <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,5.2vw,84px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:0.98,marginBottom:24,position:"relative"}}>Your future can start<br/>before you feel ready.</h2>
@@ -1386,12 +1403,32 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{fontFamily:"Georgia,serif",fontWeight:700,fontSize:18,color:"#fff"}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></div>
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · The first leap into the future you want.</div>
         <div style={{display:"flex",gap:20}}>
+          <button onClick={()=>setScreen("agency")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">fear.agency</button>
           <button onClick={()=>onOpenPanel("privacy")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Privacy</button>
           <button onClick={()=>onOpenPanel("accessibility")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Accessibility</button>
           <button onClick={()=>notify("Contact: contact@fear.social","info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Contact</button>
         </div>
       </div>
     </div>
+  );
+}
+
+function AgencyComingSoonPage({setScreen}){
+  return (
+    <main style={{minHeight:"100dvh",background:"radial-gradient(circle at 50% 8%, rgba(22,199,78,.18), transparent 38%), #050506",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:"120px 18px 48px",position:"relative",overflow:"hidden"}}>
+      <div className="landing-cursor" style={{left:"50%",top:"20%",position:"absolute",opacity:.65}}/>
+      <section style={{width:"min(860px,100%)",textAlign:"center",position:"relative",zIndex:1}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:9,border:"1px solid rgba(22,199,78,.3)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"9px 14px",fontSize:12,fontWeight:950,letterSpacing:.2,color:C.accent,marginBottom:26}}>
+          <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming soon
+        </div>
+        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(58px,13vw,132px)",lineHeight:.88,letterSpacing:0,marginBottom:24}}>fear<span style={{color:C.accent}}>.</span>agency</h1>
+        <p style={{fontSize:"clamp(17px,2.1vw,23px)",lineHeight:1.65,color:"rgba(255,255,255,.62)",maxWidth:690,margin:"0 auto 34px"}}>A new layer of fear for people building themselves into brands.</p>
+        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
+          <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Join fear.social</button>
+          <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Back to fear.social</button>
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -2463,7 +2500,6 @@ function OfficialReelCard({post}){
   const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
   const title=lines.find(line=>line.startsWith("Daily fear.social Reel:"))?.replace("Daily fear.social Reel:","").trim()||"Daily Reel";
   const quote=lines.find(line=>line.startsWith("Quote:"))?.replace("Quote:","").trim()||"";
-  const hook=lines.find(line=>line.startsWith("Hook:"))?.replace("Hook:","").trim()||"Take the next step before you feel ready.";
   const feature=lines.find(line=>line.startsWith("Why fear.social:"))?.replace("Why fear.social:","").trim()||"fear.social helps you turn first-step ambition into visible momentum.";
   const cta=lines.find(line=>line.startsWith("CTA:"))?.replace("CTA:","").trim()||"Open fear.social and make your next move.";
   return <div aria-label={`Official fear.social Reel: ${title}`} style={{marginTop:14,borderRadius:22,overflow:"hidden",background:GR2,border:`1px solid ${C.aSoft}`,boxShadow:"0 24px 60px rgba(22,199,78,0.14)"}}>
@@ -2477,7 +2513,6 @@ function OfficialReelCard({post}){
         <div style={{fontSize:13,fontWeight:950,letterSpacing:1.6,textTransform:"uppercase",color:C.accent}}>Official prompt</div>
         <div style={{fontFamily:"Georgia,serif",fontSize:"clamp(34px,7vw,58px)",lineHeight:1.02,fontWeight:900,letterSpacing:0}}>{title}</div>
         {quote&&<div style={{padding:"16px 18px",borderRadius:20,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.14)",fontFamily:"Georgia,serif",fontSize:24,lineHeight:1.28,color:"#fff"}}>"{quote}"</div>}
-        <p style={{fontSize:18,lineHeight:1.45,color:"rgba(255,255,255,.78)",maxWidth:470}}>{hook}</p>
         <p style={{fontSize:14,lineHeight:1.55,color:"rgba(255,255,255,.62)",maxWidth:500}}>{feature}</p>
       </div>
       <div style={{position:"relative",zIndex:1,display:"grid",gap:12}}>
@@ -2830,7 +2865,7 @@ export default function App(){
     window.addEventListener("hashchange",onHashChange);
     return()=>window.removeEventListener("hashchange",onHashChange);
   },[]);
-  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":"landing";
+  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":routeHash.startsWith("#agency")?"agency":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
     if(initialScreen!==screenState) setScreenState(initialScreen);
@@ -2847,7 +2882,7 @@ export default function App(){
   const setScreen=useCallback((next)=>{
     setScreenState(next);
     window.scrollTo({top:0,left:0,behavior:"auto"});
-    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":"";
+    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="agency"?"#agency":"";
     if(nextHash){
       window.history.replaceState(null,"",nextHash);
       setRouteHash(nextHash);
@@ -2869,7 +2904,7 @@ export default function App(){
   useEffect(()=>{
     const bg=screen==="app"
       ? (themeMode==="light"?C.bg:"#050506")
-      : screen==="landing"
+      : (screen==="landing"||screen==="agency")
         ? (themeMode==="light"?"#F7F8FA":"#050506")
         : C.dark;
     document.documentElement.style.background=bg;
@@ -2881,8 +2916,9 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode}/>}
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} themeMode={themeMode} setThemeMode={setThemeMode} forceVisible={screen==="agency"}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
+        {screen==="agency"&&<AgencyComingSoonPage setScreen={setScreen}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} themeMode={themeMode} setThemeMode={setThemeMode}/>}
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
