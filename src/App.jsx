@@ -1840,6 +1840,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
   const [composer,setComposer]=useState("");
   const [composerMedia,setComposerMedia]=useState([]);
   const [cameraOpen,setCameraOpen]=useState(false);
+  const [postRulesOpen,setPostRulesOpen]=useState(false);
   const [postType,setPostType]=useState("Update");
   const [commentInputs,setCommentInputs]=useState({});
   const [openComments,setOpenComments]=useState({});
@@ -2092,11 +2093,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     notify(item.kind==="video"?"Video captured":"Photo captured");
     setCameraOpen(false);
   };
-  const publish=async()=>{
+  const publish=async({confirmed=false}={})=>{
     const media=composerMedia.filter(item=>safeMediaUrl(item.url,item.kind));
     if(!composer.trim()&&media.length===0)return notify("Write something or attach media before publishing","error");
     const issue=moderationIssue(composer);
     if(issue)return notify(`This post was blocked by the safety filter for ${issue}. Edit it before publishing.`,"error");
+    if(!confirmed){
+      setPostRulesOpen(true);
+      return;
+    }
+    setPostRulesOpen(false);
     const optimistic={
       id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",verified:isVerifiedIdentity(profile),
       tag:profile.industry||"Exploring",
@@ -2483,7 +2489,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
                 {[["forYou","For You","Ranked for your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
               </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
-                <div style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:12,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={15} color="currentColor"/> Posts must follow the community rules. Abusive, hateful, explicit, threatening, or harassing content may be filtered, reported, removed, or banned.</div>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                   <Av i={initials} src={profile.avatarUrl} size={44} grad/>
                   <div style={{flex:1}}>
@@ -2558,6 +2563,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
         {mobileTabs.map(([id,label,icon])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} aria-label={id==="notifications"?`${label}, ${unread} unread`:label}><span><Icon name={icon} size={18} color="currentColor" filled={id==="notifications"&&unread>0}/></span>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
       </nav>
       {cameraOpen&&<CameraCaptureModal onClose={()=>setCameraOpen(false)} onCapture={addCapturedMedia} notify={notify}/>}
+      {postRulesOpen&&<PostRulesConfirmModal onClose={()=>setPostRulesOpen(false)} onConfirm={()=>publish({confirmed:true})}/>}
       {editProfile&&(
         <div className="edit-modal" role="dialog" aria-modal="true" aria-label="Edit your profile" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)} onKeyDown={e=>e.key==="Escape"&&setEditProfile(false)}>
           <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
@@ -2739,6 +2745,44 @@ function CameraCaptureModal({onClose,onCapture,notify}){
     </div>
   </div>;
 }
+
+function PostRulesConfirmModal({onClose,onConfirm}){
+  const rules=[
+    "No abusive, hateful, threatening, explicit, or harassing content.",
+    "No doxxing, scams, spam, impersonation, or private information.",
+    "Posts can be filtered, reported, removed, or lead to account limits."
+  ];
+  return (
+    <ModalShell title="Ready to post?" eyebrow="Community safety" onClose={onClose}>
+      <div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:18,padding:18,marginBottom:18}}>
+        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+          <span style={{width:38,height:38,borderRadius:"50%",background:C.accent,color:"#fff",display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 14px 36px rgba(22,199,78,.24)"}}>
+            <Icon name="check" size={19} color="currentColor"/>
+          </span>
+          <div>
+            <b style={{display:"block",fontSize:17,color:C.text,marginBottom:6}}>Keep fear.social useful and safe.</b>
+            <p style={{fontSize:14,color:C.tSoft,lineHeight:1.65}}>
+              Before this goes live, confirm that it follows the community rules and is something people can safely learn from, respond to, or build on.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"grid",gap:10,marginBottom:22}}>
+        {rules.map(rule=>(
+          <div key={rule} style={{display:"flex",gap:10,alignItems:"flex-start",fontSize:13,color:C.muted,lineHeight:1.55}}>
+            <Icon name="check" size={16} color={C.accent} style={{marginTop:2}}/>
+            <span>{rule}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end",flexWrap:"wrap"}}>
+        <GhostBtn onClick={onClose} style={{borderColor:C.border,color:C.text}}>Keep editing</GhostBtn>
+        <GBtn onClick={onConfirm}>Post now</GBtn>
+      </div>
+    </ModalShell>
+  );
+}
+
 function OfficialReelCard({post}){
   if(post?.type!=="Reel"||post?.handle!=="@fear.social")return null;
   const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
