@@ -66,6 +66,7 @@ const FEAR_GROUP_ID = "fear-official";
 const OFFICIAL_USER_ID = "fear-social-official";
 const OFFICIAL_AVATAR_URL = "https://fear.social/fear-official-avatar.png";
 const TAYLOR_USER_ID = "user_5c1278eb-8894-4f13-9dfa-9847f26ac0dc";
+const E2EE_MESSAGE_PREFIX = "__fear_e2ee_v1__:";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
 const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
@@ -121,6 +122,34 @@ const cleanText = (value, max = 120) =>
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .trim()
     .slice(0, max);
+
+function normalizeE2EEPublicKey(value) {
+  const key = value && typeof value === "object" ? value : {};
+  const x = cleanText(key.x || "", 120);
+  const y = cleanText(key.y || "", 120);
+  if (key.kty !== "EC" || key.crv !== "P-256" || !x || !y) return "";
+  if (!/^[A-Za-z0-9_-]{20,120}$/.test(x) || !/^[A-Za-z0-9_-]{20,120}$/.test(y)) return "";
+  return JSON.stringify({ kty: "EC", crv: "P-256", x, y, ext: true });
+}
+
+function normalizeE2EEPayload(value) {
+  const payload = value && typeof value === "object" ? value : {};
+  const iv = cleanText(payload.iv || "", 80);
+  const ct = cleanText(payload.ct || "", 5000);
+  const senderKey = normalizeE2EEPublicKey(payload.senderKey);
+  const recipientKey = normalizeE2EEPublicKey(payload.recipientKey);
+  if (Number(payload.v) !== 1 || payload.alg !== "ECDH-P256+A256GCM" || !iv || !ct || !senderKey) return "";
+  if (!/^[A-Za-z0-9+/=_-]{12,80}$/.test(iv) || !/^[A-Za-z0-9+/=_-]{12,5000}$/.test(ct)) return "";
+  return `${E2EE_MESSAGE_PREFIX}${JSON.stringify({ v: 1, alg: "ECDH-P256+A256GCM", iv, ct, senderKey: JSON.parse(senderKey), recipientKey: recipientKey ? JSON.parse(recipientKey) : null })}`;
+}
+
+function parseStoredE2EEPublicKey(value) {
+  try {
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+}
 
 const isVerifiedAccount = (user = {}) =>
   Boolean(user.verified || user.verified_badge) ||
@@ -467,6 +496,7 @@ const publicProfile = (user = {}) => {
     website: profile.website,
     lookingFor: profile.lookingFor,
     goal: profile.goal,
+    e2eePublicKey: parseStoredE2EEPublicKey(user.e2ee_public_key),
     verified: isVerifiedAccount(user),
   };
 };
@@ -1387,7 +1417,7 @@ async function getBootstrap(db, user) {
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url, u.verified_badge,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url, u.verified_badge, u.e2ee_public_key,
           u.headline, u.website, u.looking_for, u.goal,
           0 AS mutual,
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
@@ -1423,7 +1453,7 @@ async function getBootstrap(db, user) {
       .all(),
     db
       .prepare(
-        `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle,
+        `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle, other.e2ee_public_key AS other_e2ee_public_key,
           other.avatar_url AS other_avatar_url, other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
          FROM conversations c
          LEFT JOIN users other ON other.id = CASE
@@ -1476,6 +1506,7 @@ async function getBootstrap(db, user) {
       website: person.website || "",
       lookingFor: person.looking_for || "",
       goal: person.goal || "",
+      e2eePublicKey: parseStoredE2EEPublicKey(person.e2ee_public_key),
       verified: isVerifiedAccount(person),
       online: Boolean(person.online),
       connected: Boolean(person.connected),
@@ -1496,6 +1527,7 @@ async function getBootstrap(db, user) {
       handle: conversation.other_handle || "",
       av: initials(conversation.other_name || conversation.name || conversation.av),
       avatarUrl: conversation.other_avatar_url || "",
+      e2eePublicKey: parseStoredE2EEPublicKey(conversation.other_e2ee_public_key),
       verified: isVerifiedAccount({ name: conversation.other_name || conversation.name, handle: conversation.other_handle, verified_badge: conversation.other_verified_badge }),
       online: Boolean(conversation.online),
       thread: messageGroups.get(conversation.id) || [],
@@ -2109,6 +2141,15 @@ async function handleRequest({ request, env, params }) {
     );
   }
 
+  if (method === "POST" && path === "/account/e2ee-key") {
+    const limited = await enforceRateLimit(db, request, "account-e2ee-key", 10, 600);
+    if (limited) return limited;
+    const publicKey = normalizeE2EEPublicKey(body.publicKey);
+    if (!publicKey) return json({ error: "Valid P-256 public key required" }, { status: 400 });
+    await db.prepare("UPDATE users SET e2ee_public_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(publicKey, user.id).run();
+    return json({ ok: true, profile: await profileWithFollowerCount(db, { ...user, e2ee_public_key: publicKey }) });
+  }
+
   if (method === "GET" && path === "/notifications") {
     const rows = await db
       .prepare(
@@ -2448,7 +2489,8 @@ async function handleRequest({ request, env, params }) {
     const limited = await enforceRateLimit(db, request, "people-message", 30, 600);
     if (limited) return limited;
     const targetUserId = segments[1];
-    const text = cleanText(body.text || "", 800);
+    const encryptedText = normalizeE2EEPayload(body.encryptedPayload);
+    const text = encryptedText || cleanText(body.text || "", 800);
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
     const target = await db.prepare("SELECT id, name FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
     if (!target) return json({ error: "User not found" }, { status: 404 });
@@ -2476,8 +2518,10 @@ async function handleRequest({ request, env, params }) {
       conversation = { id: result?.meta?.last_row_id || created?.id };
     }
     if (text) {
-      const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
-      if (messageSafety) return messageSafety;
+      if (!encryptedText) {
+        const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+        if (messageSafety) return messageSafety;
+      }
       await db
         .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
         .bind(createId("message"), Number(conversation.id), user.id, text)
@@ -2561,10 +2605,13 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && segments[0] === "messages" && segments[2] === "send") {
     const limited = await enforceRateLimit(db, request, "messages-send", 40, 600);
     if (limited) return limited;
-    const text = cleanText(body.text || "", 800);
+    const encryptedText = normalizeE2EEPayload(body.encryptedPayload);
+    const text = encryptedText || cleanText(body.text || "", 800);
     if (!text) return json({ error: "Message text required" }, { status: 400 });
-    const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
-    if (messageSafety) return messageSafety;
+    if (!encryptedText) {
+      const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+      if (messageSafety) return messageSafety;
+    }
     const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
     if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
     if (!conversation.user_a_id || !conversation.user_b_id || (conversation.user_a_id !== user.id && conversation.user_b_id !== user.id)) {

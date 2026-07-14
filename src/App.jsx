@@ -807,6 +807,65 @@ async function api(path,options={}){
   return data;
 }
 
+const E2EE_PREFIX="__fear_e2ee_v1__:";
+const bytesToBase64=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes)));
+const base64ToBytes=value=>Uint8Array.from(atob(String(value||"")),char=>char.charCodeAt(0));
+const e2eePrivateKeyName=userId=>`fear-e2ee-private-${userId}`;
+const e2eePublicKeyName=userId=>`fear-e2ee-public-${userId}`;
+const parseE2EEPayload=value=>{
+  const raw=String(value||"");
+  if(!raw.startsWith(E2EE_PREFIX))return null;
+  try{return JSON.parse(raw.slice(E2EE_PREFIX.length));}catch{return null;}
+};
+async function ensureE2EEIdentity(userId){
+  if(!userId||!crypto?.subtle)return null;
+  const privateName=e2eePrivateKeyName(userId);
+  const publicName=e2eePublicKeyName(userId);
+  let privateJwk=null;
+  let publicJwk=null;
+  try{
+    privateJwk=JSON.parse(localStorage.getItem(privateName)||"null");
+    publicJwk=JSON.parse(localStorage.getItem(publicName)||"null");
+  }catch{}
+  if(privateJwk?.kty==="EC"&&publicJwk?.kty==="EC")return {privateJwk,publicKey:publicJwk};
+  const pair=await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},true,["deriveKey"]);
+  privateJwk=await crypto.subtle.exportKey("jwk",pair.privateKey);
+  publicJwk=await crypto.subtle.exportKey("jwk",pair.publicKey);
+  try{
+    localStorage.setItem(privateName,JSON.stringify(privateJwk));
+    localStorage.setItem(publicName,JSON.stringify(publicJwk));
+  }catch{}
+  return {privateJwk,publicKey:publicJwk};
+}
+async function deriveE2EEKey(privateJwk,otherPublicJwk){
+  const privateKey=await crypto.subtle.importKey("jwk",privateJwk,{name:"ECDH",namedCurve:"P-256"},false,["deriveKey"]);
+  const publicKey=await crypto.subtle.importKey("jwk",otherPublicJwk,{name:"ECDH",namedCurve:"P-256"},false,[]);
+  return crypto.subtle.deriveKey({name:"ECDH",public:publicKey},privateKey,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function encryptE2EEMessage(userId,recipientPublicKey,text){
+  const identity=await ensureE2EEIdentity(userId);
+  if(!identity?.privateJwk||!recipientPublicKey)return null;
+  const key=await deriveE2EEKey(identity.privateJwk,recipientPublicKey);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(text));
+  return {v:1,alg:"ECDH-P256+A256GCM",iv:bytesToBase64(iv),ct:bytesToBase64(ct),senderKey:identity.publicKey,recipientKey:recipientPublicKey};
+}
+async function decryptE2EEMessage(userId,msg,thread){
+  const payload=parseE2EEPayload(typeof msg==="string"?msg:msg?.text);
+  if(!payload)return typeof msg==="string"?msg:String(msg?.text||"");
+  const mine=(typeof msg==="object"&&msg?.author==="you");
+  const identity=await ensureE2EEIdentity(userId);
+  const otherPublicKey=mine?(payload.recipientKey||thread?.e2eePublicKey):payload.senderKey;
+  if(!identity?.privateJwk||!otherPublicKey)return "Encrypted message unavailable on this device";
+  try{
+    const key=await deriveE2EEKey(identity.privateJwk,otherPublicKey);
+    const decrypted=await crypto.subtle.decrypt({name:"AES-GCM",iv:base64ToBytes(payload.iv)},key,base64ToBytes(payload.ct));
+    return new TextDecoder().decode(decrypted);
+  }catch{
+    return "Encrypted message unavailable on this device";
+  }
+}
+
 const ToastCtx=({toasts,remove})=>(
   <div className="toast-stack" role="status" aria-live="polite" aria-atomic="true" style={{position:"fixed",top:20,right:20,zIndex:9999,display:"flex",flexDirection:"column",gap:10}}>
     {toasts.map(t=>(
@@ -1803,6 +1862,15 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>notify("Offline mode: changes are saved in this browser","info"));
     return()=>{active=false;};
   },[applyBackendState,notify]);
+  useEffect(()=>{
+    if(!profile.id||!crypto?.subtle)return;
+    let active=true;
+    ensureE2EEIdentity(profile.id)
+      .then(identity=>identity?.publicKey?api("/account/e2ee-key",{method:"POST",body:JSON.stringify({publicKey:identity.publicKey})}):null)
+      .then(data=>{if(active&&data)applyBackendState(data);})
+      .catch(()=>notify("E2EE setup is not available in this browser yet.","error"));
+    return()=>{active=false;};
+  },[applyBackendState,notify,profile.id]);
   const deleteAccount=async()=>{
     const first=window.confirm("Delete your fear.social account? This removes your profile, posts, messages, follows, groups, media, and sessions. This cannot be undone.");
     if(!first)return;
@@ -2202,14 +2270,18 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     if(!text)return;
     const issue=moderationIssue(text);
     if(issue)return notify(`This message was blocked by the safety filter for ${issue}. Edit it before sending.`,"error");
+    let encryptedPayload=null;
+    try{
+      encryptedPayload=thread?.e2eePublicKey?await encryptE2EEMessage(profile.id,thread.e2eePublicKey,text):null;
+    }catch{}
     const optimisticId=`local-message-${Date.now()}`;
     setMessages(ms=>ms.map(m=>{
       if(m.id!==id||!m.draft.trim())return m;
-      notify(`Message sent to ${m.name}`);
+      notify(encryptedPayload?`Encrypted message sent to ${m.name}`:`Message sent to ${m.name}`);
       return {...m,thread:[...m.thread,{id:optimisticId,text:m.draft.trim(),author:"you",time:"Just now"}],draft:""};
     }));
     try{
-      const data=await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});
+      const data=await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify(encryptedPayload?{encryptedPayload}:{text})});
       setActiveConversationId(id);
       if(data.messages)setMessages(data.messages.map(message=>message.id===id?{...message,draft:""}:message));
     }catch(err){
@@ -2457,7 +2529,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
         {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
-        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent}/>}
+        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
@@ -2824,7 +2896,7 @@ function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
   return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
-function MessagesView({messages,setMessages,sendMessage,activeConversationId,onBlockUser,onReport}){
+function MessagesView({messages,setMessages,sendMessage,activeConversationId,onBlockUser,onReport,profileId}){
   const messageInitials=name=>String(name||"Conversation").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"DM";
   const safeMessages=(Array.isArray(messages)?messages:[]).map((message,index)=>{
     const source=message&&typeof message==="object"?message:{};
@@ -2836,22 +2908,47 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId,onB
       avatarUrl:source.avatarUrl||"",
       online:Boolean(source.online),
       handle:source.handle||"",
+      e2eePublicKey:source.e2eePublicKey||null,
       thread:Array.isArray(source.thread)?source.thread.filter(Boolean):[],
       draft:source.draft||"",
     };
   });
   const [active,setActive]=useState(safeMessages[0]?.id);
+  const [decrypted,setDecrypted]=useState({});
   useEffect(()=>{if(activeConversationId&&safeMessages.some(m=>m.id===activeConversationId))setActive(activeConversationId);},[activeConversationId,messages]);
   useEffect(()=>{if(!safeMessages.some(m=>m.id===active))setActive(safeMessages[0]?.id);},[active,messages]);
+  useEffect(()=>{
+    if(!profileId)return;
+    let cancelled=false;
+    (async()=>{
+      const next={};
+      for(const thread of safeMessages){
+        for(let i=0;i<thread.thread.length;i+=1){
+          const msg=thread.thread[i];
+          const raw=typeof msg==="string"?msg:msg?.text;
+          if(!parseE2EEPayload(raw))continue;
+          const key=typeof msg==="string"?`${thread.id}-${i}`:msg.id||`${thread.id}-${i}`;
+          next[key]=await decryptE2EEMessage(profileId,msg,thread);
+        }
+      }
+      if(!cancelled)setDecrypted(current=>({...current,...next}));
+    })();
+    return()=>{cancelled=true;};
+  },[messages,profileId]);
   const thread=safeMessages.find(m=>m.id===active)||safeMessages[0];
-  const messageText=msg=>typeof msg==="string"?msg:String(msg?.text||"");
+  const messageKey=(msg,threadId,i)=>typeof msg==="string"?`${threadId}-${i}`:msg.id||`${threadId}-${i}`;
+  const messageText=(msg,threadId="",i=0)=>{
+    const raw=typeof msg==="string"?msg:String(msg?.text||"");
+    if(parseE2EEPayload(raw))return decrypted[messageKey(msg,threadId,i)]||"Decrypting encrypted message...";
+    return raw;
+  };
   const messageAuthor=msg=>typeof msg==="string"?"them":msg?.author||"them";
   if(safeMessages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
   return (
     <div className="directory-wrap">
       <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div>
       <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:12,color:C.text}}>Direct messages</h1>
-      <div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>Messages are stored to deliver conversations and support safety review. They are protected in transit, but fear.social does not currently offer end-to-end encrypted DMs.</div>
+      <div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>New DMs use browser-based end-to-end encryption when both people have generated message keys. Private keys stay on each user's device, so older messages may be unavailable on a new browser.</div>
       <div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}>
         <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
           {safeMessages.map(m=>(
@@ -2859,7 +2956,7 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId,onB
               <Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/>
               <div style={{minWidth:0}}>
                 <div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
-                <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1])||"Start the conversation"}</div>
+                <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1],m.id,(m.thread.length||1)-1)||"Start the conversation"}</div>
               </div>
             </button>
           ))}
@@ -2881,10 +2978,10 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId,onB
               {thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}
               {thread.thread.map((msg,i)=>{
                 const mine=messageAuthor(msg)==="you";
-                const messageId=typeof msg==="string"?`${thread.id}-${i}`:msg.id||`${thread.id}-${i}`;
+                const messageId=messageKey(msg,thread.id,i);
                 return (
                   <div key={messageId} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
-                    <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere"}}>{messageText(msg)}</div>
+                    <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere"}}>{messageText(msg,thread.id,i)}</div>
                     <button onClick={()=>onReport?.("message",messageId,"message")} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Report</button>
                   </div>
                 );
@@ -3057,7 +3154,7 @@ function TermsConditionsPanel({onClose}){
       {section("User Content and License","You keep ownership of content you post, upload, message, or submit, including text, profile details, photos, videos, comments, opportunities, group announcements, and direct messages. You grant fear.social a worldwide, non-exclusive, royalty-free, sublicensable license to host, store, reproduce, display, process, transmit, adapt for formatting, and distribute that content as needed to operate, improve, protect, and promote the service. You represent that you have the rights needed to share your content and that your content does not violate another person's privacy, publicity, copyright, trademark, or other rights.")}
       {section("Platform Intellectual Property","fear.social owns the platform code, product design, software, interface, databases, workflows, copy, branding, logos, trade dress, and other platform materials except user content and third-party materials. The fear.social name, logo, and marks should be protected through trademark filings and brand usage controls. You may not copy, modify, reverse engineer, sell, scrape, frame, or present fear.social platform materials, branding, or code as your own without written permission.")}
       {section("Copyright, Trademark, and IP Complaints","If you believe content on fear.social infringes your copyright, trademark, privacy, publicity, or other rights, contact contact@fear.social with the specific URL or content, your contact information, proof of rights, and a statement explaining the issue. For copyright notices, include enough information for us to identify the copyrighted work and the allegedly infringing material, a good-faith statement, an accuracy statement, and your physical or electronic signature. We may remove or restrict disputed content, notify the user, preserve records, terminate repeat infringers, or request more information before acting.")}
-      {section("Direct Messages and Communications","Direct messages are part of the service and are stored so conversations can be delivered, synced, searched where available, supported, and reviewed when needed for safety, abuse prevention, legal compliance, support, or platform operations. Conversation participants can see the messages in their own conversations. Authorized fear.social operators or service providers may access message records only when needed for safety, abuse reports, legal compliance, debugging, security, support, or platform operations. Direct messages are not currently end-to-end encrypted. Do not use messages for harassment, spam, scams, unlawful offers, or unwanted solicitation.")}
+      {section("Direct Messages and Communications","Direct messages are part of the service and are stored so conversations can be delivered and synced. New direct messages use browser-based end-to-end encryption when both participants have generated message keys; encrypted message content is stored as ciphertext and is intended to be readable only by the conversation participants' devices. Some older messages or fallback messages may remain unencrypted, and encrypted messages may be unavailable if a user changes browsers, clears local storage, or loses the device key. Do not use messages for harassment, spam, scams, unlawful offers, or unwanted solicitation.")}
       {section("Community Conduct","Do not harass, threaten, exploit, spam, deceive, discriminate against, or abuse other users. Do not post or send content that is hateful, sexually exploitative, pornographic, violent, illegal, invasive of privacy, infringing, defamatory, malicious, fraudulent, predatory, or designed to manipulate users or the platform. Do not post another person's private information, intimate imagery, financial information, credentials, or content involving minors in an unsafe or exploitative way.")}
       {section("Prohibited Uses and Content","You may not scrape the service, attack the infrastructure, bypass security, upload malware, reverse engineer non-public systems, automate abusive activity, interfere with other users, misrepresent business opportunities, or use fear.social for unlawful, fraudulent, exploitative, abusive, hateful, threatening, sexually explicit, harassing, spammy, or harmful purposes. Content that targets protected classes, encourages self-harm, threatens violence, sexually exploits anyone, doxxes users, impersonates others, or attempts to evade moderation may be removed and may result in account limits or bans.")}
       {section("Security Testing and Reports","If you believe you found a vulnerability, report it to contact@fear.social with steps to reproduce, affected URLs, timestamps, and any request IDs. Do not access other users' data, run denial-of-service testing, spam the service, or publicly disclose an issue before we have had a reasonable chance to investigate and fix it.")}
@@ -3092,14 +3189,14 @@ function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
       {section("Information We Collect","When someone signs up, joins the waitlist, posts, comments, messages, follows users, joins groups, posts opportunities, uploads photos or videos, records camera media, RSVPs, requests mentors, or edits a profile, fear.social may collect the information they provide. This can include name, username, email address, password hash, profile details, location text, industry, bio, website links, photos, videos, post text, comments, direct messages, group activity, opportunity listings, notifications, support requests, and account activity. We also collect technical and security information such as session tokens, timestamps, device/browser information, IP-derived security signals, cookie/local-storage preferences, and logs needed to keep the service working.")}
       {section("Sensitive Information","fear.social is not designed to collect government IDs, payment card numbers, health records, precise geolocation, biometric identifiers, or sensitive demographic information. Do not post sensitive personal information in profiles, posts, messages, groups, comments, photos, or videos. If future features require sensitive information, we should provide a separate notice and collect only what is necessary.")}
       {section("How We Use Information","We use information to create and secure accounts, verify email addresses, operate profiles, feeds, posts, media, messages, groups, notifications, opportunities, and search, personalize rankings and recommendations, send requested registration and waitlist notices, prevent spam and abuse, moderate content, investigate reports, improve reliability, respond to user requests, comply with law, and protect users and the platform.")}
-      {section("Direct Messages: Storage, Visibility, and Review","Direct messages are stored in fear.social systems so conversations can be delivered, synced between sessions, displayed to conversation participants, supported, investigated when reported, and protected from abuse. Message content is visible to the sender and recipient participants in that conversation. Authorized fear.social operators and infrastructure/service providers may access message records only when needed for safety review, abuse reports, legal compliance, security, debugging, support, or platform operations. Direct messages are not public, but they should not be treated as end-to-end encrypted or unreadable by the platform.")}
+      {section("Direct Messages: Storage, Visibility, and Review","Direct messages are stored in fear.social systems so conversations can be delivered and displayed to conversation participants. New DMs use browser-based end-to-end encryption when both participants have generated keys; in that case, fear.social stores encrypted ciphertext rather than readable message text. Older messages, fallback messages sent before keys are available, and message metadata such as participants, timestamps, reports, and delivery records may still be processed by the platform. Reports can identify the message or chat thread for moderation, but encrypted content may not be readable by fear.social unless a participant provides it.")}
       {section("Photos, Videos, and Camera Capture","If you upload media or use the in-app camera, your browser may request camera and microphone permission. Captured photos and videos are attached to your post only after you choose to capture and publish them. Media may be stored and displayed in the app as part of your post, profile, message, or other feature. You can delete posts where available or request account deletion by contacting contact@fear.social.")}
       {section("California Privacy Rights","California residents may have rights to know what personal information is collected, access specific pieces of information, delete personal information, correct inaccurate information, opt out of sale or sharing, limit certain uses of sensitive personal information, and avoid discrimination for exercising privacy rights. fear.social does not currently sell personal information or share it for cross-context behavioral advertising. To exercise privacy rights, email contact@fear.social with the request and enough information to verify your account. Some deletion requests may be limited by legal, security, fraud-prevention, backup, dispute, or operational exceptions.")}
       {section("How Users Can Delete or Correct Data","Users can edit profile information in the app, delete their own posts where the feature is available, and delete their account from their profile danger zone. Users can also request access, correction, export, or deletion help by contacting contact@fear.social. We may need to verify identity before fulfilling access, correction, or deletion requests. If an account is deleted, profile content, posts, messages, follows, group membership, media, and active sessions are removed where feasible, but some records may be retained for security, legal compliance, abuse prevention, backups, dispute resolution, or audit purposes.")}
       {section("Cookies and Local Storage","fear.social uses essential local storage and cookies for sign-in state, session continuity, cookie preference storage, accessibility preferences, theme settings, and basic app functionality. Optional analytics or marketing cookies should remain off unless those services are added and consent is collected where required. Browser settings may let you clear local storage, but doing so may sign you out or reset preferences.")}
       {section("Sharing and Processors","Information may be processed by infrastructure and service providers used to run the site, including Cloudflare services for hosting, database, serverless functions, security, and delivery, and email providers used for verification or transactional messages. We may disclose information if required by law, to enforce Terms, to investigate abuse or security issues, to respond to user requests, to protect users or the public, or as part of a merger, acquisition, financing, or business transfer with appropriate protections.")}
       {section("Public Content and Other Users","Profiles, posts, comments, groups, opportunities, follower activity, and other social features may be visible to other users or the public depending on product settings. Direct messages are intended for the conversation participants but may be stored and reviewed when needed for safety, support, abuse prevention, or legal compliance. Do not share information you are not comfortable making available through the service.")}
-      {section("Encryption and Security Standards","fear.social uses HTTPS/TLS for data in transit and relies on Cloudflare-hosted infrastructure, database access controls, security headers, email verification, password hashing, session controls, and restricted browser permissions. fear.social does not currently provide end-to-end encryption for direct messages, posts, profiles, media, or comments. If fear.social later adds true E2EE, the product and policy should be updated, and the company should declare that encryption accurately in App Store Connect and complete any applicable U.S. encryption export compliance steps, which may include an Encryption Registration Number or related filing if required.")}
+      {section("Encryption and Security Standards","fear.social uses HTTPS/TLS for data in transit and relies on Cloudflare-hosted infrastructure, database access controls, security headers, email verification, password hashing, session controls, and restricted browser permissions. New direct messages use browser-generated P-256 ECDH keys and AES-GCM encryption when both participants have keys available; private keys are stored locally in the user's browser and are not intentionally sent to fear.social. Posts, profiles, media, comments, groups, opportunities, notifications, and metadata are not end-to-end encrypted. Because E2EE is now part of DMs, App Store and export-compliance disclosures should accurately declare encryption use and complete any required U.S. encryption export compliance steps, which may include an Encryption Registration Number or related filing if required.")}
       {section("Security and Retention","No internet service can guarantee perfect security, so security is maintained as an ongoing process. We retain information as long as needed to operate the service, provide requested features, maintain records, resolve disputes, prevent abuse, comply with law, and protect users and the platform.")}
       {section("Children and COPPA","fear.social is not directed to children under 13 and does not knowingly collect personal information from children under 13. COPPA imposes requirements on online services directed to children under 13 or services with actual knowledge that they collect personal information from children under 13. If we learn that a child under 13 has provided personal information without required verifiable parental consent, we will take steps to delete it. Parents or guardians can contact contact@fear.social to request removal.")}
       {section("Changes and Contact","We may update this Privacy Policy as the product, law, or data practices change. Material updates may be shown in the app or sent by email. Questions, privacy requests, deletion requests, child privacy concerns, or security reports can be sent to contact@fear.social.")}
