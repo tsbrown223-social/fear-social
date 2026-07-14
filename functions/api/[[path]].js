@@ -138,9 +138,17 @@ function normalizeE2EEPayload(value) {
   const ct = cleanText(payload.ct || "", 5000);
   const senderKey = normalizeE2EEPublicKey(payload.senderKey);
   const recipientKey = normalizeE2EEPublicKey(payload.recipientKey);
+  const self = payload.self && typeof payload.self === "object" ? payload.self : null;
+  const selfIv = self ? cleanText(self.iv || "", 80) : "";
+  const selfCt = self ? cleanText(self.ct || "", 5000) : "";
+  const selfSenderKey = self ? normalizeE2EEPublicKey(self.senderKey) : "";
   if (Number(payload.v) !== 1 || payload.alg !== "ECDH-P256+A256GCM" || !iv || !ct || !senderKey) return "";
   if (!/^[A-Za-z0-9+/=_-]{12,80}$/.test(iv) || !/^[A-Za-z0-9+/=_-]{12,5000}$/.test(ct)) return "";
-  return `${E2EE_MESSAGE_PREFIX}${JSON.stringify({ v: 1, alg: "ECDH-P256+A256GCM", iv, ct, senderKey: JSON.parse(senderKey), recipientKey: recipientKey ? JSON.parse(recipientKey) : null })}`;
+  const normalized = { v: 1, alg: "ECDH-P256+A256GCM", iv, ct, senderKey: JSON.parse(senderKey), recipientKey: recipientKey ? JSON.parse(recipientKey) : null };
+  if (selfIv && selfCt && selfSenderKey && /^[A-Za-z0-9+/=_-]{12,80}$/.test(selfIv) && /^[A-Za-z0-9+/=_-]{12,5000}$/.test(selfCt)) {
+    normalized.self = { iv: selfIv, ct: selfCt, senderKey: JSON.parse(selfSenderKey) };
+  }
+  return `${E2EE_MESSAGE_PREFIX}${JSON.stringify(normalized)}`;
 }
 
 function parseStoredE2EEPublicKey(value) {
