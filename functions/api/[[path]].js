@@ -65,6 +65,7 @@ const TERMS_VERSION = "2026-07-13-safety";
 const FEAR_GROUP_ID = "fear-official";
 const OFFICIAL_USER_ID = "fear-social-official";
 const OFFICIAL_AVATAR_URL = "https://fear.social/fear-official-avatar.png";
+const TAYLOR_USER_ID = "user_5c1278eb-8894-4f13-9dfa-9847f26ac0dc";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
 const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
@@ -353,6 +354,15 @@ async function deleteUserAccount(db, userId) {
   await db.prepare("DELETE FROM users WHERE id = ?").bind(userId).run();
 }
 
+async function followDefaultAccounts(db, userId) {
+  if (!userId) return;
+  await safeRun(
+    db,
+    "INSERT OR IGNORE INTO user_connections (user_id, target_user_id) SELECT ?, id FROM users WHERE id = ? AND id <> ?",
+    [userId, TAYLOR_USER_ID, userId]
+  );
+}
+
 async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 300) {
   const bucket = Math.floor(Date.now() / (windowSeconds * 1000));
   const id = `${key}:${getClientKey(request)}:${bucket}`;
@@ -617,6 +627,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
     )
     .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal)
       .run();
+  await followDefaultAccounts(db, id);
   await createSession(db, id, sessionToken, request);
 
   if (profile.email) {
@@ -781,6 +792,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
       handle: finalHandle,
       username: finalHandle.replace(/^@/, ""),
     });
+    await followDefaultAccounts(db, id);
     user = { id, token: sessionToken, name: profile.name || email.split("@")[0], handle: finalHandle, email };
   } else {
     await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
@@ -1699,6 +1711,7 @@ async function handleRequest({ request, env, params }) {
     } catch (err) {
       console.warn("session record failed during signup", err);
     }
+    await followDefaultAccounts(db, id);
     await recordRegistrationEmail(db, "account_created", email, {
       userId: id,
       name: profile.name,
@@ -1801,6 +1814,7 @@ async function handleRequest({ request, env, params }) {
         status: "Account created",
         nextStep: "Your account is ready. You can now log in with your email and password.",
       });
+      await followDefaultAccounts(db, id);
       user = { id, token: sessionToken, ...profile, password_hash: passwordHash, email_verified_at: new Date().toISOString() };
     } else {
       if (passwordHash) {
