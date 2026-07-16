@@ -1435,7 +1435,8 @@ async function getBootstrap(db, user) {
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
           EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
          FROM users u
-         WHERE u.id <> 'demo-user' AND u.id <> ? AND u.email IS NOT NULL AND u.email <> ''
+         WHERE u.id <> 'demo-user' AND u.id <> ?
+           AND (COALESCE(u.email, '') <> '' OR u.password_hash IS NOT NULL OR COALESCE(u.oauth_provider, '') <> '')
            AND COALESCE(u.privacy, 'public') = 'public'
            AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = u.id)
          ORDER BY datetime(u.created_at) DESC`
@@ -2168,6 +2169,14 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const publicKey = normalizeE2EEPublicKey(body.publicKey);
     if (!publicKey) return json({ error: "Valid P-256 public key required" }, { status: 400 });
+    const existingKey = parseStoredE2EEPublicKey(user.e2ee_public_key);
+    if (existingKey && JSON.stringify(existingKey) !== JSON.stringify(publicKey)) {
+      return json({
+        ok: true,
+        deviceKeyMismatch: true,
+        profile: await profileWithFollowerCount(db, user),
+      });
+    }
     await db.prepare("UPDATE users SET e2ee_public_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(publicKey, user.id).run();
     return json({ ok: true, profile: await profileWithFollowerCount(db, { ...user, e2ee_public_key: publicKey }) });
   }
@@ -2518,7 +2527,7 @@ async function handleRequest({ request, env, params }) {
     if (!target) return json({ error: "User not found" }, { status: 404 });
     let conversation = await db
       .prepare(
-        `SELECT id FROM conversations
+        `SELECT id, user_a_id, user_b_id FROM conversations
          WHERE (user_a_id = ? AND user_b_id = ?) OR (user_a_id = ? AND user_b_id = ?)
          LIMIT 1`
       )
