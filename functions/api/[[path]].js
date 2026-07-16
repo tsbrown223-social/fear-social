@@ -1509,7 +1509,8 @@ async function getBootstrap(db, user) {
     const list = messageGroups.get(message.conversation_id) || [];
     list.push({
       id: message.id,
-      text: message.text,
+      text: message.sync_text || message.text,
+      encryptedText: message.sync_text ? message.text : "",
       author: message.user_id === userId ? "you" : message.user_id ? "them" : message.author,
       time: timeAgo(message.created_at),
     });
@@ -2521,7 +2522,8 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const targetUserId = segments[1];
     const encryptedText = normalizeE2EEPayload(body.encryptedPayload);
-    const text = encryptedText || cleanText(body.text || "", 800);
+    const syncText = cleanText(body.syncText || body.text || "", 800);
+    const text = encryptedText || syncText;
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
     const target = await db.prepare("SELECT id, name FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
     if (!target) return json({ error: "User not found" }, { status: 404 });
@@ -2552,13 +2554,13 @@ async function handleRequest({ request, env, params }) {
       await safeRun(db, `UPDATE conversations SET ${column} = NULL WHERE id = ?`, [Number(conversation.id)]);
     }
     if (text) {
-      if (!encryptedText) {
-        const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+      if (syncText) {
+        const messageSafety = await rejectObjectionableContent(db, user.id, "message", syncText);
         if (messageSafety) return messageSafety;
       }
       await db
-        .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
-        .bind(createId("message"), Number(conversation.id), user.id, text)
+        .prepare("INSERT INTO messages (id, conversation_id, user_id, text, sync_text, author) VALUES (?, ?, ?, ?, ?, 'you')")
+        .bind(createId("message"), Number(conversation.id), user.id, text, syncText || (encryptedText ? "" : text))
         .run();
       await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(conversation.id)]);
       await safeRun(
@@ -2640,10 +2642,11 @@ async function handleRequest({ request, env, params }) {
     const limited = await enforceRateLimit(db, request, "messages-send", 40, 600);
     if (limited) return limited;
     const encryptedText = normalizeE2EEPayload(body.encryptedPayload);
-    const text = encryptedText || cleanText(body.text || "", 800);
+    const syncText = cleanText(body.syncText || body.text || "", 800);
+    const text = encryptedText || syncText;
     if (!text) return json({ error: "Message text required" }, { status: 400 });
-    if (!encryptedText) {
-      const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+    if (syncText) {
+      const messageSafety = await rejectObjectionableContent(db, user.id, "message", syncText);
       if (messageSafety) return messageSafety;
     }
     const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(Number(segments[1])).first();
@@ -2652,8 +2655,8 @@ async function handleRequest({ request, env, params }) {
       return json({ error: "Conversation access denied" }, { status: 403 });
     }
     await db
-      .prepare("INSERT INTO messages (id, conversation_id, user_id, text, author) VALUES (?, ?, ?, ?, 'you')")
-      .bind(createId("message"), Number(segments[1]), user.id, text)
+      .prepare("INSERT INTO messages (id, conversation_id, user_id, text, sync_text, author) VALUES (?, ?, ?, ?, ?, 'you')")
+      .bind(createId("message"), Number(segments[1]), user.id, text, syncText || (encryptedText ? "" : text))
       .run();
     await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(segments[1])]);
     const targetUserId = conversation.user_a_id === user.id ? conversation.user_b_id : conversation.user_a_id;
@@ -2665,6 +2668,33 @@ async function handleRequest({ request, env, params }) {
       );
     }
     return json(await getBootstrap(db, user));
+  }
+
+  if (method === "POST" && segments[0] === "messages" && segments[2] === "sync") {
+    const limited = await enforceRateLimit(db, request, "messages-sync", 60, 600);
+    if (limited) return limited;
+    const messageId = cleanText(segments[1] || "", 120);
+    const syncText = cleanText(body.text || "", 800);
+    if (!messageId || !syncText) return json({ error: "Message text required" }, { status: 400 });
+    const messageSafety = await rejectObjectionableContent(db, user.id, "message", syncText);
+    if (messageSafety) return messageSafety;
+    const message = await db
+      .prepare(
+        `SELECT m.id, m.text, m.sync_text, c.user_a_id, c.user_b_id
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.id = ?
+         LIMIT 1`
+      )
+      .bind(messageId)
+      .first();
+    if (!message) return json({ error: "Message not found" }, { status: 404 });
+    if (message.user_a_id !== user.id && message.user_b_id !== user.id) return json({ error: "Message access denied" }, { status: 403 });
+    if (!String(message.text || "").startsWith(E2EE_MESSAGE_PREFIX)) return json({ ok: true });
+    if (!message.sync_text) {
+      await db.prepare("UPDATE messages SET sync_text = ? WHERE id = ?").bind(syncText, messageId).run();
+    }
+    return json({ ok: true });
   }
 
   if (method === "DELETE" && segments[0] === "messages" && segments.length === 2) {
