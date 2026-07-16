@@ -1214,7 +1214,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div className="landing-after-intro">
           <div style={{display:"inline-flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:999,padding:"8px 16px",marginBottom:32,cursor:"pointer",position:"relative"}} className="landing-badge bs fu" onClick={()=>setScreen("signup")}>
             <span style={{width:8,height:8,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"pulse 2s infinite"}}/>
-            <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>For people ready for their first real move</span>
+            <span style={{fontSize:13,fontWeight:800,color:"#F7F8FA"}}>Early access is live</span>
           </div>
           <p style={{fontSize:20,color:"rgba(255,255,255,0.76)",lineHeight:1.65,maxWidth:680,marginBottom:12,position:"relative",fontWeight:800}} className="fu landing-subhead">
             The first leap into the future you want.
@@ -1233,7 +1233,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           ):(
             <div style={{display:"flex",gap:8,maxWidth:560,width:"100%",background:"#fff",borderRadius:999,padding:6,boxShadow:"0 30px 90px rgba(0,0,0,0.32)",position:"relative"}} className="fu landing-email">
               <input aria-label="Email address for invite request" autoComplete="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&joinWaitlist()} placeholder="you@company.com" className="if" style={{flex:1,background:"transparent",border:"none",borderRadius:999,padding:"14px 18px",color:"#111318",fontSize:16,transition:"all 0.2s"}}/>
-              <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Request invite</button>
+              <button onClick={joinWaitlist} className="bs" style={{background:"#111318",color:"#fff",border:"none",borderRadius:999,padding:"13px 22px",fontSize:14,fontWeight:900,whiteSpace:"nowrap"}}>Join early access</button>
             </div>
           )}
           <div style={{fontSize:12,color:"rgba(255,255,255,0.36)",marginTop:16}}>Free to start · Built for first moves · No credit card required</div>
@@ -1795,7 +1795,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           </div>
           <button onClick={()=>setStep(0)} className="bs" style={{marginTop:16,width:"100%",background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Use a different email</button>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginTop:24}}>
-            {["Encrypted session","No card needed","Private beta"].map(text=><div key={text} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:"10px 8px",fontSize:11,fontWeight:800,color:C.muted,textAlign:"center",background:"#fff"}}>{text}</div>)}
+            {["Encrypted session","No card needed","Early access"].map(text=><div key={text} style={{border:`1px solid ${C.border}`,borderRadius:12,padding:"10px 8px",fontSize:11,fontWeight:800,color:C.muted,textAlign:"center",background:"#fff"}}>{text}</div>)}
           </div>
         </div>
       </div>
@@ -1834,6 +1834,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
             <button role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>setMode("login")} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"||mode==="password"?"#fff":C.muted,background:mode==="login"||mode==="password"?C.accent:"transparent"}}>Log in</button>
           </div>
           {mode==="signup"?<>
+          <div style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontSize:10,fontWeight:950,letterSpacing:1.4,textTransform:"uppercase",marginBottom:10}}><span style={{width:6,height:6,borderRadius:"50%",background:C.accent}}/> Early access is live</div>
           <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create account</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:24,lineHeight:1.55}}>Start free. No card. You will enter the platform immediately after creating your account.</div>
           <div style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"11px 12px",marginBottom:22,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={16} color="currentColor"/> Fast signup with email confirmation sent automatically.</div>
