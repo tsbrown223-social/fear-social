@@ -669,9 +669,12 @@ const readPostMediaFile=file=>new Promise((resolve,reject)=>{
 });
 const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
   const image=safeImageUrl(src);
+  const computedBackground=image?`center / cover no-repeat url("${image}")`:(style.background||style.backgroundColor||(grad?GR:C.aLight));
+  const computedBorder=style.border||(image?"1.5px solid rgba(255,255,255,0.35)":grad?"none":`1.5px solid ${C.aSoft}`);
+  const computedColor=style.color||(grad?"#fff":C.accent);
   return (
   <div style={{position:"relative",flexShrink:0}}>
-    <div style={{width:size,height:size,borderRadius:"50%",background:image?`center / cover no-repeat url("${image}")`:grad?GR:C.aLight,border:image?"1.5px solid rgba(255,255,255,0.35)":grad?"none":`1.5px solid ${C.aSoft}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,color:grad?"#fff":C.accent,overflow:"hidden",...style}}>{image?"":i}</div>
+    <div style={{width:size,height:size,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,overflow:"hidden",...style,background:computedBackground,border:computedBorder,color:computedColor}}>{image?"":i}</div>
     {online&&<div style={{position:"absolute",bottom:1,right:1,width:size*0.27,height:size*0.27,borderRadius:"50%",background:C.accent,border:"2px solid #fff"}}/>}
   </div>
   );
