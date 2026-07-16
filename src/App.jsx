@@ -5,6 +5,13 @@ const GR2 = "linear-gradient(135deg, #050607 0%, #0B0D10 62%, #102417 100%)";
 const GRT = { background:GR, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" };
 const OFFICIAL_FEAR_USER_ID = "fear-social-official";
 const OFFICIAL_FEAR_HANDLE = "@fear.social";
+const FEAR_BOARD_TOOLS = [
+  {name:"fear.agency",icon:"megaphone",label:"Brand growth",copy:"Build a clearer personal brand, audience, and outward presence."},
+  {name:"fear.style",icon:"diamond",label:"Creative direction",copy:"Shape the visual identity and presentation behind your work."},
+  {name:"fear.prod",icon:"camera",label:"Production",copy:"Organize ideas, assets, launches, and the work needed to ship."},
+  {name:"fearai",icon:"brain",label:"Intelligence",copy:"Turn questions into useful strategy, drafts, research, and next moves."},
+  {name:"fear.finance",icon:"briefcase",label:"Financial clarity",copy:"Plan pricing, budgets, goals, and the numbers behind sustainable progress."},
+];
 const C = {
   bg:"#F0F2F5", card:"#FFFFFF", border:"#E2E6EE", accent:"#16C74E",
   aLight:"#E8FBF0", aSoft:"#B8F5CE", text:"#0D0F14", tSoft:"#2A2D38",
@@ -81,6 +88,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-halo{animation:haloPulse 4.4s ease-in-out infinite;}
 .landing-magnetic{transition:transform .18s ease,border-color .18s ease,background .18s ease;}
 .landing-magnetic:hover{transform:translateY(-6px) scale(1.015);border-color:rgba(22,199,78,.36)!important;}
+.fear-board-tool{transition:transform .2s ease,border-color .2s ease,background .2s ease;}
+.fear-board-tool:hover{transform:translateY(-4px);border-color:rgba(22,199,78,.38)!important;background:rgba(22,199,78,.07)!important;}
+.fear-board-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.fear-board-tool-grid .fear-board-tool:last-child{grid-column:1/-1;}
+.fear-board-page-grid{display:grid;grid-template-columns:minmax(0,.82fr) minmax(420px,1.18fr);gap:40px;align-items:start;}
+.fear-board-suite-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.fear-board-suite-grid .fear-board-tool:last-child{grid-column:1/-1;}
 .landing-scroll-step{opacity:.62;transition:opacity .2s ease,transform .2s ease,border-color .2s ease;}
 .landing-scroll-step:hover{opacity:1;transform:translateX(8px);border-color:rgba(22,199,78,.32)!important;}
 .landing-world-node{transition:transform .18s ease,background .18s ease,border-color .18s ease;}
@@ -256,6 +270,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
   .landing-cinematic-sweep,.landing-halo{animation:none!important;}
   .landing-cursor,.landing-progress{display:none!important;}
+  .fear-board-tool-grid,.fear-board-suite-grid{grid-template-columns:1fr!important;}
+  .fear-board-tool-grid .fear-board-tool:last-child,.fear-board-suite-grid .fear-board-tool:last-child{grid-column:auto!important;}
+  .fear-board-page{padding:104px 14px 44px!important;}
+  .fear-board-intro{position:static!important;top:auto!important;}
+  .fear-board-principles{grid-template-columns:1fr!important;}
   .landing-magnetic:hover,.landing-scroll-step:hover,.landing-world-node:hover{transform:none!important;}
   .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
   .app-view h1,.app-view h2,.app-view h3,.app-view p,.app-view div,.app-view span,.app-view a{max-width:100%;}
@@ -551,10 +570,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-pricing .pricing-feature-list>div:nth-child(n+5){display:none!important;}
   .landing-pricing .pricing-feature-list span:last-child{font-size:13px!important;line-height:1.35!important;}
   .landing-pricing .pricing-price-row{margin-bottom:4px!important;}
-  .landing-why>div,.landing-agency>div{grid-template-columns:1fr!important;text-align:center!important;gap:18px!important;}
+  .landing-why>div,.landing-board>div{grid-template-columns:1fr!important;text-align:center!important;gap:24px!important;}
   .landing-why p,.landing-why .why-acronym-row{margin-left:auto!important;margin-right:auto!important;}
-  .landing-agency p{margin-left:auto!important;margin-right:auto!important;}
-  .landing-agency button{width:100%!important;max-width:260px!important;margin:0 auto!important;}
+  .landing-board p{margin-left:auto!important;margin-right:auto!important;}
+  .landing-board .fear-board-tool-grid{text-align:left!important;}
+  .fear-board-page-grid{grid-template-columns:1fr!important;gap:24px!important;}
   .why-page-grid{grid-template-columns:1fr!important;gap:24px!important;}
   .why-page-grid h1,.why-page-grid p{text-align:left!important;}
   .why-about-grid{grid-template-columns:1fr!important;gap:18px!important;margin-top:36px!important;padding-top:24px!important;}
@@ -1009,7 +1029,7 @@ function Navbar({setScreen,notify,onOpenPanel,forceVisible=false}){
     };
   },[]);
   const visible=forceVisible||scrolled;
-  const links=[["Product","platform"],["Why fear","why-fear"],["Proof","activity"],["Pricing","pricing"],["Agency","agency"],["Join","cta"]];
+  const links=[["Product","platform"],["Why fear","why-fear"],["Proof","activity"],["Pricing","pricing"],["Board","board"],["Join","cta"]];
   const navTo=id=>{
     if(id==="why-fear") return setScreen("why");
     if(document.getElementById(id)) return scrollToSection(id);
@@ -1162,7 +1182,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["brain","Mentor Requests","Ask focused questions, get pointed in the right direction, and turn advice into actual next steps."],
     ["calendar","Groups & Rooms","Join focused spaces around fields, careers, events, opportunities, and the first moves people usually make alone."],
     ["briefcase","Opportunities","Find entry jobs, gigs, internships, projects, volunteer roles, and career openings that match your ambition."],
-    ["zap","FEAR Pro","A future upgrade path for people ready to move faster with advanced matching, priority mentor access, and AI prep tools.",true],
+    ["zap","FEAR Pro + fear. board","A future upgrade for people ready to move faster with one workspace for brand, creative, production, AI, and financial tools.",true],
   ];
   const readinessRows=[
     ["A place to begin","Create an account when you do not know the perfect title yet. Start with curiosity, direction, and the next move in front of you.","check"],
@@ -1171,7 +1191,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   const pricingRows=[
     {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, work, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Founding-member launch price.",features:["Priority mentor request routing","Advanced people and opportunity matching","Private Pro rooms and office hours","Opportunity alerts and saved searches","AI prep notes for outreach and interviews"],grad:true,button:"Reserve Pro access"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["fear. board access when it launches","fear.agency, fear.style, and fear.prod","fearai and fear.finance","Advanced people and opportunity matching","Private Pro rooms and priority tools"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
@@ -1548,17 +1568,20 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
-      <div id="agency" className="landing-agency landing-section" style={{background:"#050506",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:"-20% -10% auto",height:420,background:"radial-gradient(circle at 50% 50%, rgba(22,199,78,.15), transparent 62%)",pointerEvents:"none"}}/>
-        <div style={{maxWidth:940,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:28,alignItems:"center"}}>
+      <div id="board" className="landing-board landing-section" style={{background:"#050506",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"-18% -10% auto",height:460,background:"radial-gradient(circle at 68% 42%, rgba(22,199,78,.15), transparent 58%)",pointerEvents:"none"}}/>
+        <div style={{maxWidth:1080,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,.82fr) minmax(420px,1.18fr)",gap:50,alignItems:"center"}}>
           <div>
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(22,199,78,.28)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"8px 12px",fontSize:12,fontWeight:950,letterSpacing:.2,color:C.accent,marginBottom:18}}>
-              <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming soon
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(22,199,78,.28)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"8px 12px",fontSize:12,fontWeight:950,color:C.accent,marginBottom:18}}>
+              <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming with fear. Pro
             </div>
-            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(42px,6vw,82px)",lineHeight:.95,letterSpacing:0,color:"#fff",marginBottom:18}}>fear<span style={{color:C.accent}}>.</span>agency</h2>
-            <p style={{fontSize:17,lineHeight:1.75,color:"rgba(255,255,255,.58)",maxWidth:640}}>A future space inside fear for people building a personal brand, growing their own following, and showing the world what they are becoming.</p>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(44px,6vw,82px)",lineHeight:.95,letterSpacing:0,color:"#fff",marginBottom:18}}>fear<span style={{color:C.accent}}>.</span> board</h2>
+            <p style={{fontSize:17,lineHeight:1.75,color:"rgba(255,255,255,.6)",maxWidth:560,marginBottom:26}}>One future workspace for the tools behind your next move. Build your presence, shape the work, produce it, think with AI, and understand the numbers in one Pro layer.</p>
+            <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"14px 20px",fontSize:14,fontWeight:950,whiteSpace:"nowrap"}}>Preview fear. board</button>
           </div>
-          <button onClick={()=>setScreen("agency")} className="bs" style={{background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"14px 20px",fontSize:14,fontWeight:950,whiteSpace:"nowrap"}}>Preview page</button>
+          <div className="fear-board-tool-grid" aria-label="Upcoming fear board tools">
+            {FEAR_BOARD_TOOLS.map(tool=><div key={tool.name} className="fear-board-tool" style={{minHeight:138,background:"rgba(255,255,255,.045)",border:"1px solid rgba(255,255,255,.1)",borderRadius:18,padding:18,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><span style={{width:34,height:34,borderRadius:10,background:"rgba(22,199,78,.12)",display:"inline-flex",alignItems:"center",justifyContent:"center",color:C.accent}}><Icon name={tool.icon} size={17}/></span><b style={{fontSize:16,color:"#fff"}}>{tool.name}</b></div><div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1.2,color:C.accent,marginBottom:6}}>{tool.label}</div><p style={{fontSize:13,lineHeight:1.55,color:"rgba(255,255,255,.5)"}}>{tool.copy}</p></div>)}
+          </div>
         </div>
       </div>
       <div id="cta" className="landing-cta" style={{padding:"118px 52px",textAlign:"center",position:"relative",overflow:"hidden",background:"#050506"}}>
@@ -1575,7 +1598,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2026 fear.social · The first leap into the future you want.</div>
         <div style={{display:"flex",gap:20}}>
           <button onClick={()=>setScreen("why")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Why fear?</button>
-          <button onClick={()=>setScreen("agency")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">fear.agency</button>
+          <button onClick={()=>setScreen("board")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">fear. board</button>
           <button onClick={()=>onOpenPanel("privacy")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Privacy</button>
           <button onClick={()=>onOpenPanel("accessibility")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Accessibility</button>
           <button onClick={()=>notify("Contact: contact@fear.social","info")} style={{background:"none",border:"none",fontSize:12,color:"rgba(255,255,255,0.3)",cursor:"pointer"}} className="nl bs">Contact</button>
@@ -1585,19 +1608,35 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   );
 }
 
-function AgencyComingSoonPage({setScreen}){
+function FearBoardComingSoonPage({setScreen}){
   return (
-    <main style={{minHeight:"100dvh",background:"radial-gradient(circle at 50% 8%, rgba(22,199,78,.18), transparent 38%), #050506",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:"120px 18px 48px",position:"relative",overflow:"hidden"}}>
-      <div className="landing-cursor" style={{left:"50%",top:"20%",position:"absolute",opacity:.65}}/>
-      <section style={{width:"min(860px,100%)",textAlign:"center",position:"relative",zIndex:1}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:9,border:"1px solid rgba(22,199,78,.3)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"9px 14px",fontSize:12,fontWeight:950,letterSpacing:.2,color:C.accent,marginBottom:26}}>
-          <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming soon
-        </div>
-        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(58px,13vw,132px)",lineHeight:.88,letterSpacing:0,marginBottom:24}}>fear<span style={{color:C.accent}}>.</span>agency</h1>
-        <p style={{fontSize:"clamp(17px,2.1vw,23px)",lineHeight:1.65,color:"rgba(255,255,255,.62)",maxWidth:690,margin:"0 auto 34px"}}>A new layer of fear for people building themselves into brands.</p>
-        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
-          <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Join fear.social</button>
-          <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Back to fear.social</button>
+    <main className="fear-board-page" style={{minHeight:"100dvh",background:"radial-gradient(circle at 78% 12%, rgba(22,199,78,.16), transparent 34%), radial-gradient(circle at 8% 80%, rgba(22,199,78,.08), transparent 30%), #050506",color:"#fff",padding:"132px 24px 70px",position:"relative",overflow:"hidden"}}>
+      <section style={{width:"min(1120px,100%)",margin:"0 auto",position:"relative",zIndex:1}}>
+        <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.07)",color:"rgba(255,255,255,.78)",border:"1px solid rgba(255,255,255,.13)",borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,marginBottom:40}}>Back to fear.social</button>
+        <div className="fear-board-page-grid">
+          <div className="fear-board-intro" style={{position:"sticky",top:118}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:9,border:"1px solid rgba(22,199,78,.3)",background:"rgba(22,199,78,.1)",borderRadius:999,padding:"9px 14px",fontSize:12,fontWeight:950,color:C.accent,marginBottom:24}}>
+              <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming soon with fear. Pro
+            </div>
+            <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(58px,9vw,112px)",lineHeight:.86,letterSpacing:0,marginBottom:28}}>fear<span style={{color:C.accent}}>.</span><br/>board</h1>
+            <p style={{fontSize:"clamp(17px,2vw,22px)",lineHeight:1.65,color:"rgba(255,255,255,.66)",maxWidth:500,marginBottom:18}}>The operating layer for what comes after your first step.</p>
+            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.46)",maxWidth:500,marginBottom:30}}>fear. board will bring a growing set of premium tools into one focused workspace. The modules below are early product foundations, not live features yet.</p>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Reserve Pro access</button>
+              <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Explore fear.social</button>
+            </div>
+          </div>
+          <div>
+            <div style={{background:"rgba(255,255,255,.045)",border:"1px solid rgba(255,255,255,.1)",borderRadius:26,padding:"clamp(18px,3vw,30px)",boxShadow:"0 36px 120px rgba(0,0,0,.34)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,paddingBottom:20,marginBottom:18,borderBottom:"1px solid rgba(255,255,255,.09)",flexWrap:"wrap"}}><div><div style={{fontSize:11,fontWeight:950,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:5}}>Future workspace</div><div style={{fontSize:19,fontWeight:950}}>Your fear. board</div></div><span style={{border:"1px solid rgba(255,255,255,.12)",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,color:"rgba(255,255,255,.5)"}}>PRO PREVIEW</span></div>
+              <div className="fear-board-suite-grid">
+                {FEAR_BOARD_TOOLS.map((tool,index)=><article key={tool.name} className="fear-board-tool" style={{background:index===0?"rgba(22,199,78,.085)":"rgba(255,255,255,.035)",border:`1px solid ${index===0?"rgba(22,199,78,.25)":"rgba(255,255,255,.085)"}`,borderRadius:20,padding:20,minHeight:190}}><div style={{width:40,height:40,borderRadius:12,background:"rgba(22,199,78,.12)",display:"flex",alignItems:"center",justifyContent:"center",color:C.accent,marginBottom:20}}><Icon name={tool.icon} size={20}/></div><div style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1.4,color:C.accent,marginBottom:7}}>{tool.label}</div><h2 style={{fontSize:22,lineHeight:1.05,letterSpacing:0,marginBottom:10}}>{tool.name}</h2><p style={{fontSize:14,lineHeight:1.65,color:"rgba(255,255,255,.5)"}}>{tool.copy}</p></article>)}
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10,marginTop:12}} className="fear-board-principles">
+              {["One Pro workspace","Tools that grow with you","Built inside fear.social"].map((item,index)=><div key={item} style={{background:"rgba(255,255,255,.035)",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:15,fontSize:12,fontWeight:850,color:"rgba(255,255,255,.56)",lineHeight:1.4}}><span style={{display:"block",color:C.accent,fontSize:10,marginBottom:6}}>0{index+1}</span>{item}</div>)}
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -1619,7 +1658,7 @@ function WhyFearPage({setScreen}){
             <p style={{fontSize:17,lineHeight:1.8,color:"rgba(255,255,255,.58)",maxWidth:760,margin:"0 0 30px"}}>fear.social is built for that exact moment. It gives people a place to be seen, find direction, meet the right people, and take that first visible step without feeling like they have to already be fearless.</p>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
               <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Take your first step</button>
-              <button onClick={()=>setScreen("agency")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>See fear.agency</button>
+              <button onClick={()=>setScreen("board")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Preview fear. board</button>
             </div>
           </div>
           <aside className="ch" style={{background:"rgba(255,255,255,.065)",border:"1px solid rgba(255,255,255,.12)",borderRadius:28,padding:"28px",boxShadow:"0 30px 90px rgba(0,0,0,.28)"}}>
@@ -2616,9 +2655,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
-                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>Founder operating system</div>
-                <div style={{fontSize:13,opacity:.72,lineHeight:1.6,marginBottom:16}}>Premium tools are planned and will show pricing only when checkout is active.</div>
-                <button onClick={()=>notify("Premium waitlist noted","info")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Join waitlist</button>
+                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>fear. board</div>
+                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>One upcoming Pro workspace for brand, style, production, AI, and finance tools.</div>
+                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>agency · style · prod · fearai · finance</div>
+                <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview board</button>
               </div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
                 <div style={{fontWeight:900,fontSize:14,marginBottom:12}}>Live rooms</div>
@@ -2707,7 +2747,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
-        {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} signOut={signOut}/>}
+        {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} openBoard={()=>setScreen("board")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} signOut={signOut}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
@@ -3137,7 +3177,7 @@ function OpportunitiesView({deals,savedDeals,toggleSave,signalInterest,postOppor
   };
   return <div className="directory-wrap"><section className="market-hero" style={{borderRadius:24,padding:"28px clamp(18px,4vw,38px)",color:"#fff",marginBottom:18,overflow:"hidden",position:"relative"}}><div style={{display:"flex",justifyContent:"space-between",gap:20,alignItems:"flex-end",flexWrap:"wrap",position:"relative",zIndex:1}}><div style={{maxWidth:720}}><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",opacity:.74,marginBottom:10}}>Deals</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02}}>Opportunity matches built around your first move.</h1><p style={{fontSize:15,lineHeight:1.7,opacity:.78,marginTop:14}}>Jobs, gigs, volunteer roles, internships, collaborations, and first-step openings are ranked by your profile field, goals, location, and what you say you are looking for.</p></div>{top&&<div style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:18,padding:16,minWidth:220}}><div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1.2,opacity:.7}}>Best match</div><div style={{fontSize:28,fontWeight:950,marginTop:4}}>{top.score}%</div><div style={{fontSize:13,opacity:.82,marginTop:4}}>{top.title}</div></div>}</div></section><section className="composer-card" aria-label="Post a job gig or volunteer opportunity" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:20,marginBottom:18}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"flex-start",flexWrap:"wrap",marginBottom:16}}><div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:7}}>Post an opportunity</div><h2 style={{fontSize:22,lineHeight:1.12,color:C.text}}>Share a job, gig, volunteer role, internship, collab, or first-step opening.</h2></div><Tag label="Member posted" style={{background:C.aLight,color:C.accent}}/></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:"1.15fr .85fr .55fr .75fr",gap:10,alignItems:"end"}}><label style={fieldStyle}>Title<input aria-label="Opportunity title" value={draft.title} onChange={e=>update("title",e.target.value)} placeholder="Volunteer mentor, Pop-up helper..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Company or project<input aria-label="Company or project" value={draft.company} onChange={e=>update("company",e.target.value)} placeholder="Your nonprofit, studio, team..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Type<select aria-label="Opportunity type" value={draft.type} onChange={e=>update("type",e.target.value)} className="if" style={inputStyle}><option>Job</option><option>Gig</option><option>Volunteer</option><option>Opportunity</option><option>Internship</option><option>Collab</option></select></label><label style={fieldStyle}>Field<input aria-label="Opportunity field" value={draft.tag} onChange={e=>update("tag",e.target.value)} placeholder="Brand Management" className="if" style={inputStyle}/></label></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:".85fr .85fr .85fr 1.45fr",gap:10,alignItems:"end",marginTop:10}}><label style={fieldStyle}>Pay or terms<input aria-label="Pay or terms" value={draft.budget} onChange={e=>update("budget",e.target.value)} placeholder="Volunteer, paid, stipend..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Location<input aria-label="Opportunity location" value={draft.location} onChange={e=>update("location",e.target.value)} placeholder="Remote, Local, Hybrid..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Level<input aria-label="Opportunity level" value={draft.level} onChange={e=>update("level",e.target.value)} placeholder="Beginner friendly" className="if" style={inputStyle}/></label><label style={fieldStyle}>Skills<input aria-label="Opportunity skills" value={draft.skills} onChange={e=>update("skills",e.target.value)} placeholder="community, events, design, research" className="if" style={inputStyle}/></label></div><label style={{...fieldStyle,marginTop:10}}>Description<textarea aria-label="Opportunity description" value={draft.desc} onChange={e=>update("desc",e.target.value)} placeholder="What will this person do, who is it best for, and how should they get started?" className="if" style={{...inputStyle,minHeight:94,resize:"vertical",lineHeight:1.55}}/></label><div className="opportunity-form-actions" style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginTop:14,flexWrap:"wrap"}}><p style={{fontSize:12,color:C.dim,lineHeight:1.5,maxWidth:620}}>Posted opportunities appear in Deals and are matched to members by field, skills, location, level, and profile goals.</p><GBtn onClick={submit} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="briefcase" size={16} color="#fff"/> Post opportunity</GBtn></div></section><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap",marginBottom:16}}><div style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:6}}>{[["matched","For You"],["saved","Saved"]].map(([id,label])=><button key={id} onClick={()=>setMode(id)} className="bs" style={{border:"none",borderRadius:10,padding:"9px 13px",fontSize:13,fontWeight:900,background:mode===id?C.accent:"transparent",color:mode===id?"#fff":C.muted}}>{label}</button>)}</div><div className="filter-row" style={{display:"flex",gap:8,flexWrap:"wrap"}}>{types.map(type=><button key={type} onClick={()=>setKind(type)} className="bs" style={{background:kind===type?C.aLight:"#fff",color:kind===type?C.accent:C.muted,border:`1px solid ${kind===type?C.aSoft:C.border}`,borderRadius:999,padding:"8px 13px",fontSize:12,fontWeight:900}}>{type}</button>)}</div></div>{visible.length===0?<EmptyState title={mode==="saved"?"No saved opportunities yet":kind==="Volunteer"?"No volunteer openings yet":"No matches yet"} text={mode==="saved"?"Save a few listings and they will live here.":kind==="Volunteer"?"Volunteer roles posted by members will appear here.":"Add more to your profile so fear can tune your opportunity feed."}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}}>{visible.map(deal=><article key={deal.id} className="ch" style={{...cardStyle,padding:0,borderColor:deal.userPosted?C.aSoft:C.border}}><div style={{padding:20,borderBottom:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:10}}><IT label={deal.tag}/><Tag label={deal.type} style={{background:C.aLight,color:C.accent}}/>{deal.userPosted&&<Tag label="Posted by member" style={{background:C.aLight,color:C.accent}}/>}</div><h2 style={{fontSize:21,lineHeight:1.12,color:C.text,overflowWrap:"anywhere"}}>{deal.title}</h2><div style={{fontSize:12,color:C.dim,marginTop:7}}>{deal.company} · {deal.budget} · {deal.location}</div>{deal.postedBy&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Posted by {deal.postedBy}{deal.postedByHandle?` · ${deal.postedByHandle}`:""}</div>}</div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:22,fontWeight:950,color:C.accent,lineHeight:1}}>{deal.score}%</div><div style={{fontSize:10,color:C.muted,fontWeight:900,textTransform:"uppercase",marginTop:4}}>match</div></div></div><div className="match-meter" style={{marginTop:16}}><span style={{width:`${deal.score}%`}}/></div></div><div style={{padding:20}}><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7}}>{deal.desc}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:14}}>{(deal.reasons?.length?deal.reasons:["useful first-step signal"]).map(reason=><span key={reason} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:999,padding:"7px 9px",fontSize:11,fontWeight:800,color:C.muted}}>{reason}</span>)}</div><div style={{display:"flex",gap:8,alignItems:"center",marginTop:18,flexWrap:"wrap"}}><GBtn sm onClick={()=>signalInterest(deal)} style={{display:"inline-flex",alignItems:"center",gap:7}}><Icon name="send" size={14} color="#fff"/> I'm interested</GBtn><button onClick={()=>toggleSave(deal.id)} className="bs" style={{background:deal.saved?C.aLight:"#fff",border:`1px solid ${deal.saved?C.aSoft:C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:deal.saved?C.accent:C.text,display:"inline-flex",gap:7,alignItems:"center"}}><Icon name="bookmark" size={15} color="currentColor" filled={deal.saved}/>{deal.saved?"Saved":"Save"}</button></div></div></article>)}</div>}</div>;
 }
-function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,accessRequests,reviewAccessRequest,openProfile,interfaceSettings,setInterfaceSettings,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel,onDeleteAccount,signOut}){
+function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,accessRequests,reviewAccessRequest,openProfile,openBoard,interfaceSettings,setInterfaceSettings,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel,onDeleteAccount,signOut}){
   const isPrivate=(profile.privacy||"public")==="private";
   const incoming=Array.isArray(accessRequests?.incoming)?accessRequests.incoming:[];
   const pending=incoming.filter(request=>request.status==="pending");
@@ -3175,6 +3215,10 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
       <button onClick={()=>setView("profile")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.text}}>View profile</button>
     </div>
     <div className="settings-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:16}}>
+      <section className="ch" style={{gridColumn:"1/-1",background:GR2,border:"1px solid rgba(22,199,78,.24)",borderRadius:18,padding:20,color:"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}>
+        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with fear. Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Your future workspace for fear.agency, fear.style, fear.prod, fearai, and fear.finance.</p></div>
+        <button onClick={openBoard} className="bs" style={{background:"#fff",color:C.text,border:"none",borderRadius:999,padding:"11px 16px",fontSize:13,fontWeight:950}}>Preview board</button>
+      </section>
       {settingCard("Appearance","Change the theme and readability settings for this browser.",<>
         {switchRow(themeMode==="dark",()=>setThemeMode(themeMode==="dark"?"light":"dark"),themeMode==="dark"?"Dark mode":"Light mode","Switch the full interface between dark and light mode.",themeMode==="dark"?"moon":"sun")}
         {switchRow(Boolean(accessibility.largeText),()=>setAccessibility(s=>({...s,largeText:!s.largeText})),"Larger text","Increase text and form control sizing across the app.","eye")}
@@ -3540,7 +3584,7 @@ function TermsConditionsPanel({onClose}){
       {section("Content Filtering, Reports, Blocks, and 24-Hour Review","fear.social may use automated filters and manual review queues to catch and hide highly objectionable content before or shortly after it goes live. Users can report posts, comments, media, profiles, messages, groups, opportunities, or other content that may violate these Terms. Users can block abusive users; blocking hides that user's historical and future posts and comments from the blocking user's feed where technically feasible. Open reports are routed to a moderation queue intended for review and action within 24 hours. We may remove content, limit distribution, suspend accounts, ban users, preserve evidence, contact affected users, notify service providers, or report matters to law enforcement when appropriate. Reporting content does not guarantee removal, and not reporting content does not mean fear.social endorses it.")}
       {section("Opportunities and User Interactions","Users are responsible for evaluating collaborators, mentors, jobs, gigs, investments, services, advice, and opportunities they discover through fear.social. We do not guarantee any user's identity, qualifications, results, funding, employment, partnership, or career or business outcome.")}
       {section("No Professional Advice","fear.social does not provide legal, financial, tax, investment, medical, employment, or other professional advice. Content on the platform is for general community and informational purposes. Verify important decisions with qualified professionals.")}
-      {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. Pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after paid tools launch. Any paid feature will be presented before purchase.")}
+      {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. fear. board and planned modules such as fear.agency, fear.style, fear.prod, fearai, and fear.finance are product previews and are not currently available unless the service clearly says otherwise. Names, features, pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after launch. Final paid terms and charges will be presented before purchase.")}
       {section("Email, Verification, and Notifications","By signing up, you agree that fear.social may send verification, security, account, signup, transactional, and service-related emails to the email address on your account, including from contact@fear.social. You may also receive in-app notifications for follows, messages, comments, account activity, and platform updates.")}
       {section("Privacy and Data","Your use of fear.social is also governed by the Privacy Policy. The platform may collect account details, profile information, posts, messages, comments, activity data, device/session data, and other information needed to provide and secure the service.")}
       {section("Moderation, Bans, and Section 230","fear.social hosts user-generated content and may moderate in good faith. We may remove content, limit visibility, suspend features, ban users, revoke access, delete accounts, preserve evidence, or report activity when we believe it is necessary to protect users, comply with law, enforce these Terms, respond to complaints, or maintain platform integrity. Under laws such as 47 U.S.C. § 230, platforms may receive protection from being treated as the publisher or speaker of third-party user content and may receive protection for good-faith restriction of objectionable material. These Terms do not waive any protections, defenses, immunities, safe harbors, or limitations available to fear.social.")}
@@ -3670,7 +3714,7 @@ export default function App(){
     window.addEventListener("hashchange",onHashChange);
     return()=>window.removeEventListener("hashchange",onHashChange);
   },[]);
-  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":routeHash.startsWith("#agency")?"agency":routeHash.startsWith("#why-fear")?"why":"landing";
+  const initialScreen=consumeOAuthToken()||routeHash.startsWith("#app")?"app":routeHash.startsWith("#login")?"login":routeHash.startsWith("#signup")?"signup":routeHash.startsWith("#board")||routeHash.startsWith("#agency")?"board":routeHash.startsWith("#why-fear")?"why":"landing";
   const [screenState,setScreenState]=useLocalState("fear-screen",initialScreen);
   useEffect(()=>{
     if(initialScreen!==screenState) setScreenState(initialScreen);
@@ -3687,7 +3731,7 @@ export default function App(){
   const setScreen=useCallback((next)=>{
     setScreenState(next);
     window.scrollTo({top:0,left:0,behavior:"auto"});
-    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="agency"?"#agency":next==="why"?"#why-fear":"";
+    const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="board"?"#board":next==="why"?"#why-fear":"";
     if(nextHash){
       window.history.replaceState(null,"",nextHash);
       setRouteHash(nextHash);
@@ -3709,7 +3753,7 @@ export default function App(){
   useEffect(()=>{
     const bg=screen==="app"
       ? (themeMode==="light"?C.bg:"#050506")
-      : (screen==="landing"||screen==="agency"||screen==="why")
+      : (screen==="landing"||screen==="board"||screen==="why")
         ? (themeMode==="light"?"#F7F8FA":"#050506")
         : C.dark;
     document.documentElement.style.background=bg;
@@ -3721,9 +3765,9 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="agency"||screen==="why"}/>}
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="board"||screen==="why"}/>}
         {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
-        {screen==="agency"&&<AgencyComingSoonPage setScreen={setScreen}/>}
+        {screen==="board"&&<FearBoardComingSoonPage setScreen={setScreen}/>}
         {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
         {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={setOpenPanel}/>}
