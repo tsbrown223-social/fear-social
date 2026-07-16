@@ -2145,7 +2145,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     handle:person.handle||"@member",
     location:person.location||person.loc||"",
     industry:person.industry||person.tag||"Exploring",
-    bio:person.bio||"Building in public, meeting ambitious people, and turning fear into momentum.",
+    bio:person.bio||"Figuring out what comes next.",
     avatarUrl:person.avatarUrl||person.avatar_url||"",
     coverUrl:person.coverUrl||person.cover_url||"",
     headline:person.headline||"",
@@ -3457,7 +3457,7 @@ function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],fol
           <button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"11px 17px",fontWeight:900,alignSelf:"center",whiteSpace:"nowrap"}}>Edit profile</button>
         </div>
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
-        <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio||"Building in public, meeting ambitious people, and turning fear into useful momentum."}</p>
+        <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio||"Figuring out what comes next."}</p>
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
         <div className="profile-detail-row" style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{detailRows.map(([k,v])=><span key={k} className="profile-detail-chip" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
@@ -3720,7 +3720,7 @@ export default function App(){
     email:"",
     location:"",
     industry:"Exploring",
-    bio:"Building in public, meeting ambitious people, and turning fear into useful momentum.",
+    bio:"Figuring out what comes next.",
     avatarUrl:"",
   });
   const setScreen=useCallback((next)=>{

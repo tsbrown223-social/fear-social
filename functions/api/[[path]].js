@@ -326,7 +326,7 @@ const normalizeProfile = (profile = {}) => {
     location: cleanText(profile.location || "", 80),
     industry: cleanText(profile.industry || "Exploring", 40),
     stage: cleanText(profile.stage || "I'm actively building", 80),
-    bio: cleanText(profile.bio || "Building in public, meeting ambitious founders, and turning fear into useful momentum.", 400),
+    bio: cleanText(profile.bio || "Figuring out what comes next.", 400),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
     avatarUrl: cleanMediaUrl(profile.avatarUrl || profile.avatar_url || "", "image", 700000),
     coverUrl: cleanMediaUrl(profile.coverUrl || profile.cover_url || "", "image", 900000),
