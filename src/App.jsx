@@ -1480,8 +1480,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           </div>
         </div>
       </div>
-      <div id="why-fear" className="landing-why landing-section" style={{background:"#050506",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:"auto -10% -35%",height:440,background:"radial-gradient(circle at 50% 50%, rgba(22,199,78,.13), transparent 62%)",pointerEvents:"none"}}/>
+      <div id="why-fear" className="landing-why landing-section" style={{background:"linear-gradient(180deg,#050506 0%,#050506 46%,#07100B 78%,#050506 100%)",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:"0 -18% -22%",background:"radial-gradient(ellipse at 58% 88%, rgba(22,199,78,.18), rgba(22,199,78,.08) 32%, transparent 68%)",filter:"blur(34px)",opacity:.92,pointerEvents:"none",WebkitMaskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)",maskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)"}}/>
+        <div style={{position:"absolute",inset:"18% -25% -32%",background:"radial-gradient(ellipse at 35% 100%, rgba(22,199,78,.09), transparent 62%)",filter:"blur(46px)",pointerEvents:"none"}}/>
         <div style={{maxWidth:1080,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,1.05fr) minmax(280px,.95fr)",gap:40,alignItems:"center"}}>
           <div>
             <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:16}}>Why the name</div>
