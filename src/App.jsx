@@ -7,7 +7,7 @@ const OFFICIAL_FEAR_USER_ID = "fear-social-official";
 const OFFICIAL_FEAR_HANDLE = "@fear.social";
 const FEAR_BOARD_TOOLS = [
   {name:"fear.agency",icon:"megaphone",label:"Personal brand growth",copy:"Build your identity, promote yourself with purpose, and grow a personal brand people remember."},
-  {name:"fear.style",icon:"diamond",label:"Style and identity",copy:"Develop the visual direction, presentation, and creative language that make your work feel unmistakably yours."},
+  {name:"fear.style",icon:"heart",label:"Lifestyle and wellness",copy:"Track your goals, habits, health, and routines, then get personalized recommendations for improving your everyday life."},
   {name:"fear.prod",icon:"camera",label:"Photo, video and audio",copy:"Your first step for producing campaigns, videos, photography, recordings, and the media behind what you want to promote."},
   {name:"fearai",icon:"brain",label:"Learn, build and connect",copy:"Learn how AI works, shape an idea into a real product, and find the people who can help you build it."},
   {name:"fear.finance",icon:"briefcase",label:"Markets and financial news",copy:"Stay current with the market information, financial context, and news you need to remain informed and in the loop."},
@@ -1182,7 +1182,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["brain","Mentor Requests","Ask focused questions, get pointed in the right direction, and turn advice into actual next steps."],
     ["calendar","Groups & Rooms","Join focused spaces around fields, careers, events, opportunities, and the first moves people usually make alone."],
     ["briefcase","Opportunities","Find entry jobs, gigs, internships, projects, volunteer roles, and career openings that match your ambition."],
-    ["zap","FEAR Pro + fear. board","A future upgrade for growing your personal brand, producing real work, building with AI, and staying current with markets and financial news.",true],
+    ["zap","FEAR Pro + fear. board","A future upgrade for growing your personal brand, improving your lifestyle, producing real work, building with AI, and staying current with markets.",true],
   ];
   const readinessRows=[
     ["A place to begin","Create an account when you do not know the perfect title yet. Start with curiosity, direction, and the next move in front of you.","check"],
@@ -1191,7 +1191,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   const pricingRows=[
     {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, work, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["fear. board access when it launches","Personal-brand tools through fear.agency","Photo, video, audio, and creative production","AI learning, building, and collaborator discovery","Market information and financial news"],grad:true,button:"Reserve Pro access"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["fear. board access when it launches","Personal-brand tools through fear.agency","Lifestyle goals and personalized wellness guidance","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
@@ -1576,7 +1576,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <span className="soft-blink" style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/> Coming with fear. Pro
             </div>
             <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(44px,6vw,82px)",lineHeight:.95,letterSpacing:0,color:"#fff",marginBottom:18}}>fear<span style={{color:C.accent}}>.</span> board</h2>
-            <p style={{fontSize:17,lineHeight:1.75,color:"rgba(255,255,255,.6)",maxWidth:560,marginBottom:26}}>One future workspace to build your personal brand, create the media behind it, turn ideas into reality with AI, and stay informed about markets and finance.</p>
+            <p style={{fontSize:17,lineHeight:1.75,color:"rgba(255,255,255,.6)",maxWidth:560,marginBottom:26}}>One future workspace to build your personal brand, improve your lifestyle, create the media behind your ideas, build with AI, and stay informed about markets.</p>
             <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",color:"#111318",border:"none",borderRadius:999,padding:"14px 20px",fontSize:14,fontWeight:950,whiteSpace:"nowrap"}}>Preview fear. board</button>
           </div>
           <div className="fear-board-tool-grid" aria-label="Upcoming fear board tools">
@@ -1620,7 +1620,7 @@ function FearBoardComingSoonPage({setScreen}){
             </div>
             <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(58px,9vw,112px)",lineHeight:.86,letterSpacing:0,marginBottom:28}}>fear<span style={{color:C.accent}}>.</span><br/>board</h1>
             <p style={{fontSize:"clamp(17px,2vw,22px)",lineHeight:1.65,color:"rgba(255,255,255,.66)",maxWidth:500,marginBottom:18}}>The operating layer for what comes after your first step.</p>
-            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.46)",maxWidth:500,marginBottom:30}}>fear. board will bring personal branding, creative direction, production, AI building, and market intelligence into one focused workspace. These modules are early product foundations, not live features yet.</p>
+            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.46)",maxWidth:500,marginBottom:30}}>fear. board will bring personal branding, lifestyle guidance, production, AI building, and market intelligence into one focused workspace. These modules are early product foundations, not live features yet.</p>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
               <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Reserve Pro access</button>
               <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Explore fear.social</button>
@@ -2656,7 +2656,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
                 <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>fear. board</div>
-                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>One upcoming Pro workspace for your brand, creative production, AI ideas, and market awareness.</div>
+                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>One upcoming Pro workspace for your brand, lifestyle goals, production, AI ideas, and market awareness.</div>
                 <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>agency · style · prod · fearai · finance</div>
                 <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview board</button>
               </div>
@@ -3216,7 +3216,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
     </div>
     <div className="settings-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:16}}>
       <section className="ch" style={{gridColumn:"1/-1",background:GR2,border:"1px solid rgba(22,199,78,.24)",borderRadius:18,padding:20,color:"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}>
-        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with fear. Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Build your personal brand, produce media, create with AI, and stay current with markets inside one future workspace.</p></div>
+        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with fear. Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Build your personal brand, improve your lifestyle, produce media, create with AI, and stay current with markets.</p></div>
         <button onClick={openBoard} className="bs" style={{background:"#fff",color:C.text,border:"none",borderRadius:999,padding:"11px 16px",fontSize:13,fontWeight:950}}>Preview board</button>
       </section>
       {settingCard("Appearance","Change the theme and readability settings for this browser.",<>
