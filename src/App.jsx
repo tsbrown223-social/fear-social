@@ -201,6 +201,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .mobile-bottom-nav{background:rgba(16,17,20,0.96)!important;border-color:#252830!important;}
 .theme-dark .mobile-bottom-nav button{color:rgba(255,255,255,0.62)!important;}
 .theme-dark .mobile-bottom-nav button.active{background:rgba(22,199,78,0.16)!important;color:#fff!important;}
+.theme-dark .dm-thread-button[data-active="true"]{background:linear-gradient(135deg,rgba(22,199,78,0.22),rgba(22,199,78,0.1))!important;border-color:rgba(22,199,78,0.42)!important;}
+.theme-dark .dm-thread-button[data-active="true"] .dm-thread-name{color:#fff!important;}
+.theme-dark .dm-thread-button[data-active="true"] .dm-thread-preview{color:rgba(255,255,255,0.72)!important;}
+.theme-dark .dm-thread-button[data-active="false"] .dm-thread-preview{color:rgba(255,255,255,0.44)!important;}
 .theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
@@ -3100,11 +3104,11 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,activeConvers
       <div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}>
         <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
           {safeMessages.map(m=>(
-            <button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh dm-thread-button" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
+            <button key={m.id} role="tab" aria-selected={active===m.id} data-active={active===m.id?"true":"false"} onClick={()=>setActive(m.id)} className="uh dm-thread-button" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"1px solid transparent",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
               <Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/>
               <div className="dm-thread-copy" style={{minWidth:0}}>
-                <div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
-                <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1],m.id,(m.thread.length||1)-1)||"Start the conversation"}</div>
+                <div className="dm-thread-name" style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
+                <div className="dm-thread-preview" style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1],m.id,(m.thread.length||1)-1)||"Start the conversation"}</div>
               </div>
             </button>
           ))}
