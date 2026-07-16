@@ -210,6 +210,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .app-view *,.landing-root *,.signup-root *{min-width:0;}
 .post-card,.composer-card,.directory-grid .ch,.message-panel,.message-list,.profile-hero,.edit-sheet{overflow-wrap:anywhere;}
 .post-media-grid img,.post-media-grid video{max-width:100%;}
+.suggested-people-card{overflow:hidden;}
+.suggested-person-row{border-radius:14px;}
+.suggested-person-row:hover{background:rgba(22,199,78,0.06);}
+.suggested-person-main,.suggested-person-name,.suggested-person-meta{min-width:0;max-width:100%;}
+.suggested-person-actions button,.suggested-follow-btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;}
 .composer-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow:visible!important;}
 .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{min-height:38px;white-space:nowrap!important;word-break:keep-all!important;overflow:hidden;text-overflow:ellipsis;display:inline-flex!important;align-items:center;justify-content:center;line-height:1.1;}
 .composer-actions .post-type-btn{min-width:82px;flex:0 0 auto;}
@@ -295,6 +300,17 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .post-actions{padding:10px 12px!important;gap:6px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
   .post-actions button{font-size:12px!important;justify-content:center!important;margin-left:0!important;min-width:0!important;padding:8px 2px!important;white-space:nowrap!important;}
   .post-actions svg{width:16px!important;height:16px!important;flex:0 0 auto;}
+  .suggested-people-card{padding:16px!important;border-radius:18px!important;}
+  .suggested-people-title{font-size:22px!important;margin-bottom:6px!important;}
+  .suggested-person-row{grid-template-columns:44px minmax(0,1fr)!important;gap:12px!important;padding:14px 0!important;border-radius:12px!important;}
+  .suggested-person-row>div:first-child>div:first-child{width:44px!important;height:44px!important;font-size:13px!important;}
+  .suggested-person-row>div:first-child>div:nth-child(2){width:13px!important;height:13px!important;}
+  .suggested-person-top{grid-template-columns:minmax(0,1fr) minmax(86px,auto)!important;gap:8px!important;}
+  .suggested-person-name{font-size:15px!important;line-height:1.15!important;}
+  .suggested-person-meta{font-size:12px!important;line-height:1.2!important;}
+  .suggested-follow-btn{min-height:40px!important;border-radius:12px!important;font-size:13px!important;padding:8px 10px!important;}
+  .suggested-person-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;}
+  .suggested-person-actions button{min-height:40px!important;font-size:12px!important;border-radius:12px!important;padding:8px 6px!important;}
   .comment-row{display:grid!important;grid-template-columns:1fr!important;}
   .comment-row button{width:100%!important;}
   .filter-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;overflow:visible!important;gap:7px!important;}
@@ -2568,7 +2584,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
               );})}
             </main>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Suggested people</b>{people.filter(p=>!blockedIds.has(p.id)).length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}{people.filter(p=>!blockedIds.has(p.id)).slice(0,4).map(p=><div key={p.id} className="uh profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:10,alignItems:"center",padding:"12px 4px",flexWrap:"wrap"}}><Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={p.name} person={p} size={14}/></div><div style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.industry||"Exploring"}</div></div><button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontWeight:900,fontSize:11,flexShrink:0}}>Block</button><button onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11,flexShrink:0}}>{p.connected?"Following":"Follow"}</button></div>)}</div>
+              <SuggestedPeopleCard people={people} blockedIds={blockedIds} openProfile={openProfile} reportContent={reportContent} blockUser={blockUser} connect={connect} notify={notify}/>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
             </aside>
           </div>
@@ -2804,6 +2820,35 @@ function PostRulesConfirmModal({onClose,onConfirm}){
         <GBtn onClick={onConfirm}>Post now</GBtn>
       </div>
     </ModalShell>
+  );
+}
+
+function SuggestedPeopleCard({people,blockedIds,openProfile,reportContent,blockUser,connect,notify}){
+  const visible=(people||[]).filter(p=>!blockedIds.has(p.id)).slice(0,4);
+  return (
+    <div className="suggested-people-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}>
+      <b className="suggested-people-title" style={{display:"block",fontSize:18,lineHeight:1.1,color:C.text,marginBottom:10}}>Suggested people</b>
+      {visible.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}
+      {visible.map(p=>(
+        <div key={p.id} className="uh profile-link suggested-person-row" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr)",gap:10,alignItems:"start",padding:"12px 4px"}}>
+          <Av i={p.av} src={p.avatarUrl} size={36} online={p.online}/>
+          <div className="suggested-person-main" style={{minWidth:0,display:"grid",gap:8}}>
+            <div className="suggested-person-top" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,alignItems:"center"}}>
+              <div style={{minWidth:0}}>
+                <div className="suggested-person-name" style={{fontSize:13,fontWeight:900,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:C.text}}><NameWithVerified name={p.name} person={p} size={14}/></div>
+                <div className="suggested-person-meta" style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:2}}>{p.industry||"Exploring"}</div>
+              </div>
+              <button className="suggested-follow-btn" onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:10,padding:"7px 10px",fontWeight:900,fontSize:12,flexShrink:0,minHeight:34}}>{p.connected?"Following":"Follow"}</button>
+            </div>
+            <div className="suggested-person-actions" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:6}}>
+              <button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 8px",fontWeight:900,fontSize:11,minHeight:34}}>View</button>
+              <button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 8px",fontWeight:900,fontSize:11,minHeight:34}}>Report</button>
+              <button onClick={e=>{e.stopPropagation();blockUser(p);}} style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 8px",fontWeight:900,fontSize:11,minHeight:34}}>Block</button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
