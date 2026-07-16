@@ -373,6 +373,7 @@ async function safeRun(db, sql, bindings = []) {
 async function deleteUserAccount(db, userId) {
   const userPosts = "SELECT id FROM posts WHERE user_id = ?";
   const userConversations = "SELECT id FROM conversations WHERE user_a_id = ? OR user_b_id = ?";
+  await safeRun(db, "DELETE FROM message_deletions WHERE user_id = ? OR message_id IN (SELECT id FROM messages WHERE conversation_id IN (" + userConversations + ") OR user_id = ?)", [userId, userId, userId, userId]);
   await safeRun(db, "DELETE FROM messages WHERE conversation_id IN (" + userConversations + ") OR user_id = ?", [userId, userId, userId]);
   await safeRun(db, "DELETE FROM conversations WHERE user_a_id = ? OR user_b_id = ?", [userId, userId]);
   await safeRun(db, "DELETE FROM comments WHERE user_id = ? OR post_id IN (" + userPosts + ")", [userId, userId]);
@@ -1538,10 +1539,13 @@ async function getBootstrap(db, user) {
       `SELECT m.*
        FROM messages m
        JOIN conversations c ON c.id = m.conversation_id
+       LEFT JOIN message_deletions md ON md.message_id = m.id AND md.user_id = ?
        WHERE (c.user_a_id = ? OR c.user_b_id = ?)
+         AND md.message_id IS NULL
+         AND m.unsent_at IS NULL
        ORDER BY datetime(m.created_at), m.id`
     )
-    .bind(userId, userId)
+    .bind(userId, userId, userId)
     .all();
   const hiddenAtByConversation = new Map(
     (conversations.results || []).map((conversation) => [
@@ -1560,6 +1564,9 @@ async function getBootstrap(db, user) {
       encryptedText: message.sync_text ? message.text : "",
       author: message.user_id === userId ? "you" : message.user_id ? "them" : message.author,
       time: timeAgo(message.created_at),
+      edited: Boolean(message.edited_at),
+      createdAt: message.created_at,
+      editedAt: message.edited_at || "",
     });
     messageGroups.set(message.conversation_id, list);
   }
@@ -2797,6 +2804,83 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(segments[1])]
       );
     }
+    return json(await getBootstrap(db, user));
+  }
+
+  if (method === "PUT" && segments[0] === "messages" && segments[2] === "edit") {
+    const limited = await enforceRateLimit(db, request, "messages-edit", 30, 600);
+    if (limited) return limited;
+    const messageId = cleanText(segments[1] || "", 120);
+    const text = cleanText(body.text || "", 800);
+    if (!messageId || !text) return json({ error: "Message text required" }, { status: 400 });
+    const messageSafety = await rejectObjectionableContent(db, user.id, "message", text);
+    if (messageSafety) return messageSafety;
+    const message = await db
+      .prepare(
+        `SELECT m.id, m.user_id, m.conversation_id, m.unsent_at, c.user_a_id, c.user_b_id
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.id = ?
+         LIMIT 1`
+      )
+      .bind(messageId)
+      .first();
+    if (!message) return json({ error: "Message not found" }, { status: 404 });
+    if (message.user_a_id !== user.id && message.user_b_id !== user.id) return json({ error: "Message access denied" }, { status: 403 });
+    if (message.user_id !== user.id) return json({ error: "You can only edit messages you sent" }, { status: 403 });
+    if (message.unsent_at) return json({ error: "Unsent messages cannot be edited" }, { status: 400 });
+    await db
+      .prepare("UPDATE messages SET text = ?, sync_text = ?, edited_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+      .bind(text, text, messageId, user.id)
+      .run();
+    await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(message.conversation_id)]);
+    return json(await getBootstrap(db, user));
+  }
+
+  if (method === "DELETE" && segments[0] === "messages" && segments[2] === "delete") {
+    const limited = await enforceRateLimit(db, request, "messages-delete-one", 60, 600);
+    if (limited) return limited;
+    const messageId = cleanText(segments[1] || "", 120);
+    if (!messageId) return json({ error: "Message required" }, { status: 400 });
+    const message = await db
+      .prepare(
+        `SELECT m.id, c.user_a_id, c.user_b_id
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.id = ?
+         LIMIT 1`
+      )
+      .bind(messageId)
+      .first();
+    if (!message) return json({ error: "Message not found" }, { status: 404 });
+    if (message.user_a_id !== user.id && message.user_b_id !== user.id) return json({ error: "Message access denied" }, { status: 403 });
+    await db
+      .prepare("INSERT OR REPLACE INTO message_deletions (message_id, user_id, deleted_at) VALUES (?, ?, CURRENT_TIMESTAMP)")
+      .bind(messageId, user.id)
+      .run();
+    return json(await getBootstrap(db, user));
+  }
+
+  if (method === "DELETE" && segments[0] === "messages" && segments[2] === "unsend") {
+    const limited = await enforceRateLimit(db, request, "messages-unsend", 30, 600);
+    if (limited) return limited;
+    const messageId = cleanText(segments[1] || "", 120);
+    if (!messageId) return json({ error: "Message required" }, { status: 400 });
+    const message = await db
+      .prepare(
+        `SELECT m.id, m.user_id, m.conversation_id, c.user_a_id, c.user_b_id
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.id = ?
+         LIMIT 1`
+      )
+      .bind(messageId)
+      .first();
+    if (!message) return json({ error: "Message not found" }, { status: 404 });
+    if (message.user_a_id !== user.id && message.user_b_id !== user.id) return json({ error: "Message access denied" }, { status: 403 });
+    if (message.user_id !== user.id) return json({ error: "You can only unsend messages you sent" }, { status: 403 });
+    await db.prepare("UPDATE messages SET unsent_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?").bind(messageId, user.id).run();
+    await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(message.conversation_id)]);
     return json(await getBootstrap(db, user));
   }
 

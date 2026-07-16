@@ -2421,7 +2421,48 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     const body=String(text||"").trim();
     if(!messageId||!body||messageId.startsWith("local-message-"))return;
     await callBackend(`/messages/${encodeURIComponent(messageId)}/sync`,{method:"POST",body:JSON.stringify({text:body})});
-  },[]);
+  },[callBackend]);
+  const editMessage=async(threadId,messageId,text)=>{
+    const body=String(text||"").trim();
+    if(!body)return notify("Message cannot be empty","error");
+    const issue=moderationIssue(body);
+    if(issue)return notify(`This message edit was blocked by the safety filter for ${issue}. Edit it before saving.`,"error");
+    const previous=messages;
+    setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.map(message=>message.id===messageId?{...message,text:body,edited:true,time:message.time||"Just now"}:message)}:thread));
+    try{
+      const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/edit`,{method:"PUT",body:JSON.stringify({text:body})});
+      if(data.messages)setMessages(data.messages);
+      notify("Message updated");
+    }catch(err){
+      setMessages(previous);
+      notify(err.message||"Could not edit message","error");
+    }
+  };
+  const deleteMessage=async(threadId,messageId)=>{
+    const previous=messages;
+    setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.filter(message=>message.id!==messageId)}:thread));
+    try{
+      const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/delete`,{method:"DELETE"});
+      if(data.messages)setMessages(data.messages);
+      notify("Message deleted from your view");
+    }catch(err){
+      setMessages(previous);
+      notify(err.message||"Could not delete message","error");
+    }
+  };
+  const unsendMessage=async(threadId,messageId)=>{
+    if(!window.confirm("Unsend this message for everyone?"))return;
+    const previous=messages;
+    setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.filter(message=>message.id!==messageId)}:thread));
+    try{
+      const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/unsend`,{method:"DELETE"});
+      if(data.messages)setMessages(data.messages);
+      notify("Message unsent");
+    }catch(err){
+      setMessages(previous);
+      notify(err.message||"Could not unsend message","error");
+    }
+  };
   const closeSearch=()=>setQuery("");
   const searchResults=searchTerm?[
     ...people.filter(p=>matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location])).slice(0,6).map(p=>({
@@ -2662,7 +2703,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
-        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
+        {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
@@ -3193,7 +3234,7 @@ function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
   return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
-function MessagesView({messages,setMessages,sendMessage,deleteChat,activeConversationId,onBlockUser,onReport,profileId,syncMessageText}){
+function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,deleteMessage,unsendMessage,activeConversationId,onBlockUser,onReport,profileId,syncMessageText}){
   const messageInitials=name=>String(name||"Conversation").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"DM";
   const safeMessages=(Array.isArray(messages)?messages:[]).map((message,index)=>{
     const source=message&&typeof message==="object"?message:{};
@@ -3212,6 +3253,7 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,activeConvers
   });
   const [active,setActive]=useState(safeMessages[0]?.id);
   const [decrypted,setDecrypted]=useState({});
+  const [editing,setEditing]=useState(null);
   const syncedMessageIdsRef=useRef(new Set());
   useEffect(()=>{if(activeConversationId&&safeMessages.some(m=>m.id===activeConversationId))setActive(activeConversationId);},[activeConversationId,messages]);
   useEffect(()=>{if(!safeMessages.some(m=>m.id===active))setActive(safeMessages[0]?.id);},[active,messages]);
@@ -3247,6 +3289,12 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,activeConvers
     return raw;
   };
   const messageAuthor=msg=>typeof msg==="string"?"them":msg?.author||"them";
+  const canEditMessage=(msg,text)=>messageAuthor(msg)==="you"&&typeof msg==="object"&&msg.id&&!String(msg.id).startsWith("local-message-")&&text&&!text.startsWith("Decrypting")&&!text.startsWith("Encrypted message unavailable");
+  const saveMessageEdit=async(threadId,msg)=>{
+    if(!editing||editing.id!==msg.id)return;
+    await editMessage?.(threadId,msg.id,editing.text);
+    setEditing(null);
+  };
   if(safeMessages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
   return (
     <div className="directory-wrap">
@@ -3284,10 +3332,34 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,activeConvers
               {thread.thread.map((msg,i)=>{
                 const mine=messageAuthor(msg)==="you";
                 const messageId=messageKey(msg,thread.id,i);
+                const text=messageText(msg,thread.id,i);
+                const editable=canEditMessage(msg,text);
+                const persistent=typeof msg==="object"&&msg.id&&!String(msg.id).startsWith("local-message-");
+                const isEditing=editing?.id===messageId;
                 return (
                   <div key={messageId} className="message-row" style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
-                    <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere"}}>{messageText(msg,thread.id,i)}</div>
-                    <button onClick={()=>onReport?.("message",messageId,"message")} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Report</button>
+                    <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere",minWidth:isEditing?260:0}}>
+                      {isEditing?(
+                        <div style={{display:"grid",gap:8}}>
+                          <textarea aria-label="Edit message" value={editing.text} onChange={e=>setEditing(current=>current?.id===messageId?{...current,text:e.target.value}:current)} rows={3} className="if" style={{width:"100%",resize:"vertical",border:`1px solid ${C.aSoft}`,borderRadius:10,padding:"9px 10px",fontSize:14,lineHeight:1.4,color:C.text,background:"#fff"}}/>
+                          <div style={{display:"flex",gap:8,justifyContent:"flex-end",flexWrap:"wrap"}}>
+                            <button onClick={()=>setEditing(null)} className="bs" style={{background:"transparent",border:"none",padding:"5px 6px",fontSize:11,fontWeight:900,color:C.muted}}>Cancel</button>
+                            <button onClick={()=>saveMessageEdit(thread.id,msg)} className="bs" style={{background:"#fff",border:"none",borderRadius:8,padding:"6px 10px",fontSize:11,fontWeight:900,color:C.accent}}>Save</button>
+                          </div>
+                        </div>
+                      ):(
+                        <>
+                          {text}
+                          {msg?.edited&&<span style={{display:"block",fontSize:10,fontWeight:900,opacity:.72,marginTop:4}}>Edited</span>}
+                        </>
+                      )}
+                    </div>
+                    {!isEditing&&<div className="message-actions" style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",justifyContent:mine?"flex-end":"flex-start"}}>
+                      {editable&&<button onClick={()=>setEditing({id:messageId,text})} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Edit</button>}
+                      {persistent&&<button onClick={()=>deleteMessage?.(thread.id,messageId)} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Delete</button>}
+                      {mine&&persistent&&<button onClick={()=>unsendMessage?.(thread.id,messageId)} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.coral}}>Unsend</button>}
+                      <button onClick={()=>onReport?.("message",messageId,"message")} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Report</button>
+                    </div>}
                   </div>
                 );
               })}
