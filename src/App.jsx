@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
-const GR = "linear-gradient(135deg, #111318 0%, #16C74E 100%)";
-const GR2 = "linear-gradient(135deg, #0a0c0f 0%, #0d2018 60%, #16C74E 100%)";
+const GR = "linear-gradient(135deg, #090B0D 0%, #14171B 72%, #16C74E 100%)";
+const GR2 = "linear-gradient(135deg, #050607 0%, #0B0D10 62%, #102417 100%)";
 const GRT = { background:GR, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" };
 const OFFICIAL_FEAR_USER_ID = "fear-social-official";
 const OFFICIAL_FEAR_HANDLE = "@fear.social";
@@ -1421,7 +1421,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
                     <span style={{fontSize:12,color:"rgba(255,255,255,.55)",fontWeight:900}}>{time}</span>
                   </div>
                   <div>
-                    <div style={{width:62,height:62,borderRadius:20,background:GR,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif",fontSize:28,fontWeight:900,color:"#fff",marginBottom:18}}>f.</div>
+                    <div style={{width:62,height:62,borderRadius:16,background:"#0A0C0E",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif",fontSize:21,fontWeight:900,color:"#fff",marginBottom:18,letterSpacing:0}}>fear<span style={{display:"inline-block",width:6,height:6,borderRadius:1,background:C.accent,marginLeft:2,marginTop:14}}/></div>
                     <p style={{fontFamily:"Georgia,serif",fontSize:31,lineHeight:1.05,color:"#fff",letterSpacing:0,fontWeight:900}}>{copy}</p>
                     <div style={{display:"flex",gap:8,marginTop:22}}>
                       {["Like","Save","Share"].map((action,idx)=><span key={action} style={{display:"inline-flex",alignItems:"center",gap:6,border:"1px solid rgba(255,255,255,.12)",background:idx===0?"rgba(22,199,78,.18)":"rgba(255,255,255,.07)",color:idx===0?C.accent:"rgba(255,255,255,.72)",borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900}}><Icon name={idx===0?"heart":idx===1?"bookmark":"send"} size={13}/>{action}</span>)}

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="fear.social">
-  <rect width="512" height="512" rx="124" fill="#0D0F14"/>
-  <circle cx="350" cy="150" r="56" fill="#16C74E"/>
-  <path fill="#FFFFFF" d="M170 390V226h-48v-58h48v-20c0-58 37-95 98-95 24 0 43 3 56 8v59c-12-4-25-6-42-6-26 0-41 13-41 39v15h82v58h-82v164h-71Z"/>
+  <rect width="512" height="512" fill="#0A0C0E"/>
+  <text x="246" y="282" text-anchor="middle" fill="#F8FAFC" font-family="Georgia, 'Times New Roman', serif" font-size="132" font-weight="700">fear</text>
+  <rect x="346" y="259" width="24" height="24" rx="2" fill="#16C74E"/>
 </svg>
