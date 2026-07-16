@@ -905,10 +905,16 @@ async function getPosts(db, userId) {
        FROM posts p
        JOIN users u ON u.id = p.user_id
        WHERE p.user_id <> 'demo-user' AND u.id <> 'demo-user'
+         AND (
+           p.user_id = ?
+           OR COALESCE(u.privacy, 'public') = 'public'
+           OR EXISTS (SELECT 1 FROM user_connections c3 WHERE c3.user_id = ? AND c3.target_user_id = p.user_id)
+           OR EXISTS (SELECT 1 FROM profile_access_requests ar WHERE ar.requester_user_id = ? AND ar.target_user_id = p.user_id AND ar.status = 'approved')
+         )
          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = p.user_id)
        ORDER BY datetime(p.created_at) DESC`
     )
-    .bind(userId, userId, userId, userId)
+    .bind(userId, userId, userId, userId, userId, userId, userId)
     .all();
 
   const comments = await db
@@ -1422,26 +1428,66 @@ async function getConnectionDirectory(db) {
   return { followersByUserId, followingByUserId };
 }
 
+async function getProfileAccessRequests(db, userId) {
+  const incoming = await db
+    .prepare(
+      `SELECT ar.*, requester.id AS requester_id, requester.name AS requester_name, requester.handle AS requester_handle,
+        requester.avatar_url AS requester_avatar_url, requester.industry AS requester_industry, requester.location AS requester_location,
+        requester.bio AS requester_bio, requester.verified_badge AS requester_verified_badge
+       FROM profile_access_requests ar
+       JOIN users requester ON requester.id = ar.requester_user_id
+       WHERE ar.target_user_id = ? AND requester.id <> 'demo-user'
+       ORDER BY CASE ar.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, datetime(ar.created_at) DESC
+       LIMIT 80`
+    )
+    .bind(userId)
+    .all();
+  return {
+    incoming: (incoming.results || []).map((row) => ({
+      id: row.id,
+      status: row.status,
+      createdAt: row.created_at,
+      requester: {
+        id: row.requester_id,
+        name: row.requester_name || "Member",
+        handle: row.requester_handle || "",
+        av: initials(row.requester_name),
+        avatarUrl: row.requester_avatar_url || "",
+        industry: row.requester_industry || "Exploring",
+        loc: row.requester_location || "",
+        bio: row.requester_bio || "",
+        verified: isVerifiedAccount({
+          name: row.requester_name,
+          handle: row.requester_handle,
+          verified_badge: row.requester_verified_badge,
+        }),
+      },
+    })),
+  };
+}
+
 async function getBootstrap(db, user) {
   const userId = user.id;
   await ensureOfficialDailyReelPost(db);
-  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities, connections] = await Promise.all([
+  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities, connections, accessRequests] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
         `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url, u.verified_badge, u.e2ee_public_key,
           u.headline, u.website, u.looking_for, u.goal,
+          COALESCE(u.privacy, 'public') AS privacy,
+          COALESCE((SELECT ar.status FROM profile_access_requests ar WHERE ar.requester_user_id = ? AND ar.target_user_id = u.id LIMIT 1), '') AS access_status,
+          EXISTS(SELECT 1 FROM profile_access_requests ar2 WHERE ar2.requester_user_id = ? AND ar2.target_user_id = u.id AND ar2.status = 'approved') AS access_granted,
           0 AS mutual,
           (SELECT COUNT(*) FROM user_connections c2 WHERE c2.target_user_id = u.id) AS followers,
           EXISTS(SELECT 1 FROM user_connections c WHERE c.target_user_id = u.id AND c.user_id = ?) AS connected
          FROM users u
          WHERE u.id <> 'demo-user' AND u.id <> ?
            AND (COALESCE(u.email, '') <> '' OR u.password_hash IS NOT NULL OR COALESCE(u.oauth_provider, '') <> '')
-           AND COALESCE(u.privacy, 'public') = 'public'
            AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE b.user_id = ? AND b.blocked_user_id = u.id)
          ORDER BY datetime(u.created_at) DESC`
       )
-      .bind(userId, userId, userId)
+      .bind(userId, userId, userId, userId, userId)
       .all(),
     db
       .prepare(
@@ -1484,6 +1530,7 @@ async function getBootstrap(db, user) {
     getGroups(db, user),
     getOpportunities(db),
     getConnectionDirectory(db),
+    getProfileAccessRequests(db, userId),
   ]);
 
   const messages = await db
@@ -1519,20 +1566,31 @@ async function getBootstrap(db, user) {
 
   return {
     posts,
-    people: (people.results || []).map((person) => ({
-      ...person,
-      av: initials(person.name),
-      avatarUrl: person.avatar_url || "",
-      coverUrl: person.cover_url || "",
-      headline: person.headline || "",
-      website: person.website || "",
-      lookingFor: person.looking_for || "",
-      goal: person.goal || "",
-      e2eePublicKey: parseStoredE2EEPublicKey(person.e2ee_public_key),
-      verified: isVerifiedAccount(person),
-      online: Boolean(person.online),
-      connected: Boolean(person.connected),
-    })),
+    people: (people.results || []).map((person) => {
+      const privateProfile = person.privacy === "private";
+      const accessGranted = Boolean(person.access_granted || person.connected);
+      const locked = privateProfile && !accessGranted;
+      return {
+        ...person,
+        privacy: person.privacy || "public",
+        privateProfile,
+        accessStatus: person.access_status || "",
+        accessGranted,
+        locked,
+        av: initials(person.name),
+        avatarUrl: person.avatar_url || "",
+        coverUrl: locked ? "" : person.cover_url || "",
+        headline: locked ? "Private profile" : person.headline || "",
+        website: locked ? "" : person.website || "",
+        lookingFor: locked ? "" : person.looking_for || "",
+        goal: locked ? "" : person.goal || "",
+        bio: locked ? "This member keeps their full profile private. Request access to see their posts, details, and activity." : person.bio || "",
+        e2eePublicKey: parseStoredE2EEPublicKey(person.e2ee_public_key),
+        verified: isVerifiedAccount(person),
+        online: Boolean(person.online),
+        connected: Boolean(person.connected),
+      };
+    }),
     events: (events.results || []).map((event) => ({
       ...event,
       going: Boolean(event.going),
@@ -1562,6 +1620,7 @@ async function getBootstrap(db, user) {
     groups,
     opportunities,
     connections,
+    accessRequests,
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
   };
 }
@@ -2487,14 +2546,85 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const targetUserId = segments[1];
     if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
-    const target = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND id = ? AND COALESCE(privacy, 'public') = 'public'").bind(targetUserId).first();
+    const target = await db.prepare("SELECT id, privacy FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
     if (!target) return json({ error: "User not found" }, { status: 404 });
+    if (target.privacy === "private") {
+      const approved = await db
+        .prepare("SELECT 1 FROM profile_access_requests WHERE requester_user_id = ? AND target_user_id = ? AND status = 'approved'")
+        .bind(user.id, targetUserId)
+        .first();
+      if (!approved) {
+        const requestId = createId("access_request");
+        await safeRun(
+          db,
+          `INSERT INTO profile_access_requests (id, requester_user_id, target_user_id, status)
+           VALUES (?, ?, ?, 'pending')
+           ON CONFLICT(requester_user_id, target_user_id)
+           DO UPDATE SET status = CASE WHEN status = 'approved' THEN status ELSE 'pending' END, updated_at = CURRENT_TIMESTAMP`,
+          [requestId, user.id, targetUserId]
+        );
+        await safeRun(
+          db,
+          "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [createId("notification"), targetUserId, user.id, "profile_request", `${user.name} requested access to your private profile.`, "user", user.id]
+        );
+        return json({ ...(await getBootstrap(db, user)), accessRequested: true });
+      }
+    }
     const connected = await toggleRow(db, "user_connections", user.id, "target_user_id", targetUserId);
     if (connected) {
       await safeRun(
         db,
         "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [createId("notification"), targetUserId, user.id, "follow", `${user.name} followed you.`, "user", user.id]
+      );
+    }
+    return json(await getBootstrap(db, user));
+  }
+
+  if (method === "POST" && segments[0] === "people" && segments[2] === "access-request") {
+    const limited = await enforceRateLimit(db, request, "profile-access-request", 30, 600);
+    if (limited) return limited;
+    const targetUserId = segments[1];
+    if (!targetUserId || targetUserId === user.id) return json({ error: "Invalid user" }, { status: 400 });
+    const target = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND id = ?").bind(targetUserId).first();
+    if (!target) return json({ error: "User not found" }, { status: 404 });
+    await safeRun(
+      db,
+      `INSERT INTO profile_access_requests (id, requester_user_id, target_user_id, status)
+       VALUES (?, ?, ?, 'pending')
+       ON CONFLICT(requester_user_id, target_user_id)
+       DO UPDATE SET status = CASE WHEN status = 'approved' THEN status ELSE 'pending' END, updated_at = CURRENT_TIMESTAMP`,
+      [createId("access_request"), user.id, targetUserId]
+    );
+    await safeRun(
+      db,
+      "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [createId("notification"), targetUserId, user.id, "profile_request", `${user.name} requested access to your private profile.`, "user", user.id]
+    );
+    return json({ ...(await getBootstrap(db, user)), accessRequested: true });
+  }
+
+  if (method === "POST" && segments[0] === "access-requests" && segments.length === 3) {
+    const limited = await enforceRateLimit(db, request, "profile-access-review", 40, 600);
+    if (limited) return limited;
+    const requestId = cleanText(segments[1] || "", 120);
+    const action = segments[2] === "approve" ? "approved" : segments[2] === "deny" ? "denied" : "";
+    if (!requestId || !action) return json({ error: "Invalid access request" }, { status: 400 });
+    const requestRow = await db
+      .prepare("SELECT * FROM profile_access_requests WHERE id = ? AND target_user_id = ?")
+      .bind(requestId, user.id)
+      .first();
+    if (!requestRow) return json({ error: "Access request not found" }, { status: 404 });
+    await db
+      .prepare("UPDATE profile_access_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND target_user_id = ?")
+      .bind(action, requestId, user.id)
+      .run();
+    if (action === "approved") {
+      await safeRun(
+        db,
+        "INSERT INTO user_notifications (id, user_id, actor_user_id, type, body, target_type, target_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [createId("notification"), requestRow.requester_user_id, user.id, "profile_request", `${user.name} approved your private profile request.`, "user", user.id]
       );
     }
     return json(await getBootstrap(db, user));

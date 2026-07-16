@@ -212,6 +212,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
 .app-view button{white-space:nowrap;}
 .app-view *,.landing-root *,.signup-root *{min-width:0;}
+.density-compact .app-shell{padding:18px!important;}
+.density-compact .post-card,.density-compact .composer-card,.density-compact .ch{border-radius:14px!important;}
+.density-compact .composer-card,.density-compact .post-card>div:first-child{padding:16px!important;}
+.layout-focus .desktop-feed-side{display:none!important;}
+.layout-focus .feed-grid{grid-template-columns:minmax(0,760px)!important;justify-content:center!important;}
 .post-card,.composer-card,.directory-grid .ch,.message-panel,.message-list,.profile-hero,.edit-sheet{overflow-wrap:anywhere;}
 .post-media-grid img,.post-media-grid video{max-width:100%;}
 .suggested-people-card{overflow:hidden;}
@@ -341,6 +346,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-compose{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding-top:2px!important;}
   .message-compose input{width:100%!important;min-height:48px!important;}
   .message-compose button{width:100%!important;justify-content:center!important;min-height:48px!important;}
+  .settings-grid{grid-template-columns:1fr!important;}
   .profile-hero{padding:0!important;border-radius:20px!important;}
   .profile-hero>div:first-child{height:118px!important;}
   .profile-hero-row{display:grid!important;grid-template-columns:72px minmax(0,1fr)!important;align-items:end!important;gap:11px!important;margin-top:-30px!important;}
@@ -715,6 +721,8 @@ const iconPaths = {
   camera:<><path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13.5" r="3.5"/></>,
   link:<><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></>,
   eye:<><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
+  settings:<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2 3.4-.2-.1a1.8 1.8 0 0 0-2.1.2 1.8 1.8 0 0 0-.6 1.9V23h-6v-.5a1.8 1.8 0 0 0-.6-1.9 1.8 1.8 0 0 0-2.1-.2l-.2.1-2-3.4.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.5-1.2H3v-4h.1a1.8 1.8 0 0 0 1.5-1.2 1.8 1.8 0 0 0-.4-2l-.1-.1 2-3.4.2.1a1.8 1.8 0 0 0 2.1-.2 1.8 1.8 0 0 0 .6-1.9V1h6v.5a1.8 1.8 0 0 0 .6 1.9 1.8 1.8 0 0 0 2.1.2l.2-.1 2 3.4-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.5 1.2h.1v4h-.1a1.8 1.8 0 0 0-1.5 1.2Z"/></>,
+  lock:<><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></>,
   sun:<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></>,
   moon:<path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/>,
 };
@@ -1869,7 +1877,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   );
 }
 
-function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
+function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel}){
   const [view,setView]=useLocalState("fear-view","feed");
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
@@ -1881,6 +1889,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
   const [unreadNotifications,setUnreadNotifications]=useLocalState("fear-unread-notifications",0);
   const [stats,setStats]=useLocalState("fear-stats",REAL_STATS);
   const [connections,setConnections]=useLocalState("fear-connections",{followersByUserId:{},followingByUserId:{}});
+  const [accessRequests,setAccessRequests]=useLocalState("fear-access-requests",{incoming:[]});
+  const [interfaceSettings,setInterfaceSettings]=useLocalState("fear-interface-settings",{layout:"comfortable",density:"standard",rightRail:true});
   const [userDeals,setUserDeals]=useLocalState("fear-user-deals",[]);
   const [savedDeals,setSavedDeals]=useLocalState("fear-saved-deals",[]);
   const [filter,setFilter]=useState("All");
@@ -1916,9 +1926,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     if(data.opportunities)setUserDeals(data.opportunities);
     if(data.notifications)setNotifications(data.notifications);
     if(data.connections)setConnections(data.connections);
+    if(data.accessRequests)setAccessRequests(data.accessRequests);
     if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[setConnections,setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
+  },[setAccessRequests,setConnections,setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     applyBackendState(data);
@@ -1968,13 +1979,14 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     ["notifications","Activity"],
     ["groups","Groups"],
     ["opportunities","Deals"],
+    ["settings","Settings"],
   ];
   const mobileTabs=[
     ["feed","Feed","home"],
     ["discover","Find","diamond"],
     ["notifications","Activity","heart"],
     ["messages","DMs","mail"],
-    ["profile","Me","user"],
+    ["settings","Settings","settings"],
   ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
   const followedIds=new Set(people.filter(p=>p.connected).map(p=>p.id));
@@ -2167,8 +2179,41 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
     }
   };
   const connect=async id=>{
+    const person=people.find(p=>p.id===id)||selectedProfile;
+    const needsAccess=person?.privateProfile&&!person?.accessGranted&&!person?.connected;
+    if(needsAccess){
+      setPeople(ps=>ps.map(p=>p.id===id?{...p,accessStatus:"pending",locked:true}:p));
+      if(selectedProfile?.id===id)setSelectedProfile(p=>({...p,accessStatus:"pending",locked:true}));
+      try{
+        await callBackend(`/people/${id}/access-request`,{method:"POST"});
+        notify(`Access request sent to ${person.name}`);
+      }catch(err){
+        notify(err.message||"Could not request access","error");
+      }
+      return;
+    }
     setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
     try{await callBackend(`/people/${id}/connect`,{method:"POST"});}catch{}
+  };
+  const reviewAccessRequest=async(id,action)=>{
+    try{
+      await callBackend(`/access-requests/${id}/${action}`);
+      notify(action==="approve"?"Profile access approved":"Profile access denied");
+    }catch(err){
+      notify(err.message||"Could not update access request","error");
+    }
+  };
+  const updateProfilePrivacy=async privacy=>{
+    const next={...profileDraft,privacy};
+    setProfileDraft(next);
+    setProfile(p=>({...p,privacy}));
+    try{
+      const data=await callBackend("/profile",{method:"PUT",body:JSON.stringify({profile:next})});
+      if(data.profile)setProfileDraft(p=>({...p,...data.profile}));
+      notify(privacy==="private"?"Profile is now private":"Profile is now public");
+    }catch(err){
+      notify("Privacy saved locally. Cloud sync failed.","error");
+    }
   };
   const blockUser=async person=>{
     const id=person?.id||person?.userId;
@@ -2495,8 +2540,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
       {action}
     </div>
   );
+  const appLayoutClass=`app-view layout-${interfaceSettings.layout||"comfortable"} density-${interfaceSettings.density||"standard"}`;
   return(
-    <div className="app-view" style={{minHeight:"100vh",background:C.bg}}>
+    <div className={appLayoutClass} style={{minHeight:"100vh",background:C.bg}}>
       <a className="skip-link" href="#app-main">Skip to main content</a>
       <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <button className="app-topbar-logo" aria-label="Go to feed" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap",background:"none",border:"none",padding:"6px 0",minHeight:36}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></button>
@@ -2521,7 +2567,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
         </div>
         {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
         {view==="feed"&&(
-          <div className="feed-grid" style={{display:"grid",gridTemplateColumns:"270px minmax(0,1fr) 310px",gap:22,alignItems:"start"}}>
+          <div className="feed-grid" style={{display:"grid",gridTemplateColumns:interfaceSettings.rightRail===false?"270px minmax(0,1fr)":"270px minmax(0,1fr) 310px",gap:interfaceSettings.density==="compact"?14:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
                 <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} src={profile.avatarUrl} size={54} grad online/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={15}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.location||"Location not set"}</div></div></div>
@@ -2607,19 +2653,20 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
                 </article>
               );})}
             </main>
-            <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
+            {interfaceSettings.rightRail!==false&&<aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <SuggestedPeopleCard people={people} blockedIds={blockedIds} openProfile={openProfile} reportContent={reportContent} blockUser={blockUser} connect={connect} notify={notify}/>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
-            </aside>
+            </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Disconnected from":"Connected with"} ${p.name}`);}}>{p.connected?"Connected":"Connect"}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
         {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
+        {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} signOut={signOut}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
@@ -2669,6 +2716,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile}){
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22,overflow:"hidden",minWidth:0};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
+const connectionButtonLabel=person=>person?.locked?(person.accessStatus==="pending"?"Request sent":"Request access"):(person?.connected?"Connected":"Connect");
+const followButtonLabel=person=>person?.locked?(person.accessStatus==="pending"?"Requested":"Request"):(person?.connected?"Following":"Follow");
 function MediaPreviewGrid({media=[],onRemove,onReport}){
   const safe=(Array.isArray(media)?media:[]).map(item=>({...item,url:safeMediaUrl(item?.url,item?.kind)})).filter(item=>item.url);
   if(safe.length===0)return null;
@@ -2862,7 +2911,7 @@ function SuggestedPeopleCard({people,blockedIds,openProfile,reportContent,blockU
                 <div className="suggested-person-name" style={{fontSize:13,fontWeight:900,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:C.text}}><NameWithVerified name={p.name} person={p} size={14}/></div>
                 <div className="suggested-person-meta" style={{fontSize:11,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:2}}>{p.industry||"Exploring"}</div>
               </div>
-              <button className="suggested-follow-btn" onClick={e=>{e.stopPropagation();connect(p.id);notify(`${p.connected?"Unfollowed":"Following"} ${p.name}`);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:10,padding:"7px 10px",fontWeight:900,fontSize:12,flexShrink:0,minHeight:34}}>{p.connected?"Following":"Follow"}</button>
+              <button className="suggested-follow-btn" disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}} style={{background:p.connected?C.accent:C.aLight,color:p.connected?"#fff":C.accent,border:"none",borderRadius:10,padding:"7px 10px",fontWeight:900,fontSize:12,flexShrink:0,minHeight:34,opacity:p.accessStatus==="pending"?0.76:1}}>{followButtonLabel(p)}</button>
             </div>
             <div className="suggested-person-actions" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:6}}>
               <button onClick={e=>{e.stopPropagation();openProfile(p,"feed");}} style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 8px",fontWeight:900,fontSize:11,minHeight:34}}>View</button>
@@ -3047,6 +3096,99 @@ function OpportunitiesView({deals,savedDeals,toggleSave,signalInterest,postOppor
   };
   return <div className="directory-wrap"><section className="market-hero" style={{borderRadius:24,padding:"28px clamp(18px,4vw,38px)",color:"#fff",marginBottom:18,overflow:"hidden",position:"relative"}}><div style={{display:"flex",justifyContent:"space-between",gap:20,alignItems:"flex-end",flexWrap:"wrap",position:"relative",zIndex:1}}><div style={{maxWidth:720}}><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",opacity:.74,marginBottom:10}}>Deals</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02}}>Opportunity matches built around your first move.</h1><p style={{fontSize:15,lineHeight:1.7,opacity:.78,marginTop:14}}>Jobs, gigs, volunteer roles, internships, collaborations, and first-step openings are ranked by your profile field, goals, location, and what you say you are looking for.</p></div>{top&&<div style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:18,padding:16,minWidth:220}}><div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1.2,opacity:.7}}>Best match</div><div style={{fontSize:28,fontWeight:950,marginTop:4}}>{top.score}%</div><div style={{fontSize:13,opacity:.82,marginTop:4}}>{top.title}</div></div>}</div></section><section className="composer-card" aria-label="Post a job gig or volunteer opportunity" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:20,marginBottom:18}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"flex-start",flexWrap:"wrap",marginBottom:16}}><div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:7}}>Post an opportunity</div><h2 style={{fontSize:22,lineHeight:1.12,color:C.text}}>Share a job, gig, volunteer role, internship, collab, or first-step opening.</h2></div><Tag label="Member posted" style={{background:C.aLight,color:C.accent}}/></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:"1.15fr .85fr .55fr .75fr",gap:10,alignItems:"end"}}><label style={fieldStyle}>Title<input aria-label="Opportunity title" value={draft.title} onChange={e=>update("title",e.target.value)} placeholder="Volunteer mentor, Pop-up helper..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Company or project<input aria-label="Company or project" value={draft.company} onChange={e=>update("company",e.target.value)} placeholder="Your nonprofit, studio, team..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Type<select aria-label="Opportunity type" value={draft.type} onChange={e=>update("type",e.target.value)} className="if" style={inputStyle}><option>Job</option><option>Gig</option><option>Volunteer</option><option>Opportunity</option><option>Internship</option><option>Collab</option></select></label><label style={fieldStyle}>Field<input aria-label="Opportunity field" value={draft.tag} onChange={e=>update("tag",e.target.value)} placeholder="Brand Management" className="if" style={inputStyle}/></label></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:".85fr .85fr .85fr 1.45fr",gap:10,alignItems:"end",marginTop:10}}><label style={fieldStyle}>Pay or terms<input aria-label="Pay or terms" value={draft.budget} onChange={e=>update("budget",e.target.value)} placeholder="Volunteer, paid, stipend..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Location<input aria-label="Opportunity location" value={draft.location} onChange={e=>update("location",e.target.value)} placeholder="Remote, Local, Hybrid..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Level<input aria-label="Opportunity level" value={draft.level} onChange={e=>update("level",e.target.value)} placeholder="Beginner friendly" className="if" style={inputStyle}/></label><label style={fieldStyle}>Skills<input aria-label="Opportunity skills" value={draft.skills} onChange={e=>update("skills",e.target.value)} placeholder="community, events, design, research" className="if" style={inputStyle}/></label></div><label style={{...fieldStyle,marginTop:10}}>Description<textarea aria-label="Opportunity description" value={draft.desc} onChange={e=>update("desc",e.target.value)} placeholder="What will this person do, who is it best for, and how should they get started?" className="if" style={{...inputStyle,minHeight:94,resize:"vertical",lineHeight:1.55}}/></label><div className="opportunity-form-actions" style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginTop:14,flexWrap:"wrap"}}><p style={{fontSize:12,color:C.dim,lineHeight:1.5,maxWidth:620}}>Posted opportunities appear in Deals and are matched to members by field, skills, location, level, and profile goals.</p><GBtn onClick={submit} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="briefcase" size={16} color="#fff"/> Post opportunity</GBtn></div></section><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap",marginBottom:16}}><div style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:6}}>{[["matched","For You"],["saved","Saved"]].map(([id,label])=><button key={id} onClick={()=>setMode(id)} className="bs" style={{border:"none",borderRadius:10,padding:"9px 13px",fontSize:13,fontWeight:900,background:mode===id?C.accent:"transparent",color:mode===id?"#fff":C.muted}}>{label}</button>)}</div><div className="filter-row" style={{display:"flex",gap:8,flexWrap:"wrap"}}>{types.map(type=><button key={type} onClick={()=>setKind(type)} className="bs" style={{background:kind===type?C.aLight:"#fff",color:kind===type?C.accent:C.muted,border:`1px solid ${kind===type?C.aSoft:C.border}`,borderRadius:999,padding:"8px 13px",fontSize:12,fontWeight:900}}>{type}</button>)}</div></div>{visible.length===0?<EmptyState title={mode==="saved"?"No saved opportunities yet":kind==="Volunteer"?"No volunteer openings yet":"No matches yet"} text={mode==="saved"?"Save a few listings and they will live here.":kind==="Volunteer"?"Volunteer roles posted by members will appear here.":"Add more to your profile so fear can tune your opportunity feed."}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}}>{visible.map(deal=><article key={deal.id} className="ch" style={{...cardStyle,padding:0,borderColor:deal.userPosted?C.aSoft:C.border}}><div style={{padding:20,borderBottom:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:10}}><IT label={deal.tag}/><Tag label={deal.type} style={{background:C.aLight,color:C.accent}}/>{deal.userPosted&&<Tag label="Posted by member" style={{background:C.aLight,color:C.accent}}/>}</div><h2 style={{fontSize:21,lineHeight:1.12,color:C.text,overflowWrap:"anywhere"}}>{deal.title}</h2><div style={{fontSize:12,color:C.dim,marginTop:7}}>{deal.company} · {deal.budget} · {deal.location}</div>{deal.postedBy&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Posted by {deal.postedBy}{deal.postedByHandle?` · ${deal.postedByHandle}`:""}</div>}</div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:22,fontWeight:950,color:C.accent,lineHeight:1}}>{deal.score}%</div><div style={{fontSize:10,color:C.muted,fontWeight:900,textTransform:"uppercase",marginTop:4}}>match</div></div></div><div className="match-meter" style={{marginTop:16}}><span style={{width:`${deal.score}%`}}/></div></div><div style={{padding:20}}><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7}}>{deal.desc}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:14}}>{(deal.reasons?.length?deal.reasons:["useful first-step signal"]).map(reason=><span key={reason} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:999,padding:"7px 9px",fontSize:11,fontWeight:800,color:C.muted}}>{reason}</span>)}</div><div style={{display:"flex",gap:8,alignItems:"center",marginTop:18,flexWrap:"wrap"}}><GBtn sm onClick={()=>signalInterest(deal)} style={{display:"inline-flex",alignItems:"center",gap:7}}><Icon name="send" size={14} color="#fff"/> I'm interested</GBtn><button onClick={()=>toggleSave(deal.id)} className="bs" style={{background:deal.saved?C.aLight:"#fff",border:`1px solid ${deal.saved?C.aSoft:C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:deal.saved?C.accent:C.text,display:"inline-flex",gap:7,alignItems:"center"}}><Icon name="bookmark" size={15} color="currentColor" filled={deal.saved}/>{deal.saved?"Saved":"Save"}</button></div></div></article>)}</div>}</div>;
 }
+function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,accessRequests,reviewAccessRequest,openProfile,interfaceSettings,setInterfaceSettings,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel,onDeleteAccount,signOut}){
+  const isPrivate=(profile.privacy||"public")==="private";
+  const incoming=Array.isArray(accessRequests?.incoming)?accessRequests.incoming:[];
+  const pending=incoming.filter(request=>request.status==="pending");
+  const settingCard=(title,copy,children)=>(
+    <section className="ch" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,minWidth:0}}>
+      <div style={{marginBottom:16}}>
+        <h2 style={{fontSize:20,lineHeight:1.15,color:C.text,marginBottom:6}}>{title}</h2>
+        {copy&&<p style={{fontSize:13,color:C.muted,lineHeight:1.6}}>{copy}</p>}
+      </div>
+      {children}
+    </section>
+  );
+  const switchRow=(checked,onClick,title,copy,icon="check")=>(
+    <button role="switch" aria-checked={checked} onClick={onClick} className="bs" style={{width:"100%",display:"flex",gap:13,alignItems:"center",textAlign:"left",background:checked?C.aLight:"#fff",border:`1px solid ${checked?C.aSoft:C.border}`,borderRadius:14,padding:14,marginBottom:10}}>
+      <span style={{width:40,height:40,borderRadius:13,background:checked?C.accent:C.bg,color:checked?"#fff":C.muted,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={icon} size={18} color="currentColor"/></span>
+      <span style={{flex:1,minWidth:0}}><b style={{display:"block",color:C.text,fontSize:14,marginBottom:3}}>{title}</b><span style={{display:"block",color:C.muted,fontSize:12,lineHeight:1.45}}>{copy}</span></span>
+      <span aria-hidden="true" style={{width:44,height:24,borderRadius:999,background:checked?C.accent:"#D7DCE5",position:"relative",flexShrink:0}}><span style={{position:"absolute",top:3,left:checked?23:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .15s"}}/></span>
+    </button>
+  );
+  const segmented=(label,value,options,onChange)=>(
+    <div style={{marginBottom:14}}>
+      <div style={{fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{label}</div>
+      <div style={{display:"flex",gap:6,background:C.bg,border:`1px solid ${C.border}`,borderRadius:13,padding:5,flexWrap:"wrap"}}>
+        {options.map(option=><button key={option.value} onClick={()=>onChange(option.value)} className="bs" style={{flex:"1 1 120px",border:"none",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:900,color:value===option.value?"#fff":C.muted,background:value===option.value?C.accent:"transparent"}}>{option.label}</button>)}
+      </div>
+    </div>
+  );
+  return <div className="directory-wrap" style={{maxWidth:1040}}>
+    <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"end",flexWrap:"wrap",marginBottom:22}}>
+      <div>
+        <div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Settings</div>
+        <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02,color:C.text}}>Personalize fear.social.</h1>
+        <p style={{fontSize:14,color:C.muted,lineHeight:1.7,marginTop:10,maxWidth:700}}>Control how the app feels, how your profile appears, who can see private details, and where legal and account tools live.</p>
+      </div>
+      <button onClick={()=>setView("profile")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.text}}>View profile</button>
+    </div>
+    <div className="settings-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:16}}>
+      {settingCard("Appearance","Change the theme and readability settings for this browser.",<>
+        {switchRow(themeMode==="dark",()=>setThemeMode(themeMode==="dark"?"light":"dark"),themeMode==="dark"?"Dark mode":"Light mode","Switch the full interface between dark and light mode.",themeMode==="dark"?"moon":"sun")}
+        {switchRow(Boolean(accessibility.largeText),()=>setAccessibility(s=>({...s,largeText:!s.largeText})),"Larger text","Increase text and form control sizing across the app.","eye")}
+        {switchRow(Boolean(accessibility.highContrast),()=>setAccessibility(s=>({...s,highContrast:!s.highContrast})),"Higher contrast","Boost color contrast for easier scanning.","check")}
+        {switchRow(Boolean(accessibility.reduceMotion),()=>setAccessibility(s=>({...s,reduceMotion:!s.reduceMotion})),"Reduce motion","Turn off animated transitions where possible.","zap")}
+      </>)}
+      {settingCard("Layout","Choose how much UI you want on screen while you work.",<>
+        {segmented("Layout format",interfaceSettings.layout||"comfortable",[{value:"comfortable",label:"Comfortable"},{value:"focus",label:"Focus"}],layout=>setInterfaceSettings(s=>({...s,layout,rightRail:layout==="focus"?false:s.rightRail})))}
+        {segmented("Density",interfaceSettings.density||"standard",[{value:"standard",label:"Standard"},{value:"compact",label:"Compact"}],density=>setInterfaceSettings(s=>({...s,density})))}
+        {switchRow(interfaceSettings.rightRail!==false,()=>setInterfaceSettings(s=>({...s,rightRail:s.rightRail===false})), "Right rail on feed","Show suggested people and events beside the feed on desktop.","network")}
+      </>)}
+      {settingCard("Profile and privacy","Control your public presence and private-profile access.",<>
+        {switchRow(!isPrivate,()=>updateProfilePrivacy(isPrivate?"public":"private"),isPrivate?"Private profile":"Public profile",isPrivate?"People must request access before they can see full profile details and posts.":"Your profile details and posts can be discovered by other members.","lock")}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}>
+          <GBtn sm onClick={()=>setEditProfile(true)} style={{display:"inline-flex",alignItems:"center",gap:7}}><Icon name="user" size={14} color="#fff"/> Edit profile</GBtn>
+          <button onClick={()=>setView("profile")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:C.text}}>Profile dashboard</button>
+        </div>
+        <div style={{marginTop:18,borderTop:`1px solid ${C.border}`,paddingTop:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginBottom:12}}>
+            <b style={{fontSize:15,color:C.text}}>Access requests</b>
+            <span style={{background:pending.length?C.aLight:C.bg,color:pending.length?C.accent:C.muted,border:`1px solid ${pending.length?C.aSoft:C.border}`,borderRadius:999,padding:"5px 9px",fontSize:11,fontWeight:900}}>{pending.length} pending</span>
+          </div>
+          {incoming.length===0?<MiniEmpty text="Private profile access requests will appear here."/>:<div style={{display:"grid",gap:10}}>{incoming.slice(0,6).map(request=><div key={request.id} style={{display:"flex",gap:10,alignItems:"center",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:12}}>
+            <button onClick={()=>openProfile(request.requester)} aria-label={`Open ${request.requester.name}`} style={{background:"none",border:"none",padding:0}}><Av i={request.requester.av} src={request.requester.avatarUrl} size={40}/></button>
+            <div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:13,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{request.requester.name}</b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{request.requester.handle} · {request.status}</span></div>
+            {request.status==="pending"?<div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}><GBtn sm onClick={()=>reviewAccessRequest(request.id,"approve")}>Approve</GBtn><button onClick={()=>reviewAccessRequest(request.id,"deny")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:900,color:C.coral}}>Deny</button></div>:<span style={{fontSize:11,fontWeight:900,color:C.muted,textTransform:"capitalize"}}>{request.status}</span>}
+          </div>)}</div>}
+        </div>
+      </>)}
+      {settingCard("Legal and data","Quick access to privacy, terms, cookies, and safety documents.",<>
+        <div style={{display:"grid",gap:9}}>
+          <button onClick={()=>onOpenPanel?.("privacy")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.text}}>Privacy Policy</button>
+          <button onClick={()=>onOpenPanel?.("terms")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.text}}>Terms and Conditions</button>
+          <button onClick={()=>onOpenPanel?.("cookies")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.text}}>Cookie settings</button>
+        </div>
+        <div style={{borderTop:`1px solid ${C.border}`,marginTop:16,paddingTop:14}}>
+          <b style={{fontSize:14,color:C.text}}>Cookie preference</b>
+          <p style={{fontSize:12,color:C.muted,lineHeight:1.55,margin:"5px 0 10px"}}>Current choice: {cookieConsent.choice||"not selected"}. Essential storage keeps login and preferences working.</p>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <button onClick={()=>setCookieConsent({choice:"essential",analytics:false,marketing:false})} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,color:C.text}}>Essential only</button>
+            <button onClick={()=>setCookieConsent({choice:"all",analytics:true,marketing:true})} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,color:C.accent}}>Allow optional</button>
+          </div>
+        </div>
+      </>)}
+      {settingCard("Account","Session and account controls.",<>
+        <div style={{display:"grid",gap:10}}>
+          <button onClick={signOut} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.text}}>Sign out</button>
+          <button onClick={onDeleteAccount} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.coral}}>Delete account</button>
+        </div>
+        <p style={{fontSize:12,color:C.muted,lineHeight:1.6,marginTop:12}}>Deleting your account removes profile data, posts, messages, follows, media, and sessions where feasible.</p>
+      </>)}
+    </div>
+  </div>;
+}
+
 function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
   return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
@@ -3225,6 +3367,7 @@ function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],fol
 }
 function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,onReport,onBlock,openProfile}){
   const [activeMetric,setActiveMetric]=useState("Posts");
+  const locked=Boolean(profile.locked);
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
   const stats=[
     ["Posts",fmt(posts.length)],
@@ -3245,12 +3388,13 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
             <div style={{color:C.muted,overflowWrap:"anywhere",marginTop:7,fontSize:14,fontWeight:700}}>{profileMeta(profile)}</div>
           </div>
           {profile.id&&<div className="profile-action-row" style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end",alignSelf:"center"}}>
-            <button onClick={onMessage} className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap"}}><Icon name="send" size={15}/> Message</button>
-            <GBtn onClick={onConnect} style={{background:profile.connected?"#fff":GR,color:profile.connected?C.accent:"#fff",boxShadow:"none",whiteSpace:"nowrap"}}>{profile.connected?"Connected":"Connect"}</GBtn>
+            {!locked&&<button onClick={onMessage} className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap"}}><Icon name="send" size={15}/> Message</button>}
+            <GBtn onClick={onConnect} disabled={profile.accessStatus==="pending"} style={{background:profile.connected||profile.accessStatus==="pending"?"#fff":GR,color:profile.connected||profile.accessStatus==="pending"?C.accent:"#fff",boxShadow:"none",whiteSpace:"nowrap"}}>{connectionButtonLabel(profile)}</GBtn>
             <button onClick={onReport} className="bs" style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Report</button>
             <button onClick={onBlock} className="bs" style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Block</button>
           </div>}
         </div>
+        {locked&&<div style={{marginTop:18,background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:16,padding:16,display:"flex",gap:12,alignItems:"center"}}><span style={{width:42,height:42,borderRadius:14,background:C.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="lock" size={19} color="currentColor"/></span><div><b style={{display:"block",color:C.text,marginBottom:4}}>This profile is private.</b><span style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Request access to see full profile details, posts, and activity after this member approves you.</span></div></div>}
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
         <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio}</p>
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
@@ -3258,7 +3402,7 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
       </div>
     </div>
     <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
-    {activeMetric==="Field"?<section style={{marginTop:18}}><SectionHead eyebrow="Profile" title="Field" count={profile.industry||"Exploring"}/><div style={{...cardStyle,padding:20,borderRadius:18}}><IT label={profile.industry||"Exploring"}/><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12}}>This profile is currently building around {profile.industry||"Exploring"}.</p></div></section>:<ProfileMetricSection active={activeMetric} posts={posts} people={activeMetric==="Followers"?followers:following} emptyName={profile.name||"This member"} openProfile={openProfile}/>}
+    {locked?<EmptyState title="Private profile" text="Posts and activity will appear after this member approves your access request."/>:activeMetric==="Field"?<section style={{marginTop:18}}><SectionHead eyebrow="Profile" title="Field" count={profile.industry||"Exploring"}/><div style={{...cardStyle,padding:20,borderRadius:18}}><IT label={profile.industry||"Exploring"}/><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12}}>This profile is currently building around {profile.industry||"Exploring"}.</p></div></section>:<ProfileMetricSection active={activeMetric} posts={posts} people={activeMetric==="Followers"?followers:following} emptyName={profile.name||"This member"} openProfile={openProfile}/>}
   </div>;
 }
 function ProfilePostsSection({posts=[],emptyTitle,emptyText}){
@@ -3510,8 +3654,9 @@ export default function App(){
         {screen==="agency"&&<AgencyComingSoonPage setScreen={setScreen}/>}
         {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
-        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile}/>}
+        {screen==="app"&&<PlatformApp notify={notify} setScreen={setScreen} signOut={signOut} profile={profile} setProfile={setProfile} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={setOpenPanel}/>}
         <CookieConsent consent={cookieConsent} setConsent={setCookieConsent} onManage={()=>setOpenPanel("cookies")}/>
+        {openPanel==="terms"&&<TermsConditionsPanel onClose={()=>setOpenPanel(null)}/>}
         {openPanel==="privacy"&&<PrivacyPolicyPanel onClose={()=>setOpenPanel(null)} onOpenAccessibility={()=>setOpenPanel("accessibility")}/>}
         {openPanel==="accessibility"&&<AccessibilityPanel settings={accessibility} setSettings={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} onClose={()=>setOpenPanel(null)}/>}
         {openPanel==="cookies"&&<CookieSettingsPanel consent={cookieConsent} setConsent={setCookieConsent} onClose={()=>setOpenPanel(null)}/>}
