@@ -1116,11 +1116,11 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       notify(err.message||"Could not save email","error");
     }
   };
-  const ticker=["First steps · ","Career starts · ","Warm intros · ","Mentor requests · ","Build updates · ","Entry opportunities · ","Private rooms · ","People who get it · "];
+  const ticker=["First steps · ","Career starts · ","Warm intros · ","FEAR Pro mentorship · ","Build updates · ","Entry opportunities · ","Private rooms · ","People who get it · "];
   const statRows=[["Beta status","Open"],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
   const demoTabs=[
     {id:"feed",label:"Feed",icon:"home",title:"A feed for people trying to become somebody.",copy:"Post what you are learning, ask for direction, share progress, and find people who are taking their first real step too.",metric:"For You"},
-    {id:"discover",label:"Discover",icon:"diamond",title:"Find the people your future needs.",copy:"Meet students, creators, mentors, early professionals, operators, collaborators, and people moving toward the same kind of future.",metric:"Profiles"},
+    {id:"discover",label:"Discover",icon:"diamond",title:"Find the people your future needs.",copy:"Meet students, creators, early professionals, operators, collaborators, and people moving toward the same kind of future.",metric:"Profiles"},
     {id:"messages",label:"DMs",icon:"mail",title:"Turn courage into a conversation.",copy:"Reach out, ask the question, follow up, and start building the relationships that can change what happens next.",metric:"Live DMs"},
     {id:"deals",label:"Deals",icon:"briefcase",title:"See openings that make the next step real.",copy:"Find jobs, gigs, internships, collabs, pilot customers, and first career opportunities tuned to where you want to go.",metric:"Matches"},
   ];
@@ -1129,17 +1129,17 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const parallaxY=(cursor.y-50)/50;
   const cinematicScenes=[
     {id:"feed",label:"01 / FEED",title:"Turn ambition into proof.",copy:"Post the question, the milestone, the first messy idea, or the thing you are trying to become known for.",icon:"home"},
-    {id:"discover",label:"02 / PEOPLE",title:"Find the room before you feel ready.",copy:"Meet students, mentors, early builders, operators, and collaborators moving toward the same kind of future.",icon:"network"},
+    {id:"discover",label:"02 / PEOPLE",title:"Find the room before you feel ready.",copy:"Meet students, early builders, operators, and collaborators moving toward the same kind of future.",icon:"network"},
     {id:"deals",label:"03 / OPENINGS",title:"See the next door you can actually walk through.",copy:"Save jobs, gigs, volunteer roles, collabs, and first-step opportunities matched to your direction.",icon:"briefcase"},
   ];
   const workflowRows=[
     ["Create your card","Show who you are becoming, what you care about, what you are learning, and what opportunity you are trying to earn.","user"],
     ["Make the first move","Ask for advice, share what you are building, look for feedback, or say out loud what you want next.","megaphone"],
-    ["Find your people","Follow people, message mentors, join groups, and meet the ones who make your future feel less far away.","network"],
+    ["Find your people","Follow people, start conversations, join groups, and meet the ones who make your future feel less far away.","network"],
     ["Turn hope into motion","Save opportunities, track signals, build relationships, and keep coming back to what moves you forward.","bell"],
   ];
   const communityCards=[
-    ["Student with ambition","Looking for the first internship, first mentor, first project, or first person who says, yes, you belong here."],
+    ["Student with ambition","Looking for the first internship, first project, or first person who says, yes, you belong here."],
     ["Builder with no map","Has an idea, a skill, or a dream, but needs feedback, collaborators, and a place to start without pretending to know everything."],
     ["Future professional","Searching for jobs, gigs, projects, warm intros, and proof that the career they want can actually begin."],
   ];
@@ -1147,7 +1147,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["Mara Vale asked for portfolio feedback","Sample preview"],
     ["Jules Kade opened a fashion career group","Sample preview"],
     ["Kai Moss saved an operations role","Sample preview"],
-    ["Nia Sol received a new mentor connection","Sample preview"],
+    ["Nia Sol received a new career connection","Sample preview"],
   ];
   const journeyRows=[
     ["01","See who you can become","fear gives ambition a place to land: a profile, a direction, and a community built around the person you are trying to become."],
@@ -1164,7 +1164,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const reelCards=[
     ["fear. daily","Your first step does not need to be perfect. It needs to be visible.","00:12"],
     ["opportunity drop","Three beginner-friendly ways to get career experience this week.","00:18"],
-    ["mentor signal","Ask one clear question. Make it easy for the right person to help.","00:15"],
+    ["outreach signal","Ask one clear question. Make it easy for the right person to help.","00:15"],
   ];
   const signalRows=[
     ["Find your people","See who is active, what they want to become, and who is close enough to help with the next step.","@mara.moves","Mara Vale"],
@@ -1177,9 +1177,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     ["Builder","Oren Pike · Exploring · Looking for collaborators"],
   ];
   const featureRows=[
-    ["network","People Directory","Create a profile for the person you are becoming, then find students, mentors, operators, creators, and collaborators moving in the same direction."],
+    ["network","People Directory","Create a profile for the person you are becoming, then find students, operators, creators, and collaborators moving in the same direction."],
     ["megaphone","Progress Posts","Share what you are learning, what you need, what you are applying for, and what you are building so momentum becomes visible."],
-    ["brain","Mentor Requests","Ask focused questions, get pointed in the right direction, and turn advice into actual next steps."],
+    ["brain","FEAR Pro Mentor Program","Launching with FEAR Pro: guided mentor discovery and focused introductions designed to turn questions into useful next steps.",true],
     ["calendar","Groups & Rooms","Join focused spaces around fields, careers, events, opportunities, and the first moves people usually make alone."],
     ["briefcase","Opportunities","Find entry jobs, gigs, internships, projects, volunteer roles, and career openings that match your ambition."],
     ["zap","FEAR Pro + fear. board","A future upgrade for growing your personal brand, improving your lifestyle, producing real work, building with AI, and staying current with markets.",true],
@@ -1187,11 +1187,11 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const readinessRows=[
     ["A place to begin","Create an account when you do not know the perfect title yet. Start with curiosity, direction, and the next move in front of you.","check"],
     ["A profile with purpose","Show your goals, your field, your projects, your questions, and the opportunities you are trying to earn.","user"],
-    ["A network with motion","Follow people, message mentors, join groups, save opportunities, and build toward the career or company you want.","zap"],
+    ["A network with motion","Follow people, start conversations, join groups, save opportunities, and build toward the career or company you want.","zap"],
   ];
   const pricingRows=[
     {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, work, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["fear. board access when it launches","Personal-brand tools through fear.agency","Lifestyle goals and personalized wellness guidance","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["FEAR Pro mentor program and guided introductions","fear. board access when it launches","Personal-brand tools through fear.agency","Lifestyle goals and personalized wellness guidance","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
@@ -1270,7 +1270,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <p style={{position:"relative",fontFamily:"Georgia,serif",fontSize:"clamp(24px,3vw,42px)",lineHeight:1.04,color:"#fff",letterSpacing:0,maxWidth:710,marginBottom:26}}>Looking for feedback before I send my first real pitch.</p>
               <div style={{position:"relative",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
                 {[
-                  ["Mentor replied","mail"],
+                  ["New reply","mail"],
                   ["2 people saved it","bookmark"],
                   ["Brand gig matched","briefcase"],
                 ].map(([label,icon],i)=><div key={label} style={{border:"1px solid rgba(255,255,255,.09)",background:i===0?"rgba(22,199,78,.14)":"rgba(255,255,255,.055)",borderRadius:16,padding:"13px 12px",display:"flex",alignItems:"center",gap:9,color:i===0?C.accent:"rgba(255,255,255,.66)",fontSize:12,fontWeight:900}}><Icon name={icon} size={15}/>{label}</div>)}
@@ -1365,7 +1365,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
           <div>
             <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>What You Can Do Here</div>
             <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Your future needs people, proof, and a place to begin.</h2>
-            <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:24}}>fear.social helps you post your progress, discover people in your lane, message mentors and collaborators, join focused groups, and find opportunities that make your next step real.</p>
+            <p style={{fontSize:16,color:"rgba(255,255,255,0.55)",lineHeight:1.78,marginBottom:24}}>fear.social helps you post your progress, discover people in your lane, start conversations, join focused groups, and find opportunities that make your next step real.</p>
             <div className="landing-demo-tabs" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {demoTabs.map(tab=><button key={tab.id} onClick={()=>setActiveDemo(tab.id)} className="bs" aria-pressed={activeDemo===tab.id} style={{display:"inline-flex",alignItems:"center",gap:8,border:`1px solid ${activeDemo===tab.id?C.aSoft:"rgba(255,255,255,0.12)"}`,background:activeDemo===tab.id?C.accent:"rgba(255,255,255,0.06)",color:activeDemo===tab.id?"#fff":"rgba(255,255,255,0.72)",borderRadius:999,padding:"10px 13px",fontSize:13,fontWeight:900}}><Icon name={tab.icon} size={15}/>{tab.label}</button>)}
             </div>
@@ -1382,7 +1382,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               {(activeDemo==="feed"?[
                 ["Launch","I posted my first portfolio and I am looking for feedback before I apply to local brand roles."],
                 ["Ask","Does anyone know a beginner-friendly way to get real experience before landing a first job?"],
-                ["Milestone","First mentor call booked. Small, but it feels like my future is starting to move."],
+                ["Milestone","First career conversation booked. Small, but it feels like my future is starting to move."],
               ]:activeDemo==="discover"?demoPeople:activeDemo==="messages"?[
                 ["DM","Hey, saw your ask. I can review the deck tonight."],
                 ["DM","Want to join the fear. group call this week?"],
@@ -1400,7 +1400,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{textAlign:"center",marginBottom:76}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>The Product</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.6vw,72px)",fontWeight:800,color:"#fff",letterSpacing:0,lineHeight:1,marginBottom:18}}>Everything you need to stop waiting and start moving.</h2>
-          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:700,margin:"0 auto"}}>A profile, a feed, direct messages, groups, mentor asks, and opportunity matching, all built for people trying to take the first step into the career, work, and future they want.</p>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.5)",lineHeight:1.75,maxWidth:700,margin:"0 auto"}}>A profile, a feed, direct messages, groups, and opportunity matching, all built for people trying to take the first step into the career, work, and future they want. Guided mentorship will launch with FEAR Pro.</p>
         </div>
         <div className="landing-feature-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
           {featureRows.map(([icon,title,desc,pro],i)=>(
@@ -1550,7 +1550,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div style={{maxWidth:980,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Access</div>
           <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(36px,4.2vw,64px)",fontWeight:800,color:"#111318",letterSpacing:0,lineHeight:1,marginBottom:16}}>Start free. Move with purpose.</h2>
-          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:680,margin:"0 auto 56px"}}>Create a profile, find people, post progress, message mentors, save opportunities, and start moving toward the work and future you want.</p>
+          <p style={{fontSize:16,color:"#687080",lineHeight:1.75,maxWidth:680,margin:"0 auto 56px"}}>Create a profile, find people, post progress, start conversations, save opportunities, and move toward the work and future you want. Upgrade to FEAR Pro when guided mentorship launches.</p>
           <div className="pricing-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,textAlign:"left"}}>
             {pricingRows.map((p,i)=>(
               <div key={i} className="ch" style={{background:p.grad?"#111318":"#F7F8FA",border:`1px solid ${p.grad?"#111318":"#EAECF0"}`,borderRadius:22,padding:"38px 34px",position:"relative",overflow:"hidden",boxShadow:p.grad?"0 28px 80px rgba(0,0,0,0.18)":"none"}}>
@@ -1635,6 +1635,10 @@ function FearBoardComingSoonPage({setScreen}){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10,marginTop:12}} className="fear-board-principles">
               {["One Pro workspace","Tools that grow with you","Built inside fear.social"].map((item,index)=><div key={item} style={{background:"rgba(255,255,255,.035)",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:15,fontSize:12,fontWeight:850,color:"rgba(255,255,255,.56)",lineHeight:1.4}}><span style={{display:"block",color:C.accent,fontSize:10,marginBottom:6}}>0{index+1}</span>{item}</div>)}
+            </div>
+            <div style={{marginTop:12,background:"rgba(22,199,78,.075)",border:"1px solid rgba(22,199,78,.22)",borderRadius:20,padding:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              <span style={{width:44,height:44,borderRadius:14,background:"rgba(22,199,78,.14)",color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="brain" size={21}/></span>
+              <div style={{flex:"1 1 240px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.5,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Also launching with FEAR Pro</div><h2 style={{fontSize:18,lineHeight:1.15,marginBottom:6}}>FEAR Pro Mentor Program</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.52)"}}>Guided mentor discovery and focused introductions for members ready to turn a question into a useful next step.</p></div>
             </div>
           </div>
         </div>
@@ -1818,7 +1822,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>The community<br/>you've been<br/>looking for.</div>
           <p style={{fontSize:16,color:"rgba(255,255,255,0.42)",lineHeight:1.85,marginBottom:44}}>Real profiles, posts, and activity counts. One platform built for you.</p>
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
-            {[["network","Connect with people around your exact interests"],["brain","Request mentor intros"],["megaphone","Build in public with real support"],["zap","Find collaborators, jobs, and gigs"]].map(([icon,text])=>(
+            {[["network","Connect with people around your exact interests"],["brain","Guided mentorship coming with FEAR Pro"],["megaphone","Build in public with real support"],["zap","Find collaborators, jobs, and gigs"]].map(([icon,text])=>(
               <div key={text} style={{display:"flex",alignItems:"center",gap:14}}>
                 <div style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:C.accent}}><Icon name={icon} size={19}/></div>
                 <span style={{fontSize:15,color:"rgba(255,255,255,0.55)"}}>{text}</span>
@@ -2008,13 +2012,13 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     }
   };
   useEffect(()=>{
-    if(view==="publicProfile"&&!selectedProfile) setView("discover");
+    if(view==="mentors") setView("feed");
+    else if(view==="publicProfile"&&!selectedProfile) setView("discover");
   },[selectedProfile,setView,view]);
   const tabs=[
     ["feed","Feed"],
     ["discover","Discover"],
     ["events","Events"],
-    ["mentors","Mentors"],
     ["messages","Messages"],
     ["notifications","Activity"],
     ["groups","Groups"],
@@ -2532,15 +2536,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       meta:e.desc,
       action:()=>{setView("events");closeSearch();}
     })),
-    ...mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])])).slice(0,4).map(m=>({
-      id:`mentor-${m.id||m.name}`,
-      kind:"Mentor",
-      icon:"brain",
-      title:m.name,
-      subtitle:m.role,
-      meta:m.bio,
-      action:()=>{setView("mentors");closeSearch();}
-    })),
     ...groups.filter(g=>matchesSearch([g.name,g.desc,g.kind,g.active,...(g.announcements||[]).map(a=>`${a.title} ${a.body}`)])).slice(0,4).map(g=>({
       id:`group-${g.id}`,
       kind:"Group",
@@ -2640,7 +2635,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           <input type="search" aria-label="Search fear.social" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, groups..." className="if" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"13px 14px",fontSize:16,color:C.text,boxShadow:"0 10px 30px rgba(13,15,20,0.04)"}}/>
         </div>
         <div className="mobile-section-tabs" role="navigation" aria-label="More mobile navigation">
-          {[["events","Events","calendar"],["mentors","Mentors","brain"],["groups","Groups","network"],["opportunities","Deals","briefcase"]].map(([id,label,icon])=>(
+          {[["events","Events","calendar"],["groups","Groups","network"],["opportunities","Deals","briefcase"]].map(([id,label,icon])=>(
             <button key={id} type="button" className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}>
               <Icon name={icon} size={15} color="currentColor"/>{label}
             </button>
@@ -2656,10 +2651,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
-                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>fear. board</div>
-                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>One upcoming Pro workspace for your brand, lifestyle goals, production, AI ideas, and market awareness.</div>
-                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>agency · style · prod · fearai · finance</div>
-                <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview board</button>
+                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>fear. board + mentorship</div>
+                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>The upcoming Pro launch combines guided mentor introductions with brand, lifestyle, production, AI, and market tools.</div>
+                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>mentor program · agency · style · prod · fearai · finance</div>
+                <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview FEAR Pro</button>
               </div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
                 <div style={{fontWeight:900,fontSize:14,marginBottom:12}}>Live rooms</div>
@@ -2743,7 +2738,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         )}
         {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
-        {view==="mentors"&&<Directory title="Verified mentors" eyebrow="Mentors" items={mentors.filter(m=>matchesSearch([m.name,m.role,m.bio,...(m.tags||[])]))} render={m=><div key={m.name} className="ch" style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}><Av i={m.av} size={52} grad/><div><b>{m.name}</b><div style={{fontSize:12,color:C.dim}}>{m.role}</div></div></div><p style={bodyCopy}>{m.bio}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",margin:"16px 0"}}>{m.tags.map(t=><Tag key={t} label={t} style={{background:C.aLight,color:C.accent}}/>)}</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.muted}}>{fmt(m.sessions)} requests</span><GBtn sm onClick={()=>{requestMentor(m.id||m.name);notify(m.requested?"Request withdrawn":"Mentor request sent");}}>{m.requested?"Requested":"Request"}</GBtn></div></div>}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
@@ -2779,7 +2773,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               {["location","industry"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input aria-label={k==="industry"?"Industry":"Location"} autoComplete={k==="location"?"address-level2":undefined} value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} placeholder={k==="industry"?"Exploring, Brand Management...":"City, State"} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-              <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>looking for<input aria-label="Looking for" value={profileDraft.lookingFor||""} onChange={e=>setProfileDraft(p=>({...p,lookingFor:e.target.value}))} placeholder="Mentors, collaborators, jobs, clients..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
+              <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>looking for<input aria-label="Looking for" value={profileDraft.lookingFor||""} onChange={e=>setProfileDraft(p=>({...p,lookingFor:e.target.value}))} placeholder="Collaborators, jobs, clients, guidance..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
               <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>first step<input aria-label="First step" value={profileDraft.goal||""} onChange={e=>setProfileDraft(p=>({...p,goal:e.target.value}))} placeholder="Validate an idea, meet operators..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             </div>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>website or link<input aria-label="Website or link" autoComplete="url" value={profileDraft.website||""} onChange={e=>setProfileDraft(p=>({...p,website:e.target.value}))} placeholder="your site, portfolio, LinkedIn, store..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
@@ -3217,8 +3211,8 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
     </div>
     <div className="settings-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:16}}>
       <section className="ch" style={{gridColumn:"1/-1",background:GR2,border:"1px solid rgba(22,199,78,.24)",borderRadius:18,padding:20,color:"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}>
-        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with fear. Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Build your personal brand, improve your lifestyle, produce media, create with AI, and stay current with markets.</p></div>
-        <button onClick={openBoard} className="bs" style={{background:"#fff",color:C.text,border:"none",borderRadius:999,padding:"11px 16px",fontSize:13,fontWeight:950}}>Preview board</button>
+        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with FEAR Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board + mentorship</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Get guided mentor introductions alongside tools for your brand, lifestyle, production, AI ideas, and market awareness.</p></div>
+        <button onClick={openBoard} className="bs" style={{background:"#fff",color:C.text,border:"none",borderRadius:999,padding:"11px 16px",fontSize:13,fontWeight:950}}>Preview FEAR Pro</button>
       </section>
       {settingCard("Appearance","Change the theme and readability settings for this browser.",<>
         {switchRow(themeMode==="dark",()=>setThemeMode(themeMode==="dark"?"light":"dark"),themeMode==="dark"?"Dark mode":"Light mode","Switch the full interface between dark and light mode.",themeMode==="dark"?"moon":"sun")}
