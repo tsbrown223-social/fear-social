@@ -1495,8 +1495,16 @@ async function getBootstrap(db, user) {
     )
     .bind(userId, userId)
     .all();
+  const hiddenAtByConversation = new Map(
+    (conversations.results || []).map((conversation) => [
+      conversation.id,
+      conversation.user_a_id === userId ? conversation.user_a_hidden_at : conversation.user_b_id === userId ? conversation.user_b_hidden_at : null,
+    ])
+  );
   const messageGroups = new Map();
   for (const message of messages.results || []) {
+    const hiddenAt = hiddenAtByConversation.get(message.conversation_id);
+    if (hiddenAt && new Date(message.created_at).getTime() <= new Date(hiddenAt).getTime()) continue;
     const list = messageGroups.get(message.conversation_id) || [];
     list.push({
       id: message.id,
@@ -1532,7 +1540,9 @@ async function getBootstrap(db, user) {
       tags: mentor.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
       requested: Boolean(mentor.requested),
     })),
-    messages: (conversations.results || []).map((conversation) => ({
+    messages: (conversations.results || [])
+      .filter((conversation) => !hiddenAtByConversation.get(conversation.id) || (messageGroups.get(conversation.id) || []).length > 0)
+      .map((conversation) => ({
       id: conversation.id,
       userId: conversation.other_id || "",
       name: conversation.other_name || conversation.name,
@@ -2528,6 +2538,9 @@ async function handleRequest({ request, env, params }) {
         .bind(user.id, targetUserId)
         .first();
       conversation = { id: result?.meta?.last_row_id || created?.id };
+    } else {
+      const column = conversation.user_a_id === user.id ? "user_a_hidden_at" : "user_b_hidden_at";
+      await safeRun(db, `UPDATE conversations SET ${column} = NULL WHERE id = ?`, [Number(conversation.id)]);
     }
     if (text) {
       if (!encryptedText) {
@@ -2642,6 +2655,21 @@ async function handleRequest({ request, env, params }) {
         [createId("notification"), targetUserId, user.id, "message", `${user.name} sent you a message.`, "conversation", String(segments[1])]
       );
     }
+    return json(await getBootstrap(db, user));
+  }
+
+  if (method === "DELETE" && segments[0] === "messages" && segments.length === 2) {
+    const limited = await enforceRateLimit(db, request, "messages-delete", 30, 600);
+    if (limited) return limited;
+    const conversationId = Number(segments[1]);
+    if (!Number.isFinite(conversationId)) return json({ error: "Invalid conversation" }, { status: 400 });
+    const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(conversationId).first();
+    if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
+    if (!conversation.user_a_id || !conversation.user_b_id || (conversation.user_a_id !== user.id && conversation.user_b_id !== user.id)) {
+      return json({ error: "Conversation access denied" }, { status: 403 });
+    }
+    const column = conversation.user_a_id === user.id ? "user_a_hidden_at" : "user_b_hidden_at";
+    await safeRun(db, `UPDATE conversations SET ${column} = CURRENT_TIMESTAMP WHERE id = ?`, [conversationId]);
     return json(await getBootstrap(db, user));
   }
 
