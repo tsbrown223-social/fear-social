@@ -1,6 +1,10 @@
 const SECURITY_RESPONSE_HEADERS = {
   "cache-control": "no-store",
+  "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+  "cross-origin-opener-policy": "same-origin",
   "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "x-permitted-cross-domain-policies": "none",
   "referrer-policy": "no-referrer",
   "cross-origin-resource-policy": "same-origin",
   "permissions-policy": "camera=(), microphone=(), geolocation=()",

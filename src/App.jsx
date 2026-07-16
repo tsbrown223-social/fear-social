@@ -302,24 +302,48 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .directory-grid{grid-template-columns:1fr!important;}
   .directory-wrap{padding-bottom:86px!important;}
   .directory-title{font-size:30px!important;line-height:1.08!important;}
-  .messages-grid{grid-template-columns:1fr!important;min-height:auto!important;}
-  .message-list{display:flex!important;overflow-x:auto!important;gap:10px!important;padding:10px!important;}
-  .message-list button{min-width:220px!important;}
-  .message-panel{min-height:55vh!important;}
-  .message-bubble{max-width:86%!important;}
-  .message-panel>div:last-child{display:grid!important;grid-template-columns:1fr!important;}
-  .message-panel>div:last-child button{width:100%!important;justify-content:center!important;}
+  .dm-e2ee-note{font-size:11.5px!important;line-height:1.45!important;padding:10px!important;border-radius:12px!important;margin-bottom:12px!important;}
+  .messages-grid{grid-template-columns:1fr!important;min-height:auto!important;gap:12px!important;}
+  .message-list{display:grid!important;grid-template-columns:1fr!important;overflow:visible!important;gap:8px!important;padding:10px!important;border-radius:16px!important;max-height:none!important;}
+  .message-list .dm-thread-button{min-width:0!important;width:100%!important;min-height:64px!important;padding:10px!important;border:1px solid transparent!important;}
+  .message-list .dm-thread-button[aria-selected="true"]{border-color:${C.aSoft}!important;}
+  .dm-thread-button>div:first-child>div:first-child{width:38px!important;height:38px!important;font-size:12px!important;}
+  .dm-thread-copy{flex:1 1 auto!important;min-width:0!important;overflow:hidden!important;}
+  .dm-thread-copy span,.dm-thread-copy div{min-width:0!important;max-width:100%!important;}
+  .message-panel{min-height:calc(100dvh - 245px)!important;border-radius:16px!important;padding:12px!important;overflow:hidden!important;}
+  .message-panel-header{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:center!important;gap:10px!important;padding-bottom:12px!important;}
+  .message-panel-header>div:first-child>div:first-child{width:44px!important;height:44px!important;font-size:13px!important;}
+  .message-panel-actions{grid-column:1/-1!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;}
+  .message-panel-actions button{width:100%!important;min-height:40px!important;justify-content:center!important;}
+  .message-feed{padding:14px 0!important;max-height:52dvh!important;overflow-y:auto!important;overscroll-behavior:contain!important;}
+  .message-row{max-width:92%!important;}
+  .message-bubble{max-width:100%!important;font-size:14px!important;line-height:1.45!important;word-break:break-word!important;overflow-wrap:anywhere!important;}
+  .message-compose{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding-top:2px!important;}
+  .message-compose input{width:100%!important;min-height:48px!important;}
+  .message-compose button{width:100%!important;justify-content:center!important;min-height:48px!important;}
   .profile-hero{padding:0!important;border-radius:20px!important;}
-  .profile-hero-row{display:grid!important;grid-template-columns:82px minmax(0,1fr)!important;align-items:end!important;gap:12px!important;margin-top:-32px!important;}
-  .profile-hero-row>div:first-child{width:82px!important;height:82px!important;font-size:24px!important;}
-  .profile-hero-copy{padding-top:34px!important;min-width:0!important;}
-  .profile-hero h1{font-size:27px!important;line-height:1.08!important;}
+  .profile-hero>div:first-child{height:118px!important;}
+  .profile-hero-row{display:grid!important;grid-template-columns:72px minmax(0,1fr)!important;align-items:end!important;gap:11px!important;margin-top:-30px!important;}
+  .profile-hero-row>div:first-child{width:72px!important;height:72px!important;}
+  .profile-hero-row>div:first-child>div:first-child{width:72px!important;height:72px!important;font-size:22px!important;border-width:5px!important;}
+  .profile-hero-row>div:first-child>div:nth-child(2){width:16px!important;height:16px!important;}
+  .profile-hero-copy{padding-top:30px!important;min-width:0!important;}
+  .profile-hero-copy>div{font-size:12.5px!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .profile-hero h1{font-size:25px!important;line-height:1.08!important;display:block!important;max-width:100%!important;}
+  .profile-hero h1 span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;}
   .profile-hero [style*="padding: 0px 28px 26px"]{padding:0 16px 20px!important;}
-  .profile-edit-button,.profile-action-row{grid-column:1/-1;width:100%!important;margin-left:0!important;justify-content:stretch!important;display:grid!important;grid-template-columns:1fr!important;}
-  .profile-action-row button{width:100%!important;justify-content:center!important;}
+  .profile-edit-button,.profile-action-row{grid-column:1/-1;width:100%!important;margin-left:0!important;justify-content:stretch!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:10px!important;}
+  .profile-edit-button{grid-template-columns:1fr!important;}
+  .profile-action-row button{width:100%!important;justify-content:center!important;min-height:44px!important;padding:10px 8px!important;font-size:13px!important;}
+  .profile-detail-row{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;}
+  .profile-detail-chip{white-space:normal!important;text-overflow:clip!important;line-height:1.3!important;width:100%!important;display:block!important;}
   .profile-stats{grid-template-columns:repeat(2,1fr)!important;}
   .profile-stats>div{min-width:0!important;}
   .profile-stats>div div:first-child{font-size:22px!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .profile-stat-button{padding:14px!important;min-height:76px!important;}
+  .profile-danger-zone{padding:14px!important;border-radius:16px!important;}
+  .profile-danger-zone>div{display:grid!important;grid-template-columns:1fr!important;}
+  .profile-danger-zone button{width:100%!important;}
   .edit-modal{align-items:flex-end!important;padding:0!important;}
   .edit-sheet{width:100%!important;border-radius:22px 22px 0 0!important;max-height:88vh!important;overflow:auto!important;padding:22px!important;}
   .profile-photo-editor{align-items:flex-start!important;flex-direction:column!important;}
@@ -3010,13 +3034,13 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId,onB
     <div className="directory-wrap">
       <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div>
       <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:12,color:C.text}}>Direct messages</h1>
-      <div style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>New DMs use browser-based end-to-end encryption with per-message ephemeral keys when both people have generated message keys. Private keys stay on each user's device, so encrypted messages may be unavailable on a new browser.</div>
+      <div className="dm-e2ee-note" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>New DMs use browser-based end-to-end encryption with per-message ephemeral keys when both people have generated message keys. Private keys stay on each user's device, so encrypted messages may be unavailable on a new browser.</div>
       <div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}>
         <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
           {safeMessages.map(m=>(
-            <button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
+            <button key={m.id} role="tab" aria-selected={active===m.id} onClick={()=>setActive(m.id)} className="uh dm-thread-button" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"none",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
               <Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/>
-              <div style={{minWidth:0}}>
+              <div className="dm-thread-copy" style={{minWidth:0}}>
                 <div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
                 <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1],m.id,(m.thread.length||1)-1)||"Start the conversation"}</div>
               </div>
@@ -3025,31 +3049,31 @@ function MessagesView({messages,setMessages,sendMessage,activeConversationId,onB
         </div>
         {thread&&(
           <div className="message-panel" role="tabpanel" aria-label={`Conversation with ${thread.name}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}>
-            <div style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`,flexWrap:"wrap"}}>
+            <div className="message-panel-header" style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`,flexWrap:"wrap"}}>
               <Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/>
               <div style={{flex:1,minWidth:0}}>
                 <b><NameWithVerified name={thread.name} person={thread} size={15}/></b>
                 <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{thread.online?"Online now":thread.handle||"Direct message"}</div>
               </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+              <div className="message-panel-actions" style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
                 <button onClick={()=>onReport?.("chat_thread",thread.id,`chat with ${thread.name}`)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.muted}}>Report chat</button>
                 {thread.userId&&<button onClick={()=>onBlockUser?.(thread)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button>}
               </div>
             </div>
-            <div aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>
+            <div className="message-feed" aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>
               {thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}
               {thread.thread.map((msg,i)=>{
                 const mine=messageAuthor(msg)==="you";
                 const messageId=messageKey(msg,thread.id,i);
                 return (
-                  <div key={messageId} style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
+                  <div key={messageId} className="message-row" style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
                     <div className="message-bubble" style={{background:mine?C.accent:C.bg,color:mine?"#fff":C.text,borderRadius:14,padding:"10px 13px",fontSize:14,lineHeight:1.5,overflowWrap:"anywhere"}}>{messageText(msg,thread.id,i)}</div>
                     <button onClick={()=>onReport?.("message",messageId,"message")} className="bs" style={{background:"transparent",border:"none",padding:"2px 0",fontSize:11,fontWeight:900,color:C.dim}}>Report</button>
                   </div>
                 );
               })}
             </div>
-            <div style={{display:"flex",gap:10}}>
+            <div className="message-compose" style={{display:"flex",gap:10}}>
               <input aria-label={`Message ${thread.name}`} value={thread.draft||""} onChange={e=>setMessages(ms=>ms.map(m=>m.id===thread.id?{...m,draft:e.target.value}:m))} onKeyDown={e=>e.key==="Enter"&&sendMessage(thread.id)} placeholder={`Message ${thread.name}`} className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",minWidth:0}}/>
               <GBtn onClick={()=>sendMessage(thread.id)} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="send" size={15} color="#fff"/> Send</GBtn>
             </div>
@@ -3105,12 +3129,12 @@ function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],fol
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
         <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio||"Building in public, meeting ambitious people, and turning fear into useful momentum."}</p>
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{detailRows.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
+        <div className="profile-detail-row" style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{detailRows.map(([k,v])=><span key={k} className="profile-detail-chip" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
     </div>
     <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
     <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} events={activeMetric==="RSVPs"?rsvps:[]} emptyName="You" openProfile={openProfile}/>
-    <section aria-label="Delete account" style={{marginTop:20,background:"#fff",border:`1px solid ${C.border}`,borderRadius:18,padding:18}}>
+    <section className="profile-danger-zone" aria-label="Delete account" style={{marginTop:20,background:"#fff",border:`1px solid ${C.border}`,borderRadius:18,padding:18}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <div style={{minWidth:0,maxWidth:560}}>
           <div style={{fontSize:11,fontWeight:900,letterSpacing:1.6,textTransform:"uppercase",color:C.coral,marginBottom:6}}>Danger zone</div>
@@ -3153,7 +3177,7 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
         <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio}</p>
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{details.map(([k,v])=><span key={k} style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
+        <div className="profile-detail-row" style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{details.map(([k,v])=><span key={k} className="profile-detail-chip" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
     </div>
     <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
