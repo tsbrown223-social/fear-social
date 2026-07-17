@@ -191,6 +191,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-light .landing-cinematic-root .landing-mini-app{background:rgba(16,17,20,.92)!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 34px 110px rgba(0,0,0,.45)!important;}
 .theme-light .landing-cinematic-root .landing-mini-card{background:#15171C!important;border-color:rgba(255,255,255,.09)!important;color:#fff!important;}
 .theme-light .landing-cinematic-root .landing-mini-card div,.theme-light .landing-cinematic-root .landing-mini-card p,.theme-light .landing-cinematic-root .landing-mini-card span:not([style*="background"]){color:rgba(255,255,255,.72)!important;}
+.theme-light .landing-cinematic-root .landing-testimonial-grid .ch{background:#101114!important;border-color:rgba(255,255,255,.09)!important;box-shadow:none!important;}
+.theme-light .landing-cinematic-root .landing-testimonial-grid .landing-card-title{color:#fff!important;}
+.theme-light .landing-cinematic-root .landing-testimonial-grid .landing-card-copy{color:rgba(255,255,255,.62)!important;}
 .theme-dark{background:#050506;color:#F7F8FA;min-height:100dvh;}
 .theme-dark .app-view{background:#050506!important;color:#F7F8FA!important;}
 .theme-dark .app-topbar{background:rgba(11,12,14,0.96)!important;border-bottom-color:#252830!important;}
@@ -277,6 +280,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-intro-copy{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:clamp(500px,78dvh,680px)!important;transform:none!important;opacity:1!important;padding:68px 18px 30px!important;}
   .landing-after-intro{position:relative!important;margin-top:0!important;padding-top:0!important;opacity:1!important;transform:none!important;}
   .landing-why,.landing-launch{padding:72px 28px!important;}
+  .landing-why{padding-bottom:38px!important;}
+  .landing-launch{padding-top:46px!important;}
   .landing-launch>div:first-child{margin-bottom:40px!important;}
   .landing-why>div:last-child{gap:28px!important;}
   .landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
@@ -284,6 +289,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 @media(min-width:761px) and (max-width:1180px) and (max-height:760px){
   .landing-intro-copy{min-height:520px!important;padding-top:54px!important;}
   .landing-why,.landing-launch{padding-top:56px!important;padding-bottom:56px!important;}
+  .landing-why{padding-bottom:34px!important;}
+  .landing-launch{padding-top:42px!important;}
   .landing-launch>div:first-child{margin-bottom:32px!important;}
 }
 @media(max-width:760px){
@@ -545,6 +552,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-motion-card{min-height:auto!important;}
   .landing-reels-grid .landing-motion-card>div{min-height:300px!important;padding:16px!important;}
   .landing-launch{padding-top:58px!important;padding-bottom:58px!important;}
+  .landing-why{padding-bottom:34px!important;}
+  .landing-launch{padding-top:42px!important;}
   .landing-cta{min-height:auto!important;padding-top:64px!important;padding-bottom:64px!important;}
   .landing-cta h2{font-size:clamp(38px,12vw,58px)!important;}
   .landing-dark-section .landing-cinema-stage{display:none!important;}
@@ -576,9 +585,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-reels-grid .landing-motion-card>div:last-child{min-height:240px!important;}
   .landing-launch .landing-testimonial-grid{gap:10px!important;}
   .landing-launch .landing-testimonial-grid .ch{display:grid!important;grid-template-columns:40px minmax(0,1fr)!important;gap:12px!important;padding:15px!important;align-items:start!important;}
-  .landing-launch .landing-testimonial-grid .icon-badge{width:40px!important;height:40px!important;margin:0!important;border-radius:14px!important;}
-  .landing-launch .landing-card-title{font-size:15px!important;line-height:1.2!important;margin:0 0 5px!important;}
-  .landing-launch .landing-card-copy{font-size:12.5px!important;line-height:1.45!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;}
+  .landing-launch .landing-testimonial-grid .icon-badge{width:40px!important;height:40px!important;margin:0!important;border-radius:14px!important;grid-column:1!important;grid-row:1 / span 2!important;}
+  .landing-launch .landing-card-title{font-size:15px!important;line-height:1.2!important;margin:0 0 5px!important;grid-column:2!important;grid-row:1!important;}
+  .landing-launch .landing-card-copy{font-size:12.5px!important;line-height:1.45!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;grid-column:2!important;grid-row:2!important;}
   .landing-workflow-grid{grid-template-columns:1fr 1fr!important;}
   .landing-workflow-grid .ch{min-height:0!important;padding:14px!important;}
   .landing-workflow-grid .ch p{display:none!important;}
@@ -1531,8 +1540,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         </div>
       </div>
       <div id="why-fear" className="landing-why landing-section" style={{background:"linear-gradient(180deg,#050506 0%,#050506 46%,#07100B 78%,#050506 100%)",padding:"104px 52px",borderTop:"1px solid rgba(255,255,255,0.08)",borderBottom:"1px solid rgba(255,255,255,0.08)",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:"0 -18% -22%",background:"radial-gradient(ellipse at 58% 88%, rgba(22,199,78,.18), rgba(22,199,78,.08) 32%, transparent 68%)",filter:"blur(34px)",opacity:.92,pointerEvents:"none",WebkitMaskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)",maskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)"}}/>
-        <div style={{position:"absolute",inset:"18% -25% -32%",background:"radial-gradient(ellipse at 35% 100%, rgba(22,199,78,.09), transparent 62%)",filter:"blur(46px)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",inset:"0 -18% 0",background:"radial-gradient(ellipse at 58% 88%, rgba(22,199,78,.18), rgba(22,199,78,.08) 32%, transparent 68%)",filter:"blur(34px)",opacity:.92,pointerEvents:"none",WebkitMaskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)",maskImage:"linear-gradient(180deg, transparent 0%, rgba(0,0,0,.22) 38%, #000 100%)"}}/>
+        <div style={{position:"absolute",inset:"18% -25% 0",background:"radial-gradient(ellipse at 35% 100%, rgba(22,199,78,.09), transparent 62%)",filter:"blur(46px)",pointerEvents:"none"}}/>
         <div style={{maxWidth:1080,margin:"0 auto",position:"relative",display:"grid",gridTemplateColumns:"minmax(0,1.05fr) minmax(280px,.95fr)",gap:40,alignItems:"center"}}>
           <div>
             <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:16}}>Why the name</div>
