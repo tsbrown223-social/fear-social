@@ -198,6 +198,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .app-shell,.theme-dark .directory-wrap{color:#F7F8FA!important;}
 .theme-dark .desktop-feed-side>div,.theme-dark .mobile-profile-summary,.theme-dark .composer-card,.theme-dark .post-card,.theme-dark .directory-grid .ch,.theme-dark .message-list,.theme-dark .message-panel,.theme-dark .profile-stats>div,.theme-dark .edit-sheet{background:#101114!important;border-color:#252830!important;}
 .theme-dark .app-view [style*="background: rgb(255, 255, 255)"],.theme-dark .app-view [style*="background: #fff"],.theme-dark .app-view [style*="background: #FFFFFF"],.theme-dark .app-view [style*="background: rgb(240, 242, 245)"],.theme-dark .app-view [style*="background: #F0F2F5"]{background:#15171C!important;border-color:#2C313A!important;color:#F7F8FA!important;}
+.theme-dark .app-view [style*="background: rgb(232, 251, 240)"],.theme-dark .app-view [style*="background: #E8FBF0"]{background:rgba(22,199,78,.14)!important;border-color:rgba(22,199,78,.34)!important;color:#CFFFE0!important;}
 .theme-dark .app-view [style*="color: rgb(13, 15, 20)"],.theme-dark .app-view [style*="color: #0D0F14"],.theme-dark .app-view [style*="color: rgb(42, 45, 56)"],.theme-dark .app-view [style*="color: #2A2D38"]{color:#F7F8FA!important;}
 .theme-dark .app-view .message-bubble[style*="background: rgb(22, 199, 78)"]{background:#16C74E!important;color:#fff!important;}
 .theme-dark .app-view .activity-unread{background:rgba(22,199,78,0.14)!important;border-color:rgba(22,199,78,0.32)!important;}
@@ -212,6 +213,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .profile-card-looking b{color:#fff!important;}
 .theme-dark .profile-card-secondary-btn{background:#101114!important;color:#fff!important;border-color:#3A414D!important;}
 .theme-dark .profile-card-secondary-btn:hover{background:#1A1D24!important;border-color:rgba(22,199,78,0.5)!important;}
+.theme-dark .profile-stat-button[aria-pressed="true"]{background:rgba(22,199,78,.14)!important;border-color:rgba(22,199,78,.38)!important;}
+.theme-dark .profile-stat-button[aria-pressed="true"] div{color:#CFFFE0!important;}
+.theme-dark .fear-club-feature{background:#101114!important;border-color:#2C313A!important;}
+.theme-dark .fear-club-feature p{color:rgba(255,255,255,.62)!important;}
 .theme-dark .mobile-bottom-nav{background:rgba(16,17,20,0.96)!important;border-color:#252830!important;}
 .theme-dark .mobile-bottom-nav button{color:rgba(255,255,255,0.62)!important;}
 .theme-dark .mobile-bottom-nav button.active{background:rgba(22,199,78,0.16)!important;color:#fff!important;}
@@ -1158,7 +1163,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     {label:"Profile",copy:"Show your goals, field, posts, and proof.",x:"8%",y:"18%",icon:"user"},
     {label:"Feed",copy:"Post progress, ask questions, and build in public.",x:"60%",y:"8%",icon:"home"},
     {label:"Deals",copy:"Find jobs, gigs, volunteer roles, and collabs.",x:"66%",y:"58%",icon:"briefcase"},
-    {label:"Groups",copy:"Join rooms for fields, events, and first moves.",x:"18%",y:"66%",icon:"network"},
+    {label:"Groups",copy:"Join rooms for fields, interests, and first moves.",x:"18%",y:"66%",icon:"network"},
     {label:"DMs",copy:"Turn interest into a real conversation.",x:"38%",y:"38%",icon:"mail"},
   ];
   const reelCards=[
@@ -1179,8 +1184,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const featureRows=[
     ["network","People Directory","Create a profile for the person you are becoming, then find students, operators, creators, and collaborators moving in the same direction."],
     ["megaphone","Progress Posts","Share what you are learning, what you need, what you are applying for, and what you are building so momentum becomes visible."],
-    ["brain","FEAR Pro Mentor Program","Launching with FEAR Pro: guided mentor discovery and focused introductions designed to turn questions into useful next steps.",true],
-    ["calendar","Groups & Rooms","Join focused spaces around fields, careers, events, opportunities, and the first moves people usually make alone."],
+    ["brain","Mentorship + fear.club","Launching with FEAR Pro: guided mentor introductions alongside curated events, live sessions, and rooms built for real connection.",true],
+    ["calendar","Groups & Rooms","Join focused spaces around fields, careers, opportunities, and the first moves people usually make alone."],
     ["briefcase","Opportunities","Find entry jobs, gigs, internships, projects, volunteer roles, and career openings that match your ambition."],
     ["zap","FEAR Pro + fear. board","A future upgrade for growing your personal brand, improving your lifestyle, producing real work, building with AI, and staying current with markets.",true],
   ];
@@ -1191,7 +1196,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   const pricingRows=[
     {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, work, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["FEAR Pro mentor program and guided introductions","fear. board access when it launches","Personal-brand tools through fear.agency","Lifestyle goals and personalized wellness guidance","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["FEAR Pro mentor program and guided introductions","fear.club events, live sessions, and member rooms","fear. board access when it launches","Personal-brand and lifestyle tools","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
@@ -1640,6 +1645,10 @@ function FearBoardComingSoonPage({setScreen}){
               <span style={{width:44,height:44,borderRadius:14,background:"rgba(22,199,78,.14)",color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="brain" size={21}/></span>
               <div style={{flex:"1 1 240px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.5,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Also launching with FEAR Pro</div><h2 style={{fontSize:18,lineHeight:1.15,marginBottom:6}}>FEAR Pro Mentor Program</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.52)"}}>Guided mentor discovery and focused introductions for members ready to turn a question into a useful next step.</p></div>
             </div>
+            <div style={{marginTop:12,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRadius:20,padding:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              <span style={{width:44,height:44,borderRadius:14,background:"rgba(22,199,78,.12)",color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="calendar" size={21}/></span>
+              <div style={{flex:"1 1 240px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.5,textTransform:"uppercase",color:C.accent,marginBottom:6}}>Also launching with FEAR Pro</div><h2 style={{fontSize:18,lineHeight:1.15,marginBottom:6}}>fear.club</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.52)"}}>Curated events, live sessions, and member rooms designed to turn online connection into real momentum.</p></div>
+            </div>
           </div>
         </div>
       </section>
@@ -2018,7 +2027,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const tabs=[
     ["feed","Feed"],
     ["discover","Discover"],
-    ["events","Events"],
+    ["events","fear.club"],
     ["messages","Messages"],
     ["notifications","Activity"],
     ["groups","Groups"],
@@ -2137,7 +2146,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     ["Followers",fmt(followerCount)],
     ["Following",fmt(ownFollowing.length)],
     ["Saved",fmt(filteredPosts.filter(p=>p.saved).length)],
-    ["RSVPs",fmt(events.filter(e=>e.going).length)],
   ];
   const toPublicProfile=person=>({
     id:person.id||person.userId||"",
@@ -2291,10 +2299,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     setNotifications(ns=>ns.map(n=>id&&n.id!==id?n:{...n,read:true}));
     if(!id)setUnreadNotifications(0);
     try{await callBackend("/notifications/read",{method:"POST",body:JSON.stringify({id})});}catch{}
-  };
-  const rsvp=async id=>{
-    setEvents(es=>es.map(e=>e.id===id?{...e,going:!e.going,attending:e.going?e.attending-1:e.attending+1}:e));
-    try{await callBackend(`/events/${id}/rsvp`,{method:"POST"});}catch{}
   };
   const requestMentor=async id=>{
     setMentors(ms=>ms.map(m=>(m.id||m.name)===id?{...m,requested:!m.requested,sessions:m.requested?m.sessions:m.sessions+1}:m));
@@ -2527,15 +2531,6 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       meta:p.content||"Photo/video post",
       action:()=>{setView("feed");setFilter("All");closeSearch();}
     })),
-    ...events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type])).slice(0,4).map(e=>({
-      id:`event-${e.id}`,
-      kind:"Event",
-      icon:"calendar",
-      title:e.title,
-      subtitle:[e.date,e.time,e.type].filter(Boolean).join(" · "),
-      meta:e.desc,
-      action:()=>{setView("events");closeSearch();}
-    })),
     ...groups.filter(g=>matchesSearch([g.name,g.desc,g.kind,g.active,...(g.announcements||[]).map(a=>`${a.title} ${a.body}`)])).slice(0,4).map(g=>({
       id:`group-${g.id}`,
       kind:"Group",
@@ -2635,7 +2630,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           <input type="search" aria-label="Search fear.social" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, groups..." className="if" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"13px 14px",fontSize:16,color:C.text,boxShadow:"0 10px 30px rgba(13,15,20,0.04)"}}/>
         </div>
         <div className="mobile-section-tabs" role="navigation" aria-label="More mobile navigation">
-          {[["events","Events","calendar"],["groups","Groups","network"],["opportunities","Deals","briefcase"]].map(([id,label,icon])=>(
+          {[["events","fear.club","calendar"],["groups","Groups","network"],["opportunities","Deals","briefcase"]].map(([id,label,icon])=>(
             <button key={id} type="button" className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}>
               <Icon name={icon} size={15} color="currentColor"/>{label}
             </button>
@@ -2651,9 +2646,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
-                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>fear. board + mentorship</div>
-                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>The upcoming Pro launch combines guided mentor introductions with brand, lifestyle, production, AI, and market tools.</div>
-                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>mentor program · agency · style · prod · fearai · finance</div>
+                <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>The FEAR Pro launch</div>
+                <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>Guided mentorship, fear.club gatherings, and a focused board for brand, lifestyle, production, AI, and market tools.</div>
+                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>mentorship · fear.club · agency · style · prod · fearai · finance</div>
                 <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview FEAR Pro</button>
               </div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
@@ -2732,18 +2727,18 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </main>
             {interfaceSettings.rightRail!==false&&<aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <SuggestedPeopleCard people={people} blockedIds={blockedIds} openProfile={openProfile} reportContent={reportContent} blockUser={blockUser} connect={connect} notify={notify}/>
-              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><b>Next events</b>{events.length===0&&<MiniEmpty text="No real events are published yet."/>}{events.slice(0,3).map(e=><div key={e.id} className="uh" style={{padding:"12px 4px"}}><div style={{fontSize:13,fontWeight:800}}>{e.title}</div><div style={{fontSize:11,color:C.dim,margin:"3px 0 8px"}}>{e.date} · {fmt(e.attending)} RSVPs</div><button onClick={()=>{rsvp(e.id);notify(`${e.going?"Removed RSVP":"RSVP confirmed"}`);}} style={{background:e.going?C.accent:C.aLight,color:e.going?"#fff":C.accent,border:"none",borderRadius:8,padding:"6px 10px",fontWeight:800,fontSize:11}}>{e.going?"Going":"RSVP"}</button></div>)}</div>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}><div style={{display:"flex",alignItems:"center",gap:9,marginBottom:9}}><span style={{width:32,height:32,borderRadius:10,background:C.aLight,color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Icon name="calendar" size={16}/></span><div><div style={{fontSize:10,fontWeight:950,letterSpacing:1.2,textTransform:"uppercase",color:C.accent}}>Coming with FEAR Pro</div><b style={{fontSize:16}}>fear.club</b></div></div><p style={{fontSize:12,color:C.muted,lineHeight:1.55,marginBottom:12}}>Curated events, live sessions, and member rooms are on the way.</p><button onClick={()=>setView("events")} className="bs" style={{width:"100%",background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:9,padding:"9px 11px",fontSize:12,fontWeight:900}}>See what is coming</button></div>
             </aside>}
           </div>
         )}
         {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
-        {view==="events"&&<Directory title="Events and rooms" eyebrow="Calendar" items={events.filter(e=>matchesSearch([e.title,e.desc,e.tag,e.date,e.time,e.type]))} render={e=><div key={e.id} className="ch" style={cardStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{e.title}</b><IT label={e.tag}/></div><p style={bodyCopy}>{e.desc}</p><div style={{fontSize:13,color:C.muted,margin:"16px 0"}}>{e.date} · {e.time} · {e.type} · {fmt(e.attending)} RSVPs</div><GBtn sm onClick={()=>{rsvp(e.id);notify(e.going?"RSVP removed":"RSVP confirmed");}}>{e.going?"Going":"RSVP"}</GBtn></div>}/>}
+        {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
         {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} openBoard={()=>setScreen("board")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} signOut={signOut}/>}
-        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} rsvps={events.filter(e=>e.going)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
+        {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
@@ -3037,9 +3032,31 @@ function MiniEmpty({text}){
 function Directory({eyebrow,title,items,render}){
   return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
 }
+function FearClubComingSoonView({onPreview}){
+  const features=[
+    ["calendar","Curated gatherings","Thoughtful events around careers, creative work, opportunity, and the first moves people usually make alone."],
+    ["network","Smaller rooms","Focused member sessions designed for useful conversation, shared interests, and introductions that feel natural."],
+    ["sparkle","Real connection","A bridge from the people you meet on fear.social to the relationships and momentum you can build beyond the feed."],
+  ];
+  return <div className="directory-wrap fear-club-view" style={{maxWidth:1040}}>
+    <section style={{position:"relative",overflow:"hidden",background:GR2,border:"1px solid rgba(22,199,78,.24)",borderRadius:24,padding:"clamp(26px,5vw,52px)",color:"#fff",boxShadow:"0 28px 90px rgba(0,0,0,.18)"}}>
+      <div aria-hidden="true" style={{position:"absolute",width:360,height:360,borderRadius:"50%",right:-130,bottom:-220,background:"radial-gradient(circle, rgba(22,199,78,.32), transparent 68%)",pointerEvents:"none"}}/>
+      <div style={{position:"relative",zIndex:1,maxWidth:720}}>
+        <span style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(22,199,78,.12)",border:"1px solid rgba(22,199,78,.3)",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:950,letterSpacing:1.2,textTransform:"uppercase",color:"#8BFFAD",marginBottom:22}}><span style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/>Coming soon with FEAR Pro</span>
+        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(48px,8vw,88px)",lineHeight:.9,letterSpacing:0,color:"#fff",marginBottom:22}}>fear<span style={{color:C.accent}}>.</span>club</h1>
+        <p style={{fontSize:"clamp(17px,2vw,21px)",lineHeight:1.62,color:"rgba(255,255,255,.72)",maxWidth:680,marginBottom:14}}>The part of fear.social built to bring the right people into the same room.</p>
+        <p style={{fontSize:14,lineHeight:1.72,color:"rgba(255,255,255,.5)",maxWidth:650,marginBottom:28}}>fear.club will introduce curated events, live sessions, and focused member rooms as part of the FEAR Pro launch. It is a preview today, and no event registration or payment is active yet.</p>
+        <button onClick={onPreview} className="bs" style={{background:"#fff",color:"#0D0F14",border:"none",borderRadius:999,padding:"13px 18px",fontSize:13,fontWeight:950,display:"inline-flex",alignItems:"center",gap:8}}>Preview FEAR Pro <Icon name="send" size={15}/></button>
+      </div>
+    </section>
+    <div className="directory-grid fear-club-features" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,marginTop:14}}>
+      {features.map(([icon,title,copy])=><article key={title} className="ch fear-club-feature" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,minWidth:0}}><span style={{width:40,height:40,borderRadius:13,background:C.aLight,color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:17}}><Icon name={icon} size={19}/></span><h2 style={{fontSize:18,lineHeight:1.15,color:C.text,marginBottom:8}}>{title}</h2><p style={{fontSize:13,lineHeight:1.62,color:C.muted}}>{copy}</p></article>)}
+    </div>
+  </div>;
+}
 function SearchResultsPanel({term,results,onClear}){
   const visible=results.slice(0,12);
-  return <section aria-label={`Search results for ${term}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:18,marginBottom:20,boxShadow:"0 18px 54px rgba(13,15,20,0.06)"}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}><div style={{minWidth:0}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:5}}>Search</div><h2 style={{fontFamily:"Georgia,serif",fontSize:28,lineHeight:1.05,letterSpacing:0,color:C.text,overflowWrap:"anywhere"}}>{visible.length?`${visible.length} results for "${term}"`:`No results for "${term}"`}</h2></div><button onClick={onClear} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7}}><Icon name="close" size={14}/> Clear</button></div>{visible.length===0?<EmptyState title="Nothing matched yet" text="Try a person, field, tag, post topic, group, event, message, or opportunity."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>{visible.map(result=><button key={result.id} onClick={result.action} className="ch" style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,textAlign:"left",display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:12,color:C.text,minWidth:0}}><span style={{width:38,height:38,borderRadius:12,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={result.icon} size={18}/></span><span style={{minWidth:0}}><span style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1,color:C.accent}}>{result.kind}</span><span style={{fontSize:12,color:C.dim,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{result.subtitle}</span></span><span style={{display:"block",fontSize:15,fontWeight:950,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{result.title}</span><span style={{fontSize:13,color:C.muted,lineHeight:1.45,marginTop:4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{result.meta}</span></span></button>)}</div>}</section>;
+  return <section aria-label={`Search results for ${term}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:18,marginBottom:20,boxShadow:"0 18px 54px rgba(13,15,20,0.06)"}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}><div style={{minWidth:0}}><div style={{fontSize:11,fontWeight:900,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:5}}>Search</div><h2 style={{fontFamily:"Georgia,serif",fontSize:28,lineHeight:1.05,letterSpacing:0,color:C.text,overflowWrap:"anywhere"}}>{visible.length?`${visible.length} results for "${term}"`:`No results for "${term}"`}</h2></div><button onClick={onClear} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",gap:7}}><Icon name="close" size={14}/> Clear</button></div>{visible.length===0?<EmptyState title="Nothing matched yet" text="Try a person, field, tag, post topic, group, message, or opportunity."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>{visible.map(result=><button key={result.id} onClick={result.action} className="ch" style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,textAlign:"left",display:"grid",gridTemplateColumns:"38px minmax(0,1fr)",gap:12,color:C.text,minWidth:0}}><span style={{width:38,height:38,borderRadius:12,background:C.aLight,color:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={result.icon} size={18}/></span><span style={{minWidth:0}}><span style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:11,fontWeight:950,textTransform:"uppercase",letterSpacing:1,color:C.accent}}>{result.kind}</span><span style={{fontSize:12,color:C.dim,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{result.subtitle}</span></span><span style={{display:"block",fontSize:15,fontWeight:950,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{result.title}</span><span style={{fontSize:13,color:C.muted,lineHeight:1.45,marginTop:4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{result.meta}</span></span></button>)}</div>}</section>;
 }
 function GroupsView({groups,people,createGroup,joinGroup,leaveGroup,inviteToGroup,postAnnouncement,reportContent}){
   const [draft,setDraft]=useState({name:"",description:""});
@@ -3211,7 +3228,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
     </div>
     <div className="settings-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:16}}>
       <section className="ch" style={{gridColumn:"1/-1",background:GR2,border:"1px solid rgba(22,199,78,.24)",borderRadius:18,padding:20,color:"#fff",display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}>
-        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with FEAR Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>fear. board + mentorship</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Get guided mentor introductions alongside tools for your brand, lifestyle, production, AI ideas, and market awareness.</p></div>
+        <div style={{flex:"1 1 420px"}}><div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Coming with FEAR Pro</div><h2 style={{fontSize:22,lineHeight:1.1,marginBottom:7}}>The FEAR Pro launch</h2><p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,.6)",maxWidth:660}}>Get guided mentor introductions, fear.club gatherings, and tools for your brand, lifestyle, production, AI ideas, and market awareness.</p></div>
         <button onClick={openBoard} className="bs" style={{background:"#fff",color:C.text,border:"none",borderRadius:999,padding:"11px 16px",fontSize:13,fontWeight:950}}>Preview FEAR Pro</button>
       </section>
       {settingCard("Appearance","Change the theme and readability settings for this browser.",<>
@@ -3223,7 +3240,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
       {settingCard("Layout","Choose how much UI you want on screen while you work.",<>
         {segmented("Layout format",interfaceSettings.layout||"comfortable",[{value:"comfortable",label:"Comfortable"},{value:"focus",label:"Focus"}],layout=>setInterfaceSettings(s=>({...s,layout,rightRail:layout==="focus"?false:s.rightRail})))}
         {segmented("Density",interfaceSettings.density||"standard",[{value:"standard",label:"Standard"},{value:"compact",label:"Compact"}],density=>setInterfaceSettings(s=>({...s,density})))}
-        {switchRow(interfaceSettings.rightRail!==false,()=>setInterfaceSettings(s=>({...s,rightRail:s.rightRail===false})), "Right rail on feed","Show suggested people and events beside the feed on desktop.","network")}
+        {switchRow(interfaceSettings.rightRail!==false,()=>setInterfaceSettings(s=>({...s,rightRail:s.rightRail===false})), "Right rail on feed","Show suggested people and FEAR Pro previews beside the feed on desktop.","network")}
       </>)}
       {settingCard("Profile and privacy","Control your public presence and private-profile access.",<>
         {switchRow(!isPrivate,()=>updateProfilePrivacy(isPrivate?"public":"private"),isPrivate?"Private profile":"Public profile",isPrivate?"People must request access before they can see full profile details and posts.":"Your profile details and posts can be discovered by other members.","lock")}
@@ -3420,10 +3437,9 @@ const ProfileStatButton=({label,value,active,onClick})=>(
   </button>
 );
 
-function ProfileMetricSection({active,posts=[],people=[],events=[],emptyName="this profile",openProfile}){
+function ProfileMetricSection({active,posts=[],people=[],emptyName="this profile",openProfile}){
   if(active==="Posts")return <ProfilePostsSection posts={posts} emptyTitle="No posts yet" emptyText={`${emptyName} has not published any posts yet.`}/>;
   if(active==="Saved")return <ProfilePostsSection posts={posts} emptyTitle="No saved posts yet" emptyText="Saved posts will appear here after you save them from the feed."/>;
-  if(active==="RSVPs")return <section style={{marginTop:18}}><SectionHead eyebrow="Profile" title="RSVPs" count={`${fmt(events.length)} events`}/>{events.length===0?<EmptyState title="No RSVPs yet" text="Events you RSVP to will appear here."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{events.map(e=><article key={e.id} className="ch" style={{...cardStyle,padding:18,borderRadius:18}}><b style={{color:C.text,overflowWrap:"anywhere"}}>{e.title}</b><p style={{fontSize:13,color:C.muted,lineHeight:1.55,marginTop:8}}>{e.date} · {e.time} · {e.type}</p></article>)}</div>}</section>;
   return <section style={{marginTop:18}}><SectionHead eyebrow="Network" title={active} count={`${fmt(people.length)} people`}/>{people.length===0?<EmptyState title={`No ${active.toLowerCase()} yet`} text={`${emptyName} does not have anyone to show here yet.`}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{people.map(person=><button key={`${active}-${person.id}`} onClick={()=>openProfile?.(person)} className="ch profile-link" style={{...cardStyle,padding:16,borderRadius:18,textAlign:"left",display:"flex",gap:12,alignItems:"center",minWidth:0}}><Av i={person.av} src={person.avatarUrl} size={44}/><span style={{minWidth:0}}><b style={{display:"block",color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={person.name} person={person} size={14}/></b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:3}}>{[person.handle,person.industry||person.loc].filter(Boolean).join(" · ")}</span></span></button>)}</div>}</section>;
 }
 
@@ -3437,9 +3453,10 @@ const SectionHead=({eyebrow,title,count})=>(
   </div>
 );
 
-function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],followers=[],following=[],savedPosts=[],rsvps=[],openProfile,initialMetric="Posts"}){
-  const [activeMetric,setActiveMetric]=useState(initialMetric);
-  useEffect(()=>setActiveMetric(initialMetric),[initialMetric]);
+function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],followers=[],following=[],savedPosts=[],openProfile,initialMetric="Posts"}){
+  const normalizedMetric=initialMetric==="RSVPs"?"Posts":initialMetric;
+  const [activeMetric,setActiveMetric]=useState(normalizedMetric);
+  useEffect(()=>setActiveMetric(initialMetric==="RSVPs"?"Posts":initialMetric),[initialMetric]);
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
   const detailRows=[["First step",profile.goal],["Looking for",profile.lookingFor],["Field",profile.industry||"Exploring"]].filter(([,v])=>v);
   const metricPeople={Followers:followers,Following:following};
@@ -3463,7 +3480,7 @@ function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],fol
       </div>
     </div>
     <div className="profile-stats" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{stats.map(([k,v])=><ProfileStatButton key={k} label={k} value={v} active={activeMetric===k} onClick={()=>setActiveMetric(k)}/>)}</div>
-    <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} events={activeMetric==="RSVPs"?rsvps:[]} emptyName="You" openProfile={openProfile}/>
+    <ProfileMetricSection active={activeMetric} posts={metricPosts[activeMetric]||[]} people={metricPeople[activeMetric]||[]} emptyName="You" openProfile={openProfile}/>
     <section className="profile-danger-zone" aria-label="Delete account" style={{marginTop:20,background:"#fff",border:`1px solid ${C.border}`,borderRadius:18,padding:18}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:14,flexWrap:"wrap"}}>
         <div style={{minWidth:0,maxWidth:560}}>
