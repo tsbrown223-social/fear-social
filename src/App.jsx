@@ -31,9 +31,9 @@ const fmt=n=>Number(n||0).toLocaleString();
 
 const css = `
 *{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;background:#050506;min-height:100%;overflow-x:hidden;overscroll-behavior-x:none;}
-body{background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;overflow-x:hidden;min-height:100dvh;overscroll-behavior-x:none;overscroll-behavior-y:none;}
-#root{min-height:100dvh;background:#050506;}
+html{scroll-behavior:smooth;background:#050506;min-height:100%;width:100%;overflow-x:clip;overflow-y:auto;overscroll-behavior-x:none;scrollbar-gutter:stable;}
+body{background:${C.bg};font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;width:100%;max-width:100%;overflow-x:clip;overflow-y:visible;min-height:100dvh;overscroll-behavior-x:none;overscroll-behavior-y:auto;-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:auto;}
+#root{width:100%;max-width:100%;min-height:100dvh;background:#050506;overflow-x:clip;}
 .a11y-large-text{font-size:112%;}
 .a11y-large-text input,.a11y-large-text textarea,.a11y-large-text button{font-size:1rem!important;}
 .a11y-high-contrast{filter:contrast(1.12);}
@@ -234,6 +234,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
 .app-view button{white-space:nowrap;}
 .app-view *,.landing-root *,.signup-root *{min-width:0;}
+.app-view,.landing-root,.signup-root,.verify-shell{width:100%;max-width:100%;}
+.app-view img,.app-view video,.landing-root img,.landing-root video{max-width:100%;height:auto;}
 .density-compact .app-shell{padding:18px!important;}
 .density-compact .post-card,.density-compact .composer-card,.density-compact .ch{border-radius:14px!important;}
 .density-compact .composer-card,.density-compact .post-card>div:first-child{padding:16px!important;}
@@ -294,8 +296,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-launch>div:first-child{margin-bottom:32px!important;}
 }
 @media(max-width:760px){
-  html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
-  body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:pan-y;}
+  html,body,#root{width:100%;max-width:100%;overflow-x:clip;}
+  body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:auto;}
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
   .landing-cinematic-sweep,.landing-halo{animation:none!important;}
   .landing-cursor,.landing-progress{display:none!important;}
@@ -305,7 +307,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fear-board-intro{position:static!important;top:auto!important;}
   .fear-board-principles{grid-template-columns:1fr!important;}
   .landing-magnetic:hover,.landing-scroll-step:hover,.landing-world-node:hover{transform:none!important;}
-  .app-view{overflow-x:hidden!important;font-size:15px;background:#F4F6F8!important;}
+  .app-view{width:100%!important;max-width:100%!important;overflow-x:clip!important;font-size:15px;background:#F4F6F8!important;}
   .app-view h1,.app-view h2,.app-view h3,.app-view p,.app-view div,.app-view span,.app-view a{max-width:100%;}
   .app-view p,.app-view h1,.app-view h2,.app-view h3{overflow-wrap:anywhere;}
   .app-view button,.app-view .bs,.app-view label.bs{min-height:44px;}
@@ -313,7 +315,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ch:hover{transform:none;box-shadow:none;}
   .desktop-app-tabs,.desktop-app-search,.desktop-signout,.desktop-feed-side{display:none!important;}
   .mobile-app-search{display:block;margin-bottom:12px;}
-  .mobile-section-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 12px;gap:6px;overflow:visible;padding:2px 0 8px;}
+  .mobile-section-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 12px;gap:6px;overflow:visible;padding:2px 0 8px;}
   .mobile-section-tabs::-webkit-scrollbar{display:none;}
   .mobile-section-tabs button{width:100%;min-width:0;min-height:42px;border:1px solid ${C.border};border-radius:999px;background:${C.card};color:${C.muted};padding:8px 5px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;box-shadow:0 10px 24px rgba(13,15,20,.04);overflow:hidden;text-overflow:ellipsis;}
   .mobile-section-tabs button svg{width:14px;height:14px;flex:0 0 auto;}
@@ -329,8 +331,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-topbar-logo{font-size:18px!important;flex:1 1 auto;min-width:0;max-width:42vw;overflow:hidden;text-overflow:ellipsis;}
   .app-topbar>button{flex:0 0 auto;}
   .app-topbar>button[aria-label="Edit profile"]>div>div{width:34px!important;height:34px!important;font-size:11px!important;}
-  .app-topbar>button[aria-label*="unread notifications"],.app-topbar .theme-toggle-button{width:38px!important;height:38px!important;min-height:38px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
-  .app-shell{padding:12px 10px calc(104px + env(safe-area-inset-bottom))!important;width:100%!important;max-width:100%!important;}
+  .app-topbar>button[aria-label*="unread notifications"],.app-topbar .theme-toggle-button,.app-topbar .app-invite-button{width:38px!important;height:38px!important;min-height:38px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+  .app-shell{padding:12px max(10px,env(safe-area-inset-left)) calc(104px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right))!important;width:100%!important;max-width:100%!important;min-width:0!important;}
+  .app-shell>*,.feed-grid>*,.directory-wrap,.messages-grid,.profile-hero{width:100%;max-width:100%;min-width:0;}
   .feed-grid{display:block!important;}
   .mobile-profile-summary{display:block!important;}
   .mobile-profile-summary{padding:14px!important;border-radius:16px!important;}
@@ -495,7 +498,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .pricing-price-row{display:block!important;margin-bottom:10px!important;}
   .pricing-price-row span:first-child{font-size:42px!important;line-height:.95!important;}
   .pricing-price-row span:last-child{display:block!important;margin-top:4px!important;}
-  .landing-cinematic-root{background:#050506!important;min-height:100dvh!important;overflow:hidden!important;}
+  .landing-cinematic-root{background:#050506!important;min-height:100dvh!important;overflow-x:clip!important;overflow-y:visible!important;}
   .landing-cinematic-root .landing-hero{min-height:auto!important;padding:92px 16px 48px!important;background:radial-gradient(circle at 50% 0%, rgba(22,199,78,.15), transparent 48%), #050506!important;display:block!important;text-align:center!important;}
   .landing-intro-copy{position:relative!important;inset:auto!important;height:auto!important;min-height:clamp(360px,58dvh,500px)!important;transform:none!important;opacity:1!important;z-index:2!important;padding:44px 0 20px!important;display:flex!important;justify-content:center!important;}
   .landing-intro-copy:before{top:6%!important;width:104vw!important;opacity:.9!important;}
@@ -649,6 +652,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .mobile-bottom-nav button{font-size:9px!important;height:48px!important;}
   .app-shell{padding-left:8px!important;padding-right:8px!important;}
   .composer-card,.post-card,.mobile-profile-summary{border-radius:16px!important;}
+}
+@supports not (overflow:clip){
+  html,body,#root,.app-view,.landing-cinematic-root{overflow-x:hidden!important;}
 }
 `;
 
@@ -1150,7 +1156,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const ticker=["First steps · ","Career starts · ","Warm intros · ","FEAR Pro mentorship · ","Build updates · ","Entry opportunities · ","Private rooms · ","People who get it · "];
   const statRows=[["Beta status","Open"],["Access","Invite"],["Free plan","Live"],["Pro plan","$19/mo"]];
   const demoTabs=[
-    {id:"feed",label:"Feed",icon:"home",title:"A feed for people trying to become somebody.",copy:"Post what you are learning, ask for direction, share progress, and find people who are taking their first real step too.",metric:"For You"},
+    {id:"feed",label:"Feed",icon:"home",title:"A feed for people trying to become somebody.",copy:"Post what you are learning, ask for direction, share progress, and find people who are taking their first real step too.",metric:"Your Path"},
     {id:"discover",label:"Discover",icon:"diamond",title:"Find the people your future needs.",copy:"Meet students, creators, early professionals, operators, collaborators, and people moving toward the same kind of future.",metric:"Profiles"},
     {id:"messages",label:"DMs",icon:"mail",title:"Turn courage into a conversation.",copy:"Reach out, ask the question, follow up, and start building the relationships that can change what happens next.",metric:"Live DMs"},
     {id:"deals",label:"Deals",icon:"briefcase",title:"See openings that make the next step real.",copy:"Find jobs, gigs, internships, collabs, pilot customers, and first career opportunities tuned to where you want to go.",metric:"Matches"},
@@ -1468,7 +1474,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
               <div style={{fontSize:11,fontWeight:900,letterSpacing:2.5,color:C.accent,textTransform:"uppercase",marginBottom:14}}>Daily fear Signals</div>
               <h2 style={{fontFamily:"Georgia,serif",fontSize:"clamp(38px,4.8vw,74px)",lineHeight:1,color:"#fff",letterSpacing:0}}>A community that keeps giving people a reason to move.</h2>
             </div>
-            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.56)",maxWidth:390}}>fear.social can use its own account to publish short product reels, first-step prompts, opportunity drops, and community updates inside the app.</p>
+            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.56)",maxWidth:390}}>fear.social can use its own account to publish short product videos, first-step prompts, opportunity drops, and community updates inside the app.</p>
           </div>
           <div className="landing-reels-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
             {reelCards.map(([label,copy,time],i)=>(
@@ -2044,6 +2050,32 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       notify("Your account has been deleted");
     }catch(err){
       notify(err.message||"Could not delete account","error");
+    }
+  };
+  const inviteFriend=async()=>{
+    const inviter=String(profile.handle||profile.name||"").replace(/^@/,"").trim();
+    const inviteUrl=new URL(window.location.origin+window.location.pathname);
+    if(inviter)inviteUrl.searchParams.set("ref",inviter);
+    inviteUrl.hash="signup";
+    const shareData={
+      title:"Join me on fear.social",
+      text:"Take your first step toward the career and future you want on fear.social.",
+      url:inviteUrl.toString(),
+    };
+    if(typeof navigator.share==="function"){
+      try{
+        await navigator.share(shareData);
+        notify("Invite ready to send");
+        return;
+      }catch(err){
+        if(err?.name==="AbortError")return;
+      }
+    }
+    try{
+      await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+      notify("Invite link copied");
+    }catch{
+      window.prompt("Copy your fear.social invite link",shareData.url);
     }
   };
   useEffect(()=>{
@@ -2647,6 +2679,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
         <input type="search" aria-label="Search people, posts, tags, groups, and deals" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
+        <button onClick={inviteFriend} className="bs app-invite-button" aria-label="Invite a friend" title="Invite a friend" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",color:C.muted}}><Icon name="send" size={18} color="currentColor"/></button>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
@@ -2694,7 +2727,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                 </div>
               </div>
               <div role="tablist" aria-label="Feed mode" style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:8}}>
-                {[["forYou","For You","Ranked for your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
+                {[["forYou","Your Path","Relevant to your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
               </div>
               <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
@@ -2712,7 +2745,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                 </div>
               </div>
               <div className="filter-row" role="toolbar" aria-label="Filter posts by field" style={{display:"flex",gap:8,marginBottom:16,overflow:"visible",flexWrap:"wrap"}}>{["All","Exploring","Finance","Brand Management","Creative","Food","Health"].map(t=><button key={t} aria-pressed={filter===t} onClick={()=>setFilter(t)} className="bs" style={{background:filter===t?C.accent:"#fff",color:filter===t?"#fff":C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,borderRadius:9,padding:"8px 16px",fontSize:13,fontWeight:800,whiteSpace:"nowrap"}}>{t}</button>)}</div>
-              {visiblePosts.length===0&&<EmptyState title={feedMode==="following"?"No following posts yet":"No real posts yet"} text={feedMode==="following"?"Connect with people in Discover, then their posts will show up here.":"The For You feed will rank real posts around your field, goals, follows, and activity."}/>}
+              {visiblePosts.length===0&&<EmptyState title={feedMode==="following"?"No following posts yet":"No real posts yet"} text={feedMode==="following"?"Connect with people in Discover, then their posts will show up here.":"Your Path uses your stated field and goals to organize real posts that may be useful to you."}/>}
               {visiblePosts.map(p=>{
                 const isOwner=ownPost(p);
                 const isEditing=editingPost?.id===p.id;
@@ -2737,7 +2770,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                         </div>
                       </div>
                     ):<>
-                      {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:p.type==="Reel"?"pre-line":"normal"}}>{p.content}</p>}
+                      {p.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:["Reel","Daily Drop"].includes(p.type)?"pre-line":"normal"}}>{p.content}</p>}
                       <OfficialReelCard post={p}/>
                       <MediaPreviewGrid media={p.media} onReport={item=>reportContent("media",item.id||p.id,`${item.kind||"media"} attachment`)}/>
                     </>}
@@ -2763,7 +2796,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
         {view==="groups"&&<GroupsView groups={groups} people={people} createGroup={createGroup} joinGroup={joinGroup} leaveGroup={leaveGroup} inviteToGroup={inviteToGroup} postAnnouncement={postGroupAnnouncement} reportContent={reportContent}/>}
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
-        {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} openBoard={()=>setScreen("board")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} signOut={signOut}/>}
+        {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} openBoard={()=>setScreen("board")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} inviteFriend={inviteFriend} signOut={signOut}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
         {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
       </main>
@@ -2997,7 +3030,7 @@ function SuggestedPeopleCard({people,blockedIds,openProfile,reportContent,blockU
   const visible=(people||[]).filter(p=>!blockedIds.has(p.id)).slice(0,4);
   return (
     <div className="suggested-people-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20}}>
-      <b className="suggested-people-title" style={{display:"block",fontSize:18,lineHeight:1.1,color:C.text,marginBottom:10}}>Suggested people</b>
+      <b className="suggested-people-title" style={{display:"block",fontSize:18,lineHeight:1.1,color:C.text,marginBottom:10}}>New people</b>
       {visible.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}
       {visible.map(p=>(
         <div key={p.id} className="uh profile-link suggested-person-row" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr)",gap:10,alignItems:"start",padding:"12px 4px"}}>
@@ -3023,17 +3056,18 @@ function SuggestedPeopleCard({people,blockedIds,openProfile,reportContent,blockU
 }
 
 function OfficialReelCard({post}){
-  if(post?.type!=="Reel"||post?.handle!=="@fear.social")return null;
+  if(!["Reel","Daily Drop"].includes(post?.type)||post?.handle!=="@fear.social")return null;
   const lines=String(post.content||"").split("\n").map(line=>line.trim()).filter(Boolean);
-  const title=lines.find(line=>line.startsWith("Daily fear.social Reel:"))?.replace("Daily fear.social Reel:","").trim()||"Daily Reel";
+  const titleLine=lines.find(line=>line.startsWith("Daily fear.social Drop:")||line.startsWith("Daily fear.social Reel:"));
+  const title=titleLine?.replace(/^Daily fear\.social (?:Drop|Reel):/,"").trim()||"Daily Drop";
   const quote=lines.find(line=>line.startsWith("Quote:"))?.replace("Quote:","").trim()||"";
   const feature=lines.find(line=>line.startsWith("Why fear.social:"))?.replace("Why fear.social:","").trim()||"fear.social helps you turn first-step ambition into visible momentum.";
   const cta=lines.find(line=>line.startsWith("CTA:"))?.replace("CTA:","").trim()||"Open fear.social and make your next move.";
-  return <div aria-label={`Official fear.social Reel: ${title}`} style={{marginTop:14,borderRadius:22,overflow:"hidden",background:GR2,border:`1px solid ${C.aSoft}`,boxShadow:"0 24px 60px rgba(22,199,78,0.14)"}}>
+  return <div aria-label={`Official fear.social Daily Drop: ${title}`} style={{marginTop:14,borderRadius:22,overflow:"hidden",background:GR2,border:`1px solid ${C.aSoft}`,boxShadow:"0 24px 60px rgba(22,199,78,0.14)"}}>
     <div style={{minHeight:430,display:"grid",alignContent:"space-between",padding:24,position:"relative",color:"#fff"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 78% 18%, rgba(22,199,78,.35), transparent 32%), radial-gradient(circle at 18% 82%, rgba(255,255,255,.08), transparent 34%)"}}/>
       <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"space-between",gap:12,alignItems:"center"}}>
-        <span style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(255,255,255,.2)",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:950,letterSpacing:1.2,textTransform:"uppercase",background:"rgba(255,255,255,.08)"}}><Icon name="sparkle" size={14} color={C.accent}/> Daily Reel</span>
+        <span style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid rgba(255,255,255,.2)",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:950,letterSpacing:1.2,textTransform:"uppercase",background:"rgba(255,255,255,.08)"}}><Icon name="sparkle" size={14} color={C.accent}/> Daily Drop</span>
         <span style={{fontFamily:"Georgia,serif",fontSize:21,fontWeight:900}}>fear<span style={{color:C.accent}}>.</span>social</span>
       </div>
       <div style={{position:"relative",zIndex:1,display:"grid",gap:14,maxWidth:520}}>
@@ -3213,9 +3247,9 @@ function OpportunitiesView({deals,savedDeals,toggleSave,signalInterest,postOppor
     const posted=await postOpportunity(draft);
     if(posted)setDraft({title:"",company:"",type:"Gig",tag:profile?.industry||"Exploring",budget:"",location:"Remote",level:"First step",skills:"",desc:""});
   };
-  return <div className="directory-wrap"><section className="market-hero" style={{borderRadius:24,padding:"28px clamp(18px,4vw,38px)",color:"#fff",marginBottom:18,overflow:"hidden",position:"relative"}}><div style={{display:"flex",justifyContent:"space-between",gap:20,alignItems:"flex-end",flexWrap:"wrap",position:"relative",zIndex:1}}><div style={{maxWidth:720}}><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",opacity:.74,marginBottom:10}}>Deals</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02}}>Opportunity matches built around your first move.</h1><p style={{fontSize:15,lineHeight:1.7,opacity:.78,marginTop:14}}>Jobs, gigs, volunteer roles, internships, collaborations, and first-step openings are ranked by your profile field, goals, location, and what you say you are looking for.</p></div>{top&&<div style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:18,padding:16,minWidth:220}}><div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1.2,opacity:.7}}>Best match</div><div style={{fontSize:28,fontWeight:950,marginTop:4}}>{top.score}%</div><div style={{fontSize:13,opacity:.82,marginTop:4}}>{top.title}</div></div>}</div></section><section className="composer-card" aria-label="Post a job gig or volunteer opportunity" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:20,marginBottom:18}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"flex-start",flexWrap:"wrap",marginBottom:16}}><div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:7}}>Post an opportunity</div><h2 style={{fontSize:22,lineHeight:1.12,color:C.text}}>Share a job, gig, volunteer role, internship, collab, or first-step opening.</h2></div><Tag label="Member posted" style={{background:C.aLight,color:C.accent}}/></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:"1.15fr .85fr .55fr .75fr",gap:10,alignItems:"end"}}><label style={fieldStyle}>Title<input aria-label="Opportunity title" value={draft.title} onChange={e=>update("title",e.target.value)} placeholder="Volunteer mentor, Pop-up helper..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Company or project<input aria-label="Company or project" value={draft.company} onChange={e=>update("company",e.target.value)} placeholder="Your nonprofit, studio, team..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Type<select aria-label="Opportunity type" value={draft.type} onChange={e=>update("type",e.target.value)} className="if" style={inputStyle}><option>Job</option><option>Gig</option><option>Volunteer</option><option>Opportunity</option><option>Internship</option><option>Collab</option></select></label><label style={fieldStyle}>Field<input aria-label="Opportunity field" value={draft.tag} onChange={e=>update("tag",e.target.value)} placeholder="Brand Management" className="if" style={inputStyle}/></label></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:".85fr .85fr .85fr 1.45fr",gap:10,alignItems:"end",marginTop:10}}><label style={fieldStyle}>Pay or terms<input aria-label="Pay or terms" value={draft.budget} onChange={e=>update("budget",e.target.value)} placeholder="Volunteer, paid, stipend..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Location<input aria-label="Opportunity location" value={draft.location} onChange={e=>update("location",e.target.value)} placeholder="Remote, Local, Hybrid..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Level<input aria-label="Opportunity level" value={draft.level} onChange={e=>update("level",e.target.value)} placeholder="Beginner friendly" className="if" style={inputStyle}/></label><label style={fieldStyle}>Skills<input aria-label="Opportunity skills" value={draft.skills} onChange={e=>update("skills",e.target.value)} placeholder="community, events, design, research" className="if" style={inputStyle}/></label></div><label style={{...fieldStyle,marginTop:10}}>Description<textarea aria-label="Opportunity description" value={draft.desc} onChange={e=>update("desc",e.target.value)} placeholder="What will this person do, who is it best for, and how should they get started?" className="if" style={{...inputStyle,minHeight:94,resize:"vertical",lineHeight:1.55}}/></label><div className="opportunity-form-actions" style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginTop:14,flexWrap:"wrap"}}><p style={{fontSize:12,color:C.dim,lineHeight:1.5,maxWidth:620}}>Posted opportunities appear in Deals and are matched to members by field, skills, location, level, and profile goals.</p><GBtn onClick={submit} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="briefcase" size={16} color="#fff"/> Post opportunity</GBtn></div></section><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap",marginBottom:16}}><div style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:6}}>{[["matched","For You"],["saved","Saved"]].map(([id,label])=><button key={id} onClick={()=>setMode(id)} className="bs" style={{border:"none",borderRadius:10,padding:"9px 13px",fontSize:13,fontWeight:900,background:mode===id?C.accent:"transparent",color:mode===id?"#fff":C.muted}}>{label}</button>)}</div><div className="filter-row" style={{display:"flex",gap:8,flexWrap:"wrap"}}>{types.map(type=><button key={type} onClick={()=>setKind(type)} className="bs" style={{background:kind===type?C.aLight:"#fff",color:kind===type?C.accent:C.muted,border:`1px solid ${kind===type?C.aSoft:C.border}`,borderRadius:999,padding:"8px 13px",fontSize:12,fontWeight:900}}>{type}</button>)}</div></div>{visible.length===0?<EmptyState title={mode==="saved"?"No saved opportunities yet":kind==="Volunteer"?"No volunteer openings yet":"No matches yet"} text={mode==="saved"?"Save a few listings and they will live here.":kind==="Volunteer"?"Volunteer roles posted by members will appear here.":"Add more to your profile so fear can tune your opportunity feed."}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}}>{visible.map(deal=><article key={deal.id} className="ch" style={{...cardStyle,padding:0,borderColor:deal.userPosted?C.aSoft:C.border}}><div style={{padding:20,borderBottom:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:10}}><IT label={deal.tag}/><Tag label={deal.type} style={{background:C.aLight,color:C.accent}}/>{deal.userPosted&&<Tag label="Posted by member" style={{background:C.aLight,color:C.accent}}/>}</div><h2 style={{fontSize:21,lineHeight:1.12,color:C.text,overflowWrap:"anywhere"}}>{deal.title}</h2><div style={{fontSize:12,color:C.dim,marginTop:7}}>{deal.company} · {deal.budget} · {deal.location}</div>{deal.postedBy&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Posted by {deal.postedBy}{deal.postedByHandle?` · ${deal.postedByHandle}`:""}</div>}</div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:22,fontWeight:950,color:C.accent,lineHeight:1}}>{deal.score}%</div><div style={{fontSize:10,color:C.muted,fontWeight:900,textTransform:"uppercase",marginTop:4}}>match</div></div></div><div className="match-meter" style={{marginTop:16}}><span style={{width:`${deal.score}%`}}/></div></div><div style={{padding:20}}><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7}}>{deal.desc}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:14}}>{(deal.reasons?.length?deal.reasons:["useful first-step signal"]).map(reason=><span key={reason} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:999,padding:"7px 9px",fontSize:11,fontWeight:800,color:C.muted}}>{reason}</span>)}</div><div style={{display:"flex",gap:8,alignItems:"center",marginTop:18,flexWrap:"wrap"}}><GBtn sm onClick={()=>signalInterest(deal)} style={{display:"inline-flex",alignItems:"center",gap:7}}><Icon name="send" size={14} color="#fff"/> I'm interested</GBtn><button onClick={()=>toggleSave(deal.id)} className="bs" style={{background:deal.saved?C.aLight:"#fff",border:`1px solid ${deal.saved?C.aSoft:C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:deal.saved?C.accent:C.text,display:"inline-flex",gap:7,alignItems:"center"}}><Icon name="bookmark" size={15} color="currentColor" filled={deal.saved}/>{deal.saved?"Saved":"Save"}</button></div></div></article>)}</div>}</div>;
+  return <div className="directory-wrap"><section className="market-hero" style={{borderRadius:24,padding:"28px clamp(18px,4vw,38px)",color:"#fff",marginBottom:18,overflow:"hidden",position:"relative"}}><div style={{display:"flex",justifyContent:"space-between",gap:20,alignItems:"flex-end",flexWrap:"wrap",position:"relative",zIndex:1}}><div style={{maxWidth:720}}><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",opacity:.74,marginBottom:10}}>Deals</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02}}>Opportunity matches built around your first move.</h1><p style={{fontSize:15,lineHeight:1.7,opacity:.78,marginTop:14}}>Jobs, gigs, volunteer roles, internships, collaborations, and first-step openings are ranked by your profile field, goals, location, and what you say you are looking for.</p></div>{top&&<div style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:18,padding:16,minWidth:220}}><div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:1.2,opacity:.7}}>Strongest overlap</div><div style={{fontSize:28,fontWeight:950,marginTop:4}}>{top.score}%</div><div style={{fontSize:13,opacity:.82,marginTop:4}}>{top.title}</div></div>}</div></section><section className="composer-card" aria-label="Post a job gig or volunteer opportunity" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,padding:20,marginBottom:18}}><div style={{display:"flex",justifyContent:"space-between",gap:14,alignItems:"flex-start",flexWrap:"wrap",marginBottom:16}}><div><div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:7}}>Post an opportunity</div><h2 style={{fontSize:22,lineHeight:1.12,color:C.text}}>Share a job, gig, volunteer role, internship, collab, or first-step opening.</h2></div><Tag label="Member posted" style={{background:C.aLight,color:C.accent}}/></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:"1.15fr .85fr .55fr .75fr",gap:10,alignItems:"end"}}><label style={fieldStyle}>Title<input aria-label="Opportunity title" value={draft.title} onChange={e=>update("title",e.target.value)} placeholder="Volunteer mentor, Pop-up helper..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Company or project<input aria-label="Company or project" value={draft.company} onChange={e=>update("company",e.target.value)} placeholder="Your nonprofit, studio, team..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Type<select aria-label="Opportunity type" value={draft.type} onChange={e=>update("type",e.target.value)} className="if" style={inputStyle}><option>Job</option><option>Gig</option><option>Volunteer</option><option>Opportunity</option><option>Internship</option><option>Collab</option></select></label><label style={fieldStyle}>Field<input aria-label="Opportunity field" value={draft.tag} onChange={e=>update("tag",e.target.value)} placeholder="Brand Management" className="if" style={inputStyle}/></label></div><div className="opportunity-form-grid" style={{display:"grid",gridTemplateColumns:".85fr .85fr .85fr 1.45fr",gap:10,alignItems:"end",marginTop:10}}><label style={fieldStyle}>Pay or terms<input aria-label="Pay or terms" value={draft.budget} onChange={e=>update("budget",e.target.value)} placeholder="Volunteer, paid, stipend..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Location<input aria-label="Opportunity location" value={draft.location} onChange={e=>update("location",e.target.value)} placeholder="Remote, Local, Hybrid..." className="if" style={inputStyle}/></label><label style={fieldStyle}>Level<input aria-label="Opportunity level" value={draft.level} onChange={e=>update("level",e.target.value)} placeholder="Beginner friendly" className="if" style={inputStyle}/></label><label style={fieldStyle}>Skills<input aria-label="Opportunity skills" value={draft.skills} onChange={e=>update("skills",e.target.value)} placeholder="community, events, design, research" className="if" style={inputStyle}/></label></div><label style={{...fieldStyle,marginTop:10}}>Description<textarea aria-label="Opportunity description" value={draft.desc} onChange={e=>update("desc",e.target.value)} placeholder="What will this person do, who is it best for, and how should they get started?" className="if" style={{...inputStyle,minHeight:94,resize:"vertical",lineHeight:1.55}}/></label><div className="opportunity-form-actions" style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginTop:14,flexWrap:"wrap"}}><p style={{fontSize:12,color:C.dim,lineHeight:1.5,maxWidth:620}}>Posted opportunities appear in Deals and are matched to members by field, skills, location, level, and profile goals.</p><GBtn onClick={submit} style={{display:"inline-flex",alignItems:"center",gap:8}}><Icon name="briefcase" size={16} color="#fff"/> Post opportunity</GBtn></div></section><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap",marginBottom:16}}><div style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:6}}>{[["matched","Relevant"],["saved","Saved"]].map(([id,label])=><button key={id} onClick={()=>setMode(id)} className="bs" style={{border:"none",borderRadius:10,padding:"9px 13px",fontSize:13,fontWeight:900,background:mode===id?C.accent:"transparent",color:mode===id?"#fff":C.muted}}>{label}</button>)}</div><div className="filter-row" style={{display:"flex",gap:8,flexWrap:"wrap"}}>{types.map(type=><button key={type} onClick={()=>setKind(type)} className="bs" style={{background:kind===type?C.aLight:"#fff",color:kind===type?C.accent:C.muted,border:`1px solid ${kind===type?C.aSoft:C.border}`,borderRadius:999,padding:"8px 13px",fontSize:12,fontWeight:900}}>{type}</button>)}</div></div>{visible.length===0?<EmptyState title={mode==="saved"?"No saved opportunities yet":kind==="Volunteer"?"No volunteer openings yet":"No matches yet"} text={mode==="saved"?"Save a few listings and they will live here.":kind==="Volunteer"?"Volunteer roles posted by members will appear here.":"Add more to your profile so fear can tune your opportunity feed."}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}}>{visible.map(deal=><article key={deal.id} className="ch" style={{...cardStyle,padding:0,borderColor:deal.userPosted?C.aSoft:C.border}}><div style={{padding:20,borderBottom:`1px solid ${C.border}`}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start"}}><div style={{minWidth:0}}><div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:10}}><IT label={deal.tag}/><Tag label={deal.type} style={{background:C.aLight,color:C.accent}}/>{deal.userPosted&&<Tag label="Posted by member" style={{background:C.aLight,color:C.accent}}/>}</div><h2 style={{fontSize:21,lineHeight:1.12,color:C.text,overflowWrap:"anywhere"}}>{deal.title}</h2><div style={{fontSize:12,color:C.dim,marginTop:7}}>{deal.company} · {deal.budget} · {deal.location}</div>{deal.postedBy&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Posted by {deal.postedBy}{deal.postedByHandle?` · ${deal.postedByHandle}`:""}</div>}</div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:22,fontWeight:950,color:C.accent,lineHeight:1}}>{deal.score}%</div><div style={{fontSize:10,color:C.muted,fontWeight:900,textTransform:"uppercase",marginTop:4}}>profile overlap</div></div></div><div className="match-meter" style={{marginTop:16}}><span style={{width:`${deal.score}%`}}/></div></div><div style={{padding:20}}><p style={{fontSize:14,color:C.tSoft,lineHeight:1.7}}>{deal.desc}</p><div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:14}}>{(deal.reasons?.length?deal.reasons:["useful first-step signal"]).map(reason=><span key={reason} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:999,padding:"7px 9px",fontSize:11,fontWeight:800,color:C.muted}}>{reason}</span>)}</div><div style={{display:"flex",gap:8,alignItems:"center",marginTop:18,flexWrap:"wrap"}}><GBtn sm onClick={()=>signalInterest(deal)} style={{display:"inline-flex",alignItems:"center",gap:7}}><Icon name="send" size={14} color="#fff"/> I'm interested</GBtn><button onClick={()=>toggleSave(deal.id)} className="bs" style={{background:deal.saved?C.aLight:"#fff",border:`1px solid ${deal.saved?C.aSoft:C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:900,color:deal.saved?C.accent:C.text,display:"inline-flex",gap:7,alignItems:"center"}}><Icon name="bookmark" size={15} color="currentColor" filled={deal.saved}/>{deal.saved?"Saved":"Save"}</button></div></div></article>)}</div>}</div>;
 }
-function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,accessRequests,reviewAccessRequest,openProfile,openBoard,interfaceSettings,setInterfaceSettings,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel,onDeleteAccount,signOut}){
+function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,accessRequests,reviewAccessRequest,openProfile,openBoard,interfaceSettings,setInterfaceSettings,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel,onDeleteAccount,inviteFriend,signOut}){
   const isPrivate=(profile.privacy||"public")==="private";
   const incoming=Array.isArray(accessRequests?.incoming)?accessRequests.incoming:[];
   const pending=incoming.filter(request=>request.status==="pending");
@@ -3266,7 +3300,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
       {settingCard("Layout","Choose how much UI you want on screen while you work.",<>
         {segmented("Layout format",interfaceSettings.layout||"comfortable",[{value:"comfortable",label:"Comfortable"},{value:"focus",label:"Focus"}],layout=>setInterfaceSettings(s=>({...s,layout,rightRail:layout==="focus"?false:s.rightRail})))}
         {segmented("Density",interfaceSettings.density||"standard",[{value:"standard",label:"Standard"},{value:"compact",label:"Compact"}],density=>setInterfaceSettings(s=>({...s,density})))}
-        {switchRow(interfaceSettings.rightRail!==false,()=>setInterfaceSettings(s=>({...s,rightRail:s.rightRail===false})), "Right rail on feed","Show suggested people and FEAR Pro previews beside the feed on desktop.","network")}
+        {switchRow(interfaceSettings.rightRail!==false,()=>setInterfaceSettings(s=>({...s,rightRail:s.rightRail===false})), "Right rail on feed","Show new people and FEAR Pro previews beside the feed on desktop.","network")}
       </>)}
       {settingCard("Profile and privacy","Control your public presence and private-profile access.",<>
         {switchRow(!isPrivate,()=>updateProfilePrivacy(isPrivate?"public":"private"),isPrivate?"Private profile":"Public profile",isPrivate?"People must request access before they can see full profile details and posts.":"Your profile details and posts can be discovered by other members.","lock")}
@@ -3303,6 +3337,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
       </>)}
       {settingCard("Account","Session and account controls.",<>
         <div style={{display:"grid",gap:10}}>
+          <button onClick={inviteFriend} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.accent,display:"flex",alignItems:"center",gap:10}}><Icon name="send" size={17} color="currentColor"/> Invite a friend</button>
           <button onClick={signOut} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.text}}>Sign out</button>
           <button onClick={onDeleteAccount} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:13,textAlign:"left",fontWeight:900,color:C.coral}}>Delete account</button>
         </div>
@@ -3572,7 +3607,7 @@ function ProfilePostsSection({posts=[],emptyTitle,emptyText}){
             <div style={{fontSize:12,color:C.dim,marginTop:2}}>{post.handle} · {post.time} ago{post.edited?" · edited":""}</div>
           </div>
         </div>
-        {post.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:post.type==="Reel"?"pre-line":"normal",overflowWrap:"anywhere"}}>{post.content}</p>}
+        {post.content&&<p style={{fontSize:15,color:C.tSoft,lineHeight:1.75,whiteSpace:["Reel","Daily Drop"].includes(post.type)?"pre-line":"normal",overflowWrap:"anywhere"}}>{post.content}</p>}
         <OfficialReelCard post={post}/>
         <MediaPreviewGrid media={post.media}/>
       </div>

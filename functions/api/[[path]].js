@@ -998,7 +998,7 @@ const DAILY_REEL_TEMPLATES = [
     tag: "Opportunities",
     title: "Deals Is Your Opportunity Board",
     feature: "fear.social matches opportunities to your field, goals, skills, and location so the next door is easier to spot.",
-    beats: ["Check For You in Deals.", "Save the best fit.", "Post an opportunity if you have one."],
+    beats: ["Check Relevant in Deals.", "Save the strongest overlap.", "Post an opportunity if you have one."],
     cta: "Go to Deals and find one opening worth chasing.",
   },
   {
@@ -1067,12 +1067,12 @@ const officialReelContent = (dateKey) => {
   return {
     ...reel,
     content: [
-      `Daily fear.social Reel: ${reel.title}`,
+      `Daily fear.social Drop: ${reel.title}`,
       "",
       ...(reel.quote ? [`Quote: ${reel.quote}`, ""] : []),
       `Why fear.social: ${reel.feature}`,
       "",
-      "Reel beats:",
+      "Daily beats:",
       ...reel.beats.map((beat, beatIndex) => `${beatIndex + 1}. ${beat}`),
       "",
       `CTA: ${reel.cta}`,
@@ -1114,7 +1114,7 @@ async function ensureOfficialDailyReelPost(db) {
   await db
     .prepare(
       `INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, role, headline, website, looking_for, goal, verified_badge, email_verified_at)
-       VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', ?, 'admin', 'Official fear.social daily reels and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
+       VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', ?, 'admin', 'Official fear.social Daily Drops and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
     )
     .bind(OFFICIAL_USER_ID, `official-${OFFICIAL_USER_ID}`, OFFICIAL_AVATAR_URL)
     .run();
@@ -1131,7 +1131,7 @@ async function ensureOfficialDailyReelPost(db) {
            privacy = 'public',
            avatar_url = ?,
            role = 'admin',
-           headline = 'Official fear.social daily reels and platform notes.',
+           headline = 'Official fear.social Daily Drops and platform notes.',
            website = 'https://fear.social',
            looking_for = 'People ready to take their first business or career step.',
            goal = 'Turn fear into momentum.',
@@ -1143,11 +1143,11 @@ async function ensureOfficialDailyReelPost(db) {
     .bind(OFFICIAL_AVATAR_URL, OFFICIAL_USER_ID)
     .run();
   await db
-    .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, 'Reel', ?, 'Daily', ?, '[]', CURRENT_TIMESTAMP)")
+    .prepare("INSERT OR IGNORE INTO posts (id, user_id, type, tag, stage, content, media, created_at) VALUES (?, ?, 'Daily Drop', ?, 'Daily', ?, '[]', CURRENT_TIMESTAMP)")
     .bind(postId, OFFICIAL_USER_ID, reel.tag, reel.content)
     .run();
   await db
-    .prepare("UPDATE posts SET type = 'Reel', tag = ?, stage = 'Daily', content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+    .prepare("UPDATE posts SET type = 'Daily Drop', tag = ?, stage = 'Daily', content = ?, media = '[]', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
     .bind(reel.tag, reel.content, postId, OFFICIAL_USER_ID)
     .run();
   for (const post of OFFICIAL_EVERGREEN_POSTS) {
