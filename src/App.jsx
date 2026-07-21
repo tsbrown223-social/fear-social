@@ -233,7 +233,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
-.theme-dark .signup-form-panel .signup-fast-note{background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.34)!important;color:#9AF4B8!important;}
+.signup-form-panel .signup-fast-note,.theme-dark .signup-form-panel .signup-fast-note{background:#102A19!important;border-color:#2F8C4F!important;color:#E6FFEE!important;}
 .theme-dark .signup-form-panel .signup-title{color:#F7F8FA!important;}
 .app-view button,.app-view input,.app-view textarea{max-width:100%;}
 .app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
