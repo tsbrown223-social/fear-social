@@ -42,7 +42,7 @@ const readJson = async (request) => {
     return text ? JSON.parse(text) : {};
   } catch (err) {
     if (err instanceof Response) throw err;
-    return {};
+    throw json({ error: "Request body must contain valid JSON", code: "INVALID_JSON" }, { status: 400 });
   }
 };
 
@@ -2931,11 +2931,22 @@ async function handleRequest({ request, env, params }) {
 
 export const onRequest = async (context) => {
   const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
   try {
-    return await handleRequest(context);
+    const response = await handleRequest(context);
+    const headers = new Headers(response.headers);
+    headers.set("x-request-id", requestId);
+    headers.set("x-fear-api-version", "2026-07");
+    headers.set("server-timing", `app;dur=${Math.max(0, Date.now() - startedAt)}`);
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
-    if (error instanceof Response) return error;
+    if (error instanceof Response) {
+      const headers = new Headers(error.headers);
+      headers.set("x-request-id", requestId);
+      headers.set("x-fear-api-version", "2026-07");
+      return new Response(error.body, { status: error.status, statusText: error.statusText, headers });
+    }
     console.error("Unhandled API error", { requestId, message: error?.message, stack: error?.stack });
-    return json({ error: "Server error", requestId }, { status: 500 });
+    return json({ error: "Server error", code: "INTERNAL_ERROR", requestId }, { status: 500, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } });
   }
 };

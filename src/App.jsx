@@ -402,6 +402,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-compose input{width:100%!important;min-height:48px!important;}
   .message-compose button{width:100%!important;justify-content:center!important;min-height:48px!important;}
   .settings-grid{grid-template-columns:1fr!important;}
+  .settings-grid button[role="switch"]{display:grid!important;grid-template-columns:40px minmax(0,1fr) 44px!important;align-items:center!important;gap:11px!important;}
+  .settings-grid button[role="switch"]>span:nth-child(2){min-width:0!important;overflow:hidden!important;}
+  .settings-grid button[role="switch"]>span:nth-child(2)>span{white-space:normal!important;overflow-wrap:anywhere!important;}
   .profile-hero{padding:0!important;border-radius:20px!important;}
   .profile-hero>div:first-child{height:118px!important;}
   .profile-hero-row{display:grid!important;grid-template-columns:72px minmax(0,1fr)!important;align-items:end!important;gap:11px!important;margin-top:-30px!important;}
@@ -783,6 +786,85 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .signup-copy{position:relative;overflow:hidden;}
 .signup-copy:after{content:"";position:absolute;inset:auto -20% -42% 10%;height:70%;background:radial-gradient(ellipse,rgba(22,199,78,.2),transparent 65%);pointer-events:none;}
 .signup-form-panel{min-height:100dvh;align-items:flex-start!important;padding-top:52px!important;padding-bottom:52px!important;overflow:visible;}
+
+/* Product workspace: one visual language across every signed-in surface. */
+.app-view{--app-bg:#080A09;--app-panel:#101311;--app-panel-2:#141815;--app-line:rgba(255,255,255,.09);--app-copy:#F5F7F5;--app-muted:rgba(245,247,245,.56);--app-soft:rgba(245,247,245,.72);background:var(--app-bg)!important;color:var(--app-copy)!important;isolation:isolate;}
+.app-view:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(22,199,78,.035),transparent 24%),linear-gradient(90deg,transparent 49.95%,rgba(255,255,255,.018) 50%,transparent 50.05%);background-size:auto,72px 72px;mask-image:linear-gradient(180deg,#000,transparent 70%);}
+.theme-light .app-view{--app-bg:#EEF2EF;--app-panel:#FFFFFF;--app-panel-2:#F6F8F6;--app-line:#D9E1DB;--app-copy:#0B0E0C;--app-muted:#67716A;--app-soft:#3F4942;background:var(--app-bg)!important;color:var(--app-copy)!important;}
+.app-topbar{height:72px!important;min-height:72px!important;padding:0 max(20px,calc((100vw - 1440px)/2))!important;gap:12px!important;background:rgba(8,10,9,.88)!important;border-bottom:1px solid var(--app-line)!important;box-shadow:none!important;backdrop-filter:blur(22px) saturate(120%)!important;}
+.theme-light .app-topbar{background:rgba(247,249,247,.9)!important;}
+.app-topbar-logo{font-size:21px!important;color:var(--app-copy)!important;letter-spacing:0!important;margin-right:8px;}
+.app-topbar-logo span:last-child{color:var(--app-copy)!important;}
+.desktop-app-tabs{height:100%;align-items:center;gap:0!important;scrollbar-width:none;}
+.desktop-app-tabs .nl{position:relative;height:100%;padding:0 11px!important;border-radius:0!important;background:transparent!important;color:var(--app-muted)!important;font-size:11px!important;letter-spacing:0!important;}
+.desktop-app-tabs .nl[aria-current="page"]{color:var(--app-copy)!important;}
+.desktop-app-tabs .nl[aria-current="page"]:after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:#16C74E;border-radius:2px 2px 0 0;}
+.desktop-app-search{height:40px!important;background:rgba(255,255,255,.045)!important;border-color:var(--app-line)!important;border-radius:8px!important;color:var(--app-copy)!important;}
+.theme-light .desktop-app-search{background:#fff!important;}
+.app-topbar>button:not(.app-topbar-logo):not(.nl){background:transparent!important;border-color:var(--app-line)!important;color:var(--app-muted)!important;border-radius:8px!important;}
+.app-topbar>button:hover{color:var(--app-copy)!important;border-color:rgba(22,199,78,.38)!important;}
+.app-connection-state{display:inline-flex;align-items:center;gap:6px;color:var(--app-muted);font-size:10px;font-weight:850;white-space:nowrap;}
+.app-connection-state i{width:6px;height:6px;border-radius:50%;background:#16C74E;box-shadow:0 0 0 4px rgba(22,199,78,.1);}
+.app-connection-state.offline i{background:#F1A23C;box-shadow:0 0 0 4px rgba(241,162,60,.1);}
+.app-connection-state.connecting i{background:#8D9790;box-shadow:0 0 0 4px rgba(141,151,144,.1);animation:pulse 1.4s ease-in-out infinite;}
+.app-shell{width:min(100%,1380px)!important;max-width:1380px!important;padding:38px 24px 110px!important;}
+.app-view-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.52fr);gap:48px;align-items:end;padding:26px 4px 32px;margin-bottom:20px;border-bottom:1px solid var(--app-line);position:relative;}
+.app-view-intro-index{position:absolute;left:0;top:0;width:34px;height:2px;background:#16C74E;}
+.app-view-intro span{display:block;color:#16C74E;font-size:10px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;margin-bottom:10px;}
+.app-view-intro h1{font-family:Georgia,serif!important;font-size:clamp(38px,4vw,62px)!important;line-height:.98!important;letter-spacing:0!important;color:var(--app-copy)!important;max-width:760px!important;}
+.app-view-intro p{font-size:14px!important;line-height:1.7!important;color:var(--app-muted)!important;max-width:440px!important;margin:0!important;}
+.app-view-intro + .directory-wrap > .view-local-heading{display:none!important;}
+.feed-grid{grid-template-columns:228px minmax(0,1fr) 272px!important;gap:16px!important;}
+.feed-main{min-width:0;}
+.desktop-feed-side{top:94px!important;gap:12px!important;}
+.desktop-feed-side>div,.mobile-profile-summary,.composer-card,.post-card,.message-list,.message-panel,.profile-hero,.profile-danger-zone,.settings-grid>div,.directory-grid>.ch,.directory-grid>div,.search-results-panel{background:var(--app-panel)!important;border:1px solid var(--app-line)!important;border-radius:10px!important;box-shadow:none!important;}
+.desktop-feed-side>div{padding:16px!important;}
+.desktop-feed-side>div[style*="background: linear-gradient"]{background:linear-gradient(145deg,#102017,#0B0F0C)!important;border-color:rgba(22,199,78,.2)!important;}
+.feed-mode-switch{background:transparent!important;border:0!important;border-bottom:1px solid var(--app-line)!important;border-radius:0!important;padding:0!important;margin-bottom:14px!important;}
+.feed-mode-switch button{place-items:start!important;text-align:left!important;padding:12px 2px 13px!important;background:transparent!important;border-radius:0!important;color:var(--app-muted)!important;position:relative;}
+.feed-mode-switch button[aria-selected="true"]{color:var(--app-copy)!important;}
+.feed-mode-switch button[aria-selected="true"]:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#16C74E;}
+.fs-app-composer{padding:18px!important;background:#F2F6F3!important;border-color:#D9E4DC!important;color:#0B0E0C!important;margin-bottom:14px!important;}
+.theme-dark .fs-app-composer textarea{background:#FFFFFF!important;border-color:#DCE4DE!important;color:#0B0E0C!important;}
+.theme-dark .fs-app-composer textarea::placeholder{color:#7A847D!important;}
+.theme-dark .fs-app-composer .post-type-btn,.theme-dark .fs-app-composer .composer-media-btn{background:transparent!important;color:#526059!important;border-color:#CFD9D2!important;}
+.theme-dark .fs-app-composer .post-type-btn[aria-pressed="true"]{background:#DFF8E8!important;color:#12813A!important;border-color:#A9EBC0!important;}
+.composer-actions{flex-wrap:wrap!important;}
+.composer-publish-btn{background:#101311!important;color:#fff!important;border-radius:999px!important;}
+.filter-row{padding:2px 0 10px!important;margin-bottom:10px!important;flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none;}
+.filter-row button{background:transparent!important;border-color:var(--app-line)!important;color:var(--app-muted)!important;border-radius:999px!important;padding:8px 13px!important;}
+.filter-row button[aria-pressed="true"]{background:#16C74E!important;border-color:#16C74E!important;color:#071009!important;}
+.post-card{padding:20px!important;margin-bottom:12px!important;}
+.post-card:hover{border-color:rgba(22,199,78,.25)!important;}
+.directory-wrap{max-width:1180px;margin:0 auto;color:var(--app-copy)!important;}
+.directory-title{color:var(--app-copy)!important;}
+.directory-grid{gap:12px!important;}
+.directory-grid>.ch,.directory-grid>div{transition:border-color .18s ease,transform .18s ease;}
+.directory-grid>.ch:hover,.directory-grid>div:hover{border-color:rgba(22,199,78,.3)!important;transform:translateY(-2px);}
+.messages-grid{grid-template-columns:292px minmax(0,1fr)!important;gap:12px!important;min-height:min(680px,calc(100dvh - 260px))!important;}
+.message-list{padding:8px!important;}
+.dm-thread-button{border-radius:7px!important;padding:11px!important;}
+.dm-thread-button[data-active="true"]{background:#E2F8EA!important;border-color:#BCEFCC!important;}
+.theme-dark .dm-thread-button[data-active="true"] *{color:#0B3A1D!important;}
+.message-panel{padding:18px!important;min-height:560px;}
+.message-panel-header{border-color:var(--app-line)!important;}
+.message-feed{scrollbar-color:rgba(255,255,255,.18) transparent;}
+.message-compose{padding-top:12px;border-top:1px solid var(--app-line);}
+.message-compose input{background:var(--app-panel-2)!important;}
+.dm-e2ee-note{background:rgba(22,199,78,.08)!important;border-color:rgba(22,199,78,.2)!important;color:#65DF89!important;border-radius:8px!important;font-weight:750!important;}
+.profile-hero{border-radius:12px!important;}
+.profile-stats{gap:8px!important;}
+.profile-stat-button{background:var(--app-panel)!important;border-color:var(--app-line)!important;border-radius:8px!important;}
+.profile-stat-button[aria-pressed="true"]{background:rgba(22,199,78,.1)!important;border-color:rgba(22,199,78,.28)!important;}
+.profile-detail-chip,.industry-tag,.tag-chip{border-radius:4px!important;}
+.profile-danger-zone{background:rgba(229,57,53,.04)!important;border-color:rgba(229,57,53,.2)!important;}
+.settings-grid{gap:12px!important;}
+.settings-grid>div{padding:22px!important;}
+.market-hero,.groups-hero{border-radius:10px!important;border:1px solid rgba(22,199,78,.18)!important;background:linear-gradient(145deg,#0D1811,#111512)!important;}
+.mobile-app-search,.mobile-section-tabs{display:none;}
+.mobile-bottom-nav{box-shadow:none!important;}
+.app-view~.toast-stack,.toast-stack{top:84px!important;}
+
 @media(max-width:900px){
   .fs2-section{padding:84px 28px;}
   .fs2-opening,.fs2-social-head,.fs2-why,.fs2-access-head{grid-template-columns:1fr;gap:36px;}
@@ -803,6 +885,57 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-access-head{margin-bottom:38px}.fs2-plan{padding:24px 18px;min-height:0}.fs2-plan h3{font-size:34px}.fs2-plan-list{grid-template-columns:1fr;margin:22px 0}.fs2-cta{min-height:78dvh}.fs2-footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}.fs2-footer-links{gap:0}
   .cookie-notice{width:calc(100% - 20px);bottom:calc(10px + env(safe-area-inset-bottom))!important}.cookie-card{display:block!important;padding:12px!important}.cookie-card>div:first-child b{font-size:13px!important}.cookie-card p{font-size:11px!important}.cookie-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important;margin-top:10px!important}.cookie-actions button{padding:8px 5px!important;font-size:10px!important;min-height:36px}
   .signup-brand{position:absolute;top:18px;left:18px;font-size:19px}.signup-form-panel{padding-top:72px!important;padding-bottom:110px!important}
+}
+@media(max-width:760px){
+  .app-view{padding-bottom:0!important;}
+  .toast-stack{top:70px!important;left:12px!important;right:12px!important;}
+  .app-view:before{background:linear-gradient(180deg,rgba(22,199,78,.04),transparent 22%);}
+  .app-topbar{height:60px!important;min-height:60px!important;padding:7px 12px!important;gap:7px!important;border-bottom-color:var(--app-line)!important;}
+  .app-topbar-logo{font-size:19px!important;max-width:none!important;margin-right:auto!important;}
+  .app-connection-state,.desktop-signout{display:none!important;}
+  .app-topbar>button[aria-label="Edit profile"]>div>div{width:34px!important;height:34px!important;}
+  .app-shell{padding:14px 12px calc(92px + env(safe-area-inset-bottom))!important;}
+  .mobile-app-search{display:block!important;margin:0 0 10px!important;}
+  .mobile-app-search input{height:44px!important;border-radius:8px!important;background:var(--app-panel)!important;border-color:var(--app-line)!important;box-shadow:none!important;padding:10px 12px!important;}
+  .mobile-section-tabs{display:flex!important;gap:7px!important;overflow-x:auto!important;padding:0 0 12px!important;margin:0 0 8px!important;scrollbar-width:none;}
+  .mobile-section-tabs button{flex:0 0 auto!important;min-height:38px!important;border-radius:999px!important;background:transparent!important;border:1px solid var(--app-line)!important;color:var(--app-muted)!important;padding:8px 12px!important;font-size:11px!important;}
+  .mobile-section-tabs button.active{background:rgba(22,199,78,.12)!important;color:#65DF89!important;border-color:rgba(22,199,78,.3)!important;}
+  .app-view-intro{grid-template-columns:1fr;gap:12px;padding:20px 2px 22px;margin-bottom:14px;}
+  .app-view-intro h1{font-size:38px!important;line-height:1!important;overflow-wrap:normal!important;}
+  .app-view-intro p{font-size:13px!important;line-height:1.6!important;}
+  .feed-grid{display:block!important;}
+  .mobile-profile-summary{display:block!important;padding:14px!important;margin-bottom:10px!important;}
+  .feed-mode-switch{margin-bottom:10px!important;}
+  .feed-mode-switch button{min-height:56px!important;padding:10px 2px!important;}
+  .fs-app-composer{padding:14px!important;}
+  .fs-app-composer>div{gap:9px!important;}
+  .fs-app-composer>div>.avatar-shell{width:36px!important;height:36px!important;}
+  .composer-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;}
+  .composer-actions .post-type-btn{width:100%!important;min-height:38px!important;padding:7px 5px!important;font-size:10px!important;}
+  .composer-actions .composer-media-btn{width:100%!important;min-height:40px!important;padding:7px 5px!important;font-size:11px!important;}
+  .composer-publish-btn{grid-column:span 2!important;width:100%!important;min-height:42px!important;margin:0!important;}
+  .filter-row{margin-left:-12px!important;margin-right:-12px!important;padding:2px 12px 10px!important;}
+  .post-card{padding:16px!important;}
+  .directory-wrap{padding-bottom:8px!important;}
+  .directory-grid{grid-template-columns:1fr!important;}
+  .messages-grid{display:block!important;min-height:0!important;}
+  .message-list{max-height:232px;overflow-y:auto;margin-bottom:10px;}
+  .message-panel{min-height:calc(100dvh - 350px)!important;padding:13px!important;}
+  .message-panel-actions{width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .message-panel-actions button{width:100%!important;min-height:36px!important;padding:7px 5px!important;font-size:10px!important;}
+  .message-row{max-width:88%!important;}
+  .message-compose{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important;position:sticky;bottom:76px;background:var(--app-panel);padding:10px 0 2px;}
+  .message-compose button{min-width:64px!important;}
+  .profile-hero-row{grid-template-columns:76px minmax(0,1fr)!important;gap:12px!important;align-items:end!important;}
+  .profile-hero-row>.profile-edit-button{grid-column:1/-1!important;width:100%!important;margin-top:4px!important;}
+  .profile-hero-copy{padding-top:36px!important;}
+  .profile-hero-copy h1{font-size:29px!important;}
+  .profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .settings-grid{grid-template-columns:1fr!important;}
+  .mobile-bottom-nav{left:0!important;right:0!important;bottom:0!important;border-radius:0!important;border-width:1px 0 0!important;padding:5px 8px calc(5px + env(safe-area-inset-bottom))!important;background:rgba(8,10,9,.94)!important;backdrop-filter:blur(22px)!important;}
+  .mobile-bottom-nav button{height:52px!important;border-radius:0!important;background:transparent!important;color:var(--app-muted)!important;position:relative;}
+  .mobile-bottom-nav button.active{background:transparent!important;color:#63DF88!important;}
+  .mobile-bottom-nav button.active:before{content:"";position:absolute;top:-5px;left:28%;right:28%;height:2px;background:#16C74E;}
 }
 @media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary{transition:none!important}}
 .a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}
@@ -1061,16 +1194,59 @@ try{
   }
 }catch{}
 
+class ApiError extends Error{
+  constructor(message,{status=0,code="REQUEST_FAILED",requestId="",retryAfter=""}={}){
+    super(message);
+    this.name="ApiError";
+    this.status=status;
+    this.code=code;
+    this.requestId=requestId;
+    this.retryAfter=retryAfter;
+  }
+}
+
 async function api(path,options={}){
   const token=getSessionToken();
-  const headers={"content-type":"application/json",...(token?{"x-fear-token":token}:{}),...(options.headers||{})};
-  const res=await fetch(`/api${path}`,{...options,headers});
-  const data=await res.json().catch(()=>({}));
-  if(data.token){
-    try{localStorage.setItem("fear-session-token",data.token);}catch{}
+  const controller=new AbortController();
+  const timeout=window.setTimeout(()=>controller.abort(),options.timeout||15000);
+  const requestId=crypto?.randomUUID?.()||`web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const hasBody=options.body!==undefined&&options.body!==null;
+  const headers={
+    accept:"application/json",
+    "x-client-request-id":requestId,
+    ...(hasBody?{"content-type":"application/json"}:{}),
+    ...(token?{"x-fear-token":token}:{}),
+    ...(options.headers||{}),
+  };
+  const abortFromCaller=()=>controller.abort();
+  options.signal?.addEventListener?.("abort",abortFromCaller,{once:true});
+  try{
+    const res=await fetch(`/api${path}`,{...options,headers,credentials:"same-origin",signal:controller.signal});
+    const data=await res.json().catch(()=>({}));
+    if(data.token){
+      try{localStorage.setItem("fear-session-token",data.token);}catch{}
+    }
+    if(!res.ok){
+      if(res.status===401&&token){
+        clearSessionToken();
+        window.dispatchEvent(new CustomEvent("fear:session-expired"));
+      }
+      throw new ApiError(data.error||"We could not complete that request.",{
+        status:res.status,
+        code:data.code||`HTTP_${res.status}`,
+        requestId:data.requestId||res.headers.get("x-request-id")||requestId,
+        retryAfter:res.headers.get("retry-after")||"",
+      });
+    }
+    return data;
+  }catch(error){
+    if(error instanceof ApiError)throw error;
+    if(error?.name==="AbortError")throw new ApiError("The request took too long. Check your connection and try again.",{code:"REQUEST_TIMEOUT",requestId});
+    throw new ApiError("fear.social could not reach the server. Check your connection and try again.",{code:"NETWORK_ERROR",requestId});
+  }finally{
+    window.clearTimeout(timeout);
+    options.signal?.removeEventListener?.("abort",abortFromCaller);
   }
-  if(!res.ok) throw new Error(data.error||"Request failed");
-  return data;
 }
 
 const E2EE_PREFIX="__fear_e2ee_v1__:";
@@ -2658,6 +2834,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [connections,setConnections]=useLocalState("fear-connections",{followersByUserId:{},followingByUserId:{}});
   const [accessRequests,setAccessRequests]=useLocalState("fear-access-requests",{incoming:[]});
   const [interfaceSettings,setInterfaceSettings]=useLocalState("fear-interface-settings",{layout:"comfortable",density:"standard",rightRail:true});
+  const [connectionState,setConnectionState]=useState(navigator.onLine?"connecting":"offline");
   const [userDeals,setUserDeals]=useLocalState("fear-user-deals",[]);
   const [savedDeals,setSavedDeals]=useLocalState("fear-saved-deals",[]);
   const [filter,setFilter]=useState("All");
@@ -2675,6 +2852,19 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [selectedProfile,setSelectedProfile]=useState(null);
   const [profileReturnView,setProfileReturnView]=useState("discover");
   const [profileMetric,setProfileMetric]=useState("Posts");
+  useEffect(()=>{
+    const online=()=>setConnectionState("connecting");
+    const offline=()=>setConnectionState("offline");
+    const expired=()=>{notify("Your session expired. Log in again to keep your account secure.","error");signOut();};
+    window.addEventListener("online",online);
+    window.addEventListener("offline",offline);
+    window.addEventListener("fear:session-expired",expired);
+    return()=>{
+      window.removeEventListener("online",online);
+      window.removeEventListener("offline",offline);
+      window.removeEventListener("fear:session-expired",expired);
+    };
+  },[notify,signOut]);
   const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
   const [blockedUserIds,setBlockedUserIds]=useLocalState("fear-blocked-user-ids",[]);
@@ -2699,12 +2889,13 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   },[setAccessRequests,setConnections,setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
+    setConnectionState("online");
     applyBackendState(data);
     return data;
   },[applyBackendState]);
   useEffect(()=>{
     let active=true;
-    api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>{if(active)notify("Offline mode: changes are saved in this browser","info");});
+    api("/bootstrap").then(data=>{if(active){setConnectionState("online");applyBackendState(data);}}).catch(()=>{if(active){setConnectionState("offline");notify("Offline mode: changes are saved in this browser","info");}});
     return()=>{active=false;};
   },[applyBackendState,notify]);
   useEffect(()=>{
@@ -2774,6 +2965,13 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     ["opportunities","Deals"],
     ["settings","Settings"],
   ];
+  const viewMeta={
+    discover:{eyebrow:"People",title:"Find your next connection",copy:"Explore people by direction, field, and the move they are trying to make."},
+    messages:{eyebrow:"Conversations",title:"Messages",copy:"Keep every useful introduction and next move in one focused place."},
+    notifications:{eyebrow:"Your network",title:"Activity",copy:"Connections, replies, invitations, and requests that need your attention."},
+    groups:{eyebrow:"Shared direction",title:"Groups",copy:"Create focused rooms, invite the right people, and keep your community moving."},
+    settings:{eyebrow:"Your experience",title:"Settings",copy:"Control your profile, privacy, layout, accessibility, and account preferences."},
+  };
   const mobileTabs=[
     ["feed","Feed","home"],
     ["discover","Find","diamond"],
@@ -3364,6 +3562,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <button onClick={inviteFriend} className="bs app-invite-button" aria-label="Invite a friend" title="Invite a friend" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",color:C.muted}}><Icon name="send" size={18} color="currentColor"/></button>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
         <button onClick={()=>setEditProfile(true)} style={{background:"none",border:"none",padding:0}} aria-label="Edit profile"><Av i={initials} src={profile.avatarUrl} size={38} grad online/></button>
+        <span className={`app-connection-state ${connectionState}`} aria-live="polite"><i/>{connectionState==="online"?"Online":connectionState==="offline"?"Offline":"Connecting"}</span>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
       <main id="app-main" className="app-shell" tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
@@ -3378,6 +3577,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           ))}
         </div>
         {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
+        {!searchTerm&&viewMeta[view]&&<AppViewIntro {...viewMeta[view]} />}
         {view==="feed"&&(
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:interfaceSettings.rightRail===false?"270px minmax(0,1fr)":"270px minmax(0,1fr) 310px",gap:interfaceSettings.density==="compact"?14:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
@@ -3397,7 +3597,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                 {groups.slice(0,4).map(g=><div key={g.id} className="uh" onClick={()=>setView("groups")} style={{padding:"9px 6px",cursor:"pointer"}}><div style={{fontSize:13,fontWeight:800,color:C.text}}>{g.name}</div><div style={{fontSize:11,color:C.dim}}>{g.active}</div></div>)}
               </div>
             </aside>
-            <main>
+            <main className="feed-main">
               <div className="mobile-profile-summary" style={{display:"none",background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:16,marginBottom:14}}>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
                   <Av i={initials} src={profile.avatarUrl} size={46} grad online/>
@@ -3408,10 +3608,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                   <button onClick={()=>setEditProfile(true)} style={{background:C.aLight,color:C.accent,border:"none",borderRadius:9,padding:"8px 11px",fontSize:12,fontWeight:900}}>Edit</button>
                 </div>
               </div>
-              <div role="tablist" aria-label="Feed mode" style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:8}}>
-                {[["forYou","Your Path","Relevant to your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
+              <div className="feed-mode-switch" role="tablist" aria-label="Feed mode" style={{display:"flex",gap:8,background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:6,marginBottom:8}}>
+                {[["forYou","For you","Relevant to your goals"],["following","Following","Only people you follow"]].map(([id,label,detail])=><button key={id} role="tab" aria-selected={feedMode===id} onClick={()=>setFeedMode(id)} className="bs" style={{flex:1,border:"none",borderRadius:11,padding:"10px 12px",fontSize:13,fontWeight:950,color:feedMode===id?"#fff":C.muted,background:feedMode===id?C.accent:"transparent",display:"grid",gap:2,placeItems:"center",lineHeight:1.15}}><span style={{display:"inline-flex",alignItems:"center",gap:7}}>{id==="forYou"&&<Icon name="sparkle" size={15} color="currentColor"/>}{label}</span><span style={{fontSize:10,fontWeight:800,opacity:feedMode===id?0.9:0.62}}>{detail}</span></button>)}
               </div>
-              <div className="composer-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
+              <div className="composer-card fs-app-composer" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                   <Av i={initials} src={profile.avatarUrl} size={44} grad/>
                   <div style={{flex:1}}>
@@ -3472,7 +3672,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
@@ -3528,6 +3728,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22,overflow:"hidden",minWidth:0};
 const bodyCopy={fontSize:14,color:C.tSoft,lineHeight:1.7,marginTop:12};
+const AppViewIntro=({eyebrow,title,copy})=>(
+  <header className="app-view-intro">
+    <div className="app-view-intro-index" aria-hidden="true"/>
+    <div>
+      <span>{eyebrow}</span>
+      <h1>{title}</h1>
+    </div>
+    <p>{copy}</p>
+  </header>
+);
 const connectionButtonLabel=person=>person?.locked?(person.accessStatus==="pending"?"Request sent":"Request access"):(person?.connected?"Connected":"Connect");
 const followButtonLabel=person=>person?.locked?(person.accessStatus==="pending"?"Requested":"Request"):(person?.connected?"Following":"Follow");
 function MediaPreviewGrid({media=[],onRemove,onReport}){
@@ -3771,8 +3981,8 @@ function EmptyState({title,text}){
 function MiniEmpty({text}){
   return <div style={{fontSize:12,color:C.dim,lineHeight:1.55,marginTop:10,padding:"10px 0"}}>{text}</div>;
 }
-function Directory({eyebrow,title,items,render}){
-  return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1>{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
+function Directory({eyebrow,title,items,render,hideHeading=false}){
+  return <div className="directory-wrap">{!hideHeading&&<><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>{title}</h1></>}{items.length===0?<EmptyState title="Nothing real here yet" text="This area will stay empty until real records are added in the backend."/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16}}>{items.map(render)}</div>}</div>;
 }
 function FearClubComingSoonView({onPreview}){
   const features=[
@@ -3813,7 +4023,7 @@ function GroupsView({groups,people,createGroup,joinGroup,leaveGroup,inviteToGrou
   const invitePeople=(Array.isArray(people)?people:[]).slice(0,24);
   return (
     <div className="directory-wrap">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,marginBottom:22,flexWrap:"wrap"}}>
+      <div className="view-local-heading" style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,marginBottom:22,flexWrap:"wrap"}}>
         <div>
           <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Rooms</div>
           <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Groups</h1>
@@ -3960,7 +4170,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
     </div>
   );
   return <div className="directory-wrap" style={{maxWidth:1040}}>
-    <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"end",flexWrap:"wrap",marginBottom:22}}>
+    <div className="view-local-heading" style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"end",flexWrap:"wrap",marginBottom:22}}>
       <div>
         <div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Settings</div>
         <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:42,letterSpacing:0,lineHeight:1.02,color:C.text}}>Personalize fear.social.</h1>
@@ -4031,7 +4241,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
 
 function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
-  return <div className="directory-wrap" style={{maxWidth:760}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
+  return <div className="directory-wrap" style={{maxWidth:760}}><div className="view-local-heading" style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
 function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,deleteMessage,unsendMessage,activeConversationId,onBlockUser,onReport,profileId,syncMessageText}){
   const messageInitials=name=>String(name||"Conversation").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"DM";
@@ -4094,11 +4304,9 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
     await editMessage?.(threadId,msg.id,editing.text);
     setEditing(null);
   };
-  if(safeMessages.length===0)return <div className="directory-wrap"><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:24,color:C.text}}>Founder messages</h1><EmptyState title="No real messages yet" text="Direct messages will appear here after real conversations start."/></div>;
+  if(safeMessages.length===0)return <div className="directory-wrap"><EmptyState title="Your inbox is ready" text="Start from a profile when you find someone worth talking to. Your conversations will stay available across your devices."/></div>;
   return (
     <div className="directory-wrap">
-      <div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Inbox</div>
-      <h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,marginBottom:12,color:C.text}}>Direct messages</h1>
       <div className="dm-e2ee-note" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"10px 12px",marginBottom:16,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.45}}>DMs now sync through your fear.social account, so your conversations are available when you log in from your phone, laptop, or another browser.</div>
       <div className="messages-grid" style={{display:"grid",gridTemplateColumns:"310px 1fr",gap:18,minHeight:"70vh"}}>
         <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
