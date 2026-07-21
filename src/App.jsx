@@ -857,7 +857,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .profile-danger-zone{background:rgba(229,57,53,.04)!important;border-color:rgba(229,57,53,.2)!important;}
 .settings-grid{gap:12px!important;}
 .settings-grid>div{padding:22px!important;}
-.market-hero,.groups-hero{border-radius:10px!important;border:1px solid rgba(22,199,78,.18)!important;background:linear-gradient(145deg,#0D1811,#111512)!important;}
+.market-hero,.groups-hero{border-radius:10px!important;border:1px solid rgba(22,199,78,.18)!important;background:linear-gradient(145deg,#0D1811,#111512)!important;color:#F5F7F5!important;}
+.market-hero .directory-title,.groups-hero .directory-title{color:#F7F9F7!important;}
+.market-hero p,.groups-hero p{color:rgba(245,247,245,.76)!important;}
 .mobile-app-search,.mobile-section-tabs{display:none;}
 .mobile-bottom-nav{box-shadow:none!important;}
 .app-view~.toast-stack,.toast-stack{top:84px!important;}
