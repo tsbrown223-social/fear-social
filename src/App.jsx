@@ -69,7 +69,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes introBloom{0%{opacity:0;transform:scale(.92);filter:blur(18px);}45%{opacity:.85;}100%{opacity:1;transform:scale(1);filter:blur(0);}}
 @keyframes cinematicFog{0%,100%{transform:translate3d(-2%,1%,0) scale(1);opacity:.68;}50%{transform:translate3d(2%,-2%,0) scale(1.08);opacity:.9;}}
 @keyframes navReveal{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
-@keyframes wordReveal{0%{opacity:0;transform:translateY(28px);filter:blur(9px);}55%{filter:blur(1px);}100%{opacity:1;transform:translateY(0);filter:blur(0);}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -119,17 +118,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-intro-copy:before{content:"";position:absolute;inset:18% auto auto 50%;width:min(720px,92vw);aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle, rgba(22,199,78,.2), rgba(22,199,78,.06) 42%, transparent 70%);filter:blur(18px);animation:introBloom 2.8s ease both, cinematicFog 9s ease-in-out infinite;pointer-events:none;}
 .landing-intro-copy:after{content:"";position:absolute;left:50%;bottom:7vh;width:1px;height:72px;background:linear-gradient(180deg, transparent, rgba(22,199,78,.65), transparent);opacity:.7;animation:introBloom 2.8s ease 2.3s both;pointer-events:none;}
 .landing-typed-headline{z-index:1;text-shadow:0 0 44px rgba(22,199,78,.13),0 24px 80px rgba(0,0,0,.62);}
-.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:visible;color:#fff;}
-.landing-type-line-second{color:#fff;}
-.landing-word{display:inline-block;opacity:0;transform:translateY(28px);filter:blur(9px);animation:wordReveal .9s cubic-bezier(.2,0,0,1) forwards;animation-delay:calc(.48s + var(--word-index,0) * .19s);}
+.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.45s steps(18,end) forwards;color:#fff;}
+.landing-type-line-second{animation-delay:1.55s;animation-duration:1.05s;color:#fff;}
 .landing-fear-word{color:#16C74E;}
 .landing-type-line-caret{position:relative;}
 .landing-type-line-caret:after{content:"";display:inline-block;width:.08em;height:.82em;margin-left:.08em;background:#16C74E;vertical-align:-.05em;animation:caretBlink .78s steps(1,end) infinite;}
 .landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
 .landing-after-intro{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;margin-top:100dvh;padding:24px 0 0;will-change:transform,opacity;opacity:var(--after-opacity,0);transform:translate3d(0,var(--after-y,90px),0);}
 .landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;min-height:205dvh!important;}
-@media(prefers-reduced-motion:reduce){.landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}.landing-type-line-caret:after{display:none!important;}.landing-flow-canvas{opacity:.42!important;}.landing-cursor-glow{filter:blur(18px)!important;}}
-.a11y-reduce-motion .landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}
+@media(prefers-reduced-motion:reduce){.landing-type-line{animation:none!important;clip-path:none!important;filter:none!important;}.landing-type-line-caret:after{display:none!important;}.landing-flow-canvas{opacity:.42!important;}.landing-cursor-glow{filter:blur(18px)!important;}}
+.a11y-reduce-motion .landing-type-line{animation:none!important;clip-path:none!important;filter:none!important;}
 .a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
@@ -278,8 +276,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{width:100%!important;min-width:0!important;margin-left:0!important;padding-left:10px!important;padding-right:10px!important;}
   .composer-actions .composer-media-btn{grid-column:span 2;}
   .composer-actions .composer-publish-btn{grid-column:3 / span 1;}
-  .landing-type-line{animation:none!important;clip-path:none!important;filter:none!important;overflow:visible!important;}
-  .landing-type-line-caret:after{display:none!important;}
 }
 @media(min-width:761px) and (max-width:1180px){
   .landing-progress{display:none!important;}
@@ -1413,15 +1409,8 @@ function LandingPage({setScreen,notify,onOpenPanel}){
         <div className="landing-flow-grain" aria-hidden="true"/>
         <div className="landing-intro-copy">
           <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="landing-typed-headline">
-            <span className="landing-type-line">
-              <span className="landing-word" style={{"--word-index":0}}>Your</span>{" "}
-              <span className="landing-word" style={{"--word-index":1}}>first</span>{" "}
-              <span className="landing-word" style={{"--word-index":2}}>step</span>
-            </span>
-            <span className="landing-type-line landing-type-line-second landing-type-line-caret">
-              <span className="landing-word" style={{"--word-index":3}}>is</span>{" "}
-              <span className="landing-word landing-fear-word" style={{"--word-index":4}}>fear.</span>
-            </span>
+            <span className="landing-type-line"><span>Your first step</span></span>
+            <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is </span><span className="landing-fear-word">fear.</span></span>
           </h1>
         </div>
         <div className="landing-after-intro">
