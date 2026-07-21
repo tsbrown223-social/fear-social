@@ -78,6 +78,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .landing-root{cursor:default;}
 .landing-flow-canvas{position:absolute;inset:0 0 auto 0;width:100%;height:100dvh;z-index:0;pointer-events:none;opacity:var(--intro-opacity,1);transition:opacity .12s linear;will-change:opacity;}
+.landing-wave-field{filter:saturate(.92) contrast(1.04);mix-blend-mode:screen;}
 .landing-cursor-glow{position:fixed;left:0;top:0;width:clamp(420px,42vw,650px);height:clamp(420px,42vw,650px);z-index:0;pointer-events:none;border-radius:50%;transform:translate3d(50vw,24vh,0) translate(-50%,-50%);background:radial-gradient(circle,rgba(22,199,78,.2) 0%,rgba(22,199,78,.09) 30%,rgba(22,199,78,.035) 48%,transparent 70%);filter:blur(14px);mix-blend-mode:screen;opacity:var(--intro-opacity,1);will-change:transform,opacity;}
 .landing-flow-scrim{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;background:radial-gradient(112% 92% at 50% 47%,rgba(5,5,6,.68) 0%,rgba(5,5,6,.58) 25%,rgba(5,5,6,.34) 54%,rgba(5,5,6,.08) 100%);}
 .landing-flow-grain{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");mix-blend-mode:soft-light;}
@@ -1633,6 +1634,127 @@ function FlowWaveScene({screen,reducedMotion=false}){
   );
 }
 
+function LandingWaveField(){
+  const canvasRef=useRef(null);
+  useEffect(()=>{
+    const canvas=canvasRef.current;
+    const ctx=canvas?.getContext("2d",{alpha:true});
+    if(!canvas||!ctx)return undefined;
+    const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const coarse=window.matchMedia?.("(pointer: coarse)")?.matches;
+    let width=1;
+    let height=1;
+    let ratio=1;
+    let frame=0;
+    let running=true;
+    let visible=true;
+    let lastTime=0;
+    const pointer={targetX:0,targetY:0,x:0,y:0,activity:0,last:0};
+
+    const resize=()=>{
+      const rect=canvas.getBoundingClientRect();
+      width=Math.max(1,Math.round(rect.width));
+      height=Math.max(1,Math.round(rect.height));
+      ratio=Math.min(window.devicePixelRatio||1,coarse?1.1:1.5);
+      canvas.width=Math.round(width*ratio);
+      canvas.height=Math.round(height*ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+    };
+    const move=event=>{
+      pointer.targetX=Math.max(-1,Math.min(1,event.clientX/Math.max(1,width)*2-1));
+      pointer.targetY=Math.max(-1,Math.min(1,event.clientY/Math.max(1,height)*2-1));
+      pointer.last=performance.now();
+    };
+    const draw=time=>{
+      if(!running)return;
+      if(!reduced)frame=requestAnimationFrame(draw);
+      if(!visible||document.hidden)return;
+      const seconds=time*.001;
+      const delta=Math.min(.05,Math.max(0,(time-lastTime)*.001));
+      lastTime=time;
+      pointer.x+=(pointer.targetX-pointer.x)*Math.min(1,delta*7.5);
+      pointer.y+=(pointer.targetY-pointer.y)*Math.min(1,delta*7.5);
+      const active=performance.now()-pointer.last<1500&&!coarse;
+      pointer.activity+=(Number(active)-pointer.activity)*Math.min(1,delta*5.5);
+      const maxScroll=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
+      const scroll=Math.max(0,Math.min(1,window.scrollY/maxScroll));
+      const mobile=width<700;
+      const rows=mobile?31:48;
+      const columns=mobile?43:82;
+      const horizon=height*(mobile?.30:.27)+scroll*height*.05;
+      const stream=reduced?0:(seconds*.032)%1;
+
+      ctx.clearRect(0,0,width,height);
+      const atmosphere=ctx.createRadialGradient(width*.5,height*.58,0,width*.5,height*.58,Math.max(width,height)*.72);
+      atmosphere.addColorStop(0,"rgba(13,112,55,.13)");
+      atmosphere.addColorStop(.48,"rgba(3,40,20,.06)");
+      atmosphere.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=atmosphere;
+      ctx.fillRect(0,0,width,height);
+
+      for(let row=0;row<rows;row+=1){
+        const depth=(row/rows+stream)%1;
+        const eased=Math.pow(depth,1.62);
+        const baseY=horizon+eased*height*.82;
+        const spread=width*(.18+depth*.46);
+        const amplitude=(7+depth*43)*(1+scroll*.5);
+        const points=[];
+        for(let column=0;column<columns;column+=1){
+          const across=column/(columns-1)*2-1;
+          const worldX=across*7.5;
+          const broad=Math.sin(worldX*.72+seconds*.42+depth*8.5)*.62;
+          const detail=Math.sin(worldX*1.85-seconds*.27+depth*14.0)*.24;
+          const cross=Math.cos(worldX*.38+depth*21.0-seconds*.18)*.18;
+          const screenX=width*.5+across*spread;
+          const pointerScreenX=width*.5+pointer.x*width*.34;
+          const pointerScreenY=height*.5+pointer.y*height*.22;
+          const distance=Math.hypot((screenX-pointerScreenX)/Math.max(1,width*.32),(baseY-pointerScreenY)/Math.max(1,height*.3));
+          const lift=Math.exp(-distance*distance*4.6)*pointer.activity;
+          const wave=broad+detail+cross;
+          points.push({x:screenX,y:baseY-wave*amplitude-lift*(10+depth*38),energy:Math.max(0,Math.min(1,.48+wave*.27+lift*.34)),depth});
+        }
+
+        ctx.beginPath();
+        points.forEach((point,index)=>index?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));
+        ctx.strokeStyle=`rgba(35,190,92,${.012+depth*.045})`;
+        ctx.lineWidth=.45+depth*.28;
+        ctx.stroke();
+
+        for(const point of points){
+          const radius=.42+point.depth*1.18;
+          const green=Math.round(116+point.energy*122);
+          const red=Math.round(5+point.energy*43);
+          const blue=Math.round(43+point.energy*82);
+          ctx.beginPath();
+          ctx.arc(point.x,point.y,radius,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${red},${green},${blue},${.11+point.depth*.28+point.energy*.13})`;
+          ctx.fill();
+        }
+      }
+      canvas.dataset.ready="true";
+      canvas.dataset.frames=String((Number(canvas.dataset.frames)||0)+1);
+    };
+
+    resize();
+    const observer=window.IntersectionObserver?new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting!==false;},{threshold:0}):null;
+    observer?.observe(canvas);
+    const resizeObserver=window.ResizeObserver?new ResizeObserver(resize):null;
+    resizeObserver?.observe(canvas);
+    if(!resizeObserver)window.addEventListener("resize",resize,{passive:true});
+    window.addEventListener("pointermove",move,{passive:true});
+    draw(0);
+    return()=>{
+      running=false;
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      resizeObserver?.disconnect();
+      if(!resizeObserver)window.removeEventListener("resize",resize);
+      window.removeEventListener("pointermove",move);
+    };
+  },[]);
+  return <canvas ref={canvasRef} className="landing-flow-canvas landing-wave-field" aria-hidden="true"/>;
+}
+
 function FearFlowCanvas(){
   const canvasRef=useRef(null);
   useEffect(()=>{
@@ -1888,7 +2010,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
 
   return(
     <div className="landing-root landing-cinematic-root fs2-root">
-      <FearFlowCanvas/>
+      <LandingWaveField/>
       <div ref={cursorGlowRef} className="landing-cursor-glow" aria-hidden="true"/>
       <section className="fs2-intro" aria-labelledby="fs2-intro-title">
         <div className="landing-flow-scrim"/>
@@ -2095,7 +2217,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
       <div className="landing-progress" aria-hidden="true"><span style={{height:`${scrollProgress}%`}}/></div>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
-        <FearFlowCanvas/>
+        <LandingWaveField/>
         <div ref={cursorGlowRef} className="landing-cursor-glow" aria-hidden="true"/>
         <div className="landing-flow-scrim" aria-hidden="true"/>
         <div className="landing-flow-grain" aria-hidden="true"/>
