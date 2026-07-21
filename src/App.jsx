@@ -271,8 +271,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .landing-section{scroll-margin-top:92px;}
 .landing-footer{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important;}
 @media(max-width:980px){
-  [style*="grid-template-columns: 270px minmax(0,1fr) 310px"]{grid-template-columns:1fr!important;}
-  [style*="position: sticky"]{position:static!important;}
+  .feed-grid{grid-template-columns:1fr!important;}
+  .landing-sticky-world,.fear-board-intro,.desktop-feed-side{position:static!important;}
 }
 @media(max-width:1180px){
   .composer-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;}
@@ -636,11 +636,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .verify-card .verify-actions{grid-template-columns:1fr!important;}
   .toast-stack{left:12px!important;right:12px!important;top:12px!important;}
   .toast-stack>div{min-width:0!important;width:100%!important;}
-  [style*="grid-template-columns: 310px 1fr"]{grid-template-columns:1fr!important;}
-  [style*="grid-template-columns: repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
-  [style*="grid-template-columns: repeat(5,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
-  [style*="grid-template-columns: repeat(3,1fr)"]{grid-template-columns:1fr!important;}
-  [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important;}
   input[placeholder="Search people, posts, tags"]{width:100%!important;max-width:none!important;}
 }
 @media(max-width:360px){
@@ -938,6 +933,86 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .mobile-bottom-nav button{height:52px!important;border-radius:0!important;background:transparent!important;color:var(--app-muted)!important;position:relative;}
   .mobile-bottom-nav button.active{background:transparent!important;color:#63DF88!important;}
   .mobile-bottom-nav button.active:before{content:"";position:absolute;top:-5px;left:28%;right:28%;height:2px;background:#16C74E;}
+}
+/* The final mobile contract lives here so earlier feature styles cannot fight each other. */
+@media(max-width:760px){
+  html{scrollbar-gutter:auto!important;overflow-x:hidden!important;}
+  html::-webkit-scrollbar,body::-webkit-scrollbar{width:0!important;height:0!important;}
+  body,#root{width:100%!important;max-width:100%!important;overflow-x:hidden!important;}
+  body{overscroll-behavior-x:none;-webkit-text-size-adjust:100%;}
+  button,a,input,textarea,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .fs2-root{overflow-x:clip!important;overflow-y:visible!important;}
+  .fs2-intro{height:auto!important;min-height:100svh!important;}
+  .fs2-intro-copy{min-height:100svh!important;}
+  .fs2-intro-line{width:auto!important;max-width:100%!important;}
+  .app-view{width:100%!important;min-height:100dvh!important;overflow-x:hidden!important;}
+  .app-topbar{width:100%!important;padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;overflow:visible!important;}
+  .app-topbar-logo{min-width:0!important;flex:1 1 auto!important;white-space:nowrap!important;}
+  .app-topbar>button{flex:0 0 auto!important;}
+  .app-shell{width:100%!important;max-width:100%!important;padding:12px max(10px,env(safe-area-inset-right)) calc(86px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;}
+  .app-view-intro{padding:16px 2px 18px!important;gap:8px!important;}
+  .app-view-intro h1{font-size:clamp(31px,10vw,38px)!important;line-height:1.02!important;overflow-wrap:anywhere!important;}
+  .mobile-app-search,.mobile-section-tabs,.feed-grid,.directory-wrap,.messages-grid,.profile-hero,.settings-grid{min-width:0!important;max-width:100%!important;}
+  .mobile-section-tabs{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain;}
+  .mobile-section-tabs button{scroll-snap-align:start;}
+  .composer-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
+  .composer-actions .post-type-btn,.composer-actions .composer-media-btn{grid-column:auto!important;min-width:0!important;min-height:44px!important;padding:8px 6px!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .composer-publish-btn{grid-column:1/-1!important;min-height:46px!important;}
+  .post-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;padding:10px 12px!important;}
+  .post-actions>button,.post-actions>span{min-width:0!important;min-height:42px!important;justify-content:center!important;margin:0!important;padding:7px 4px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+  .post-media-grid{grid-template-columns:1fr!important;}
+  .profile-directory-card{padding:16px!important;}
+  .profile-directory-card-header{margin-bottom:10px!important;}
+  .profile-directory-card-tags{margin-bottom:12px!important;}
+  .profile-directory-card-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:stretch!important;}
+  .profile-directory-card-actions .profile-card-followers{grid-column:1/-1!important;width:100%!important;min-width:0!important;}
+  .profile-directory-card-actions button{width:100%!important;min-width:0!important;min-height:42px!important;padding:8px 6px!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .messages-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;min-height:0!important;}
+  .message-list{display:flex!important;flex-direction:row!important;gap:8px!important;max-height:none!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;margin:0!important;padding:0 0 2px!important;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .message-list::-webkit-scrollbar{display:none;}
+  .dm-thread-button{flex:0 0 min(78vw,264px)!important;min-width:0!important;scroll-snap-align:start;}
+  .message-panel{width:100%!important;min-height:0!important;max-height:none!important;padding:13px!important;overflow:visible!important;}
+  .message-panel-header{align-items:flex-start!important;}
+  .message-panel-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;}
+  .message-panel-actions button{min-width:0!important;min-height:40px!important;padding:7px 6px!important;font-size:11px!important;white-space:normal!important;}
+  .message-feed{min-height:240px!important;max-height:46svh!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .message-row{max-width:90%!important;overflow-wrap:anywhere!important;}
+  .message-compose{position:static!important;bottom:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) 76px!important;gap:8px!important;padding:10px 0 0!important;background:transparent!important;}
+  .message-compose input{width:100%!important;min-width:0!important;font-size:16px!important;}
+  .message-compose button{width:76px!important;min-width:76px!important;padding:10px 7px!important;justify-content:center!important;}
+  .profile-hero>div:nth-child(2){padding-left:16px!important;padding-right:16px!important;padding-bottom:20px!important;}
+  .profile-hero-row{grid-template-columns:76px minmax(0,1fr)!important;gap:12px!important;margin-top:-30px!important;}
+  .profile-hero-row>div:first-child,.profile-hero-row>div:first-child>div:first-child{width:76px!important;height:76px!important;}
+  .profile-hero-row>.profile-edit-button,.profile-hero-row>.profile-action-row{grid-column:1/-1!important;width:100%!important;margin-top:4px!important;}
+  .profile-action-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;justify-content:stretch!important;}
+  .profile-action-row button{width:100%!important;min-width:0!important;justify-content:center!important;padding:10px 6px!important;}
+  .profile-hero-copy{padding-top:31px!important;}
+  .profile-hero-copy h1{font-size:clamp(25px,8vw,30px)!important;}
+  .profile-detail-chip{white-space:normal!important;overflow-wrap:anywhere!important;}
+  .profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .profile-stat-button{min-width:0!important;padding:15px!important;}
+  .modal-backdrop,.camera-modal{align-items:flex-end!important;justify-content:center!important;padding:0!important;height:100dvh!important;overflow:hidden!important;}
+  .modal-sheet,.edit-sheet,.camera-sheet{width:100%!important;max-width:none!important;max-height:calc(100dvh - env(safe-area-inset-top))!important;border-radius:20px 20px 0 0!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .modal-sheet{padding:20px 16px calc(20px + env(safe-area-inset-bottom))!important;}
+  .camera-sheet{padding-bottom:env(safe-area-inset-bottom)!important;}
+  .camera-sheet video{max-height:48dvh!important;}
+  .signup-root{width:100%!important;overflow-x:hidden!important;}
+  .signup-form-panel{width:100%!important;max-width:100%!important;padding:68px 12px 40px!important;}
+  .signup-form-panel>div{width:100%!important;max-width:440px!important;padding:20px 16px!important;border-radius:20px!important;}
+  .signup-form-panel input,.signup-form-panel textarea,.signup-form-panel select{max-width:100%!important;font-size:16px!important;}
+  .verify-code-input{font-size:26px!important;letter-spacing:5px!important;}
+  .cookie-notice{left:8px!important;right:8px!important;width:auto!important;max-height:calc(100dvh - 16px)!important;overflow-y:auto!important;overscroll-behavior:contain;transform:none!important;}
+  .toast-stack{top:68px!important;max-height:calc(100dvh - 84px)!important;overflow-y:auto!important;}
+  .mobile-bottom-nav{padding-left:max(6px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important;}
+}
+@media(max-width:360px){
+  .app-topbar{gap:5px!important;}
+  .app-topbar-logo{font-size:17px!important;}
+  .app-invite-button{display:none!important;}
+  .app-shell{padding-left:8px!important;padding-right:8px!important;}
+  .profile-action-row{grid-template-columns:1fr!important;}
+  .message-panel-actions{grid-template-columns:1fr!important;}
+  .fs2-intro h1{font-size:39px!important;}
 }
 @media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary{transition:none!important}}
 .a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}
@@ -3916,7 +3991,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
@@ -4099,7 +4174,7 @@ function CameraCaptureModal({onClose,onCapture,notify}){
     stopStream();
     onClose();
   };
-  return <div role="dialog" aria-modal="true" aria-label="Record a photo or video" style={{position:"fixed",inset:0,zIndex:8000,background:"rgba(0,0,0,.72)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={close}>
+  return <div role="dialog" aria-modal="true" aria-label="Record a photo or video" className="camera-modal" style={{position:"fixed",inset:0,zIndex:8000,background:"rgba(0,0,0,.72)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={close}>
     <div className="camera-sheet" style={{width:"min(520px,100%)",background:"#0D0F14",border:"1px solid rgba(255,255,255,.12)",borderRadius:24,overflow:"hidden",boxShadow:"0 32px 120px rgba(0,0,0,.45)"}} onClick={e=>e.stopPropagation()}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:14,borderBottom:"1px solid rgba(255,255,255,.1)"}}>
         <div><div style={{fontSize:11,fontWeight:950,letterSpacing:1.8,textTransform:"uppercase",color:C.accent}}>Create in camera</div><div style={{fontFamily:"Georgia,serif",fontSize:24,fontWeight:900,color:"#fff",letterSpacing:0}}>Record a post</div></div>
@@ -4770,8 +4845,8 @@ function ProfilePostsSection({posts=[],emptyTitle,emptyText}){
 function ModalShell({title,eyebrow,onClose,children}){
   const titleId=`modal-title-${title.toLowerCase().replace(/[^a-z0-9]+/g,"-")}`;
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(0,0,0,.62)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={onClose} onKeyDown={e=>e.key==="Escape"&&onClose()}>
-      <div style={{width:"min(760px,100%)",maxHeight:"88vh",overflow:"auto",background:"#fff",borderRadius:22,padding:28,boxShadow:"0 30px 100px rgba(0,0,0,.35)"}} onClick={e=>e.stopPropagation()}>
+    <div role="dialog" aria-modal="true" aria-labelledby={titleId} className="modal-backdrop" style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(0,0,0,.62)",display:"flex",alignItems:"center",justifyContent:"center",padding:18}} onClick={onClose} onKeyDown={e=>e.key==="Escape"&&onClose()}>
+      <div className="modal-sheet" style={{width:"min(760px,100%)",maxHeight:"88vh",overflow:"auto",background:"#fff",borderRadius:22,padding:28,boxShadow:"0 30px 100px rgba(0,0,0,.35)"}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",gap:18,alignItems:"start",marginBottom:20}}>
           <div>
             <div style={{fontSize:11,fontWeight:900,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>{eyebrow}</div>
