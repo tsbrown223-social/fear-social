@@ -69,6 +69,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @keyframes introBloom{0%{opacity:0;transform:scale(.92);filter:blur(18px);}45%{opacity:.85;}100%{opacity:1;transform:scale(1);filter:blur(0);}}
 @keyframes cinematicFog{0%,100%{transform:translate3d(-2%,1%,0) scale(1);opacity:.68;}50%{transform:translate3d(2%,-2%,0) scale(1.08);opacity:.9;}}
 @keyframes navReveal{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes wordReveal{0%{opacity:0;transform:translateY(28px);filter:blur(9px);}55%{filter:blur(1px);}100%{opacity:1;transform:translateY(0);filter:blur(0);}}
 .fu{animation:fadeUp 0.45s ease forwards;}
 .glow{animation:glow 2s ease-in-out infinite;}
 .ticker{animation:ticker 32s linear infinite;}
@@ -77,7 +78,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .signal-rise{animation:signalRise 5s ease-in-out infinite;}
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .landing-root{cursor:default;}
-.landing-cursor{position:fixed;z-index:2;width:460px;height:460px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle, rgba(22,199,78,.13), rgba(22,199,78,.045) 38%, transparent 67%);filter:blur(10px);mix-blend-mode:screen;will-change:left,top;}
+.landing-flow-canvas{position:absolute;inset:0 0 auto 0;width:100%;height:100dvh;z-index:0;pointer-events:none;opacity:var(--intro-opacity,1);transition:opacity .12s linear;will-change:opacity;}
+.landing-flow-scrim{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;background:radial-gradient(112% 92% at 50% 47%,rgba(5,5,6,.68) 0%,rgba(5,5,6,.58) 25%,rgba(5,5,6,.34) 54%,rgba(5,5,6,.08) 100%);}
+.landing-flow-grain{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");mix-blend-mode:soft-light;}
 .landing-progress{display:none;position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
 .landing-progress span{display:block;width:100%;border-radius:999px;background:linear-gradient(180deg,#16C74E,#B8F5CE);box-shadow:0 0 22px rgba(22,199,78,.5);}
 .landing-ambient{animation:ambientDrift 9s ease-in-out infinite;}
@@ -115,16 +118,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-intro-copy:before{content:"";position:absolute;inset:18% auto auto 50%;width:min(720px,92vw);aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle, rgba(22,199,78,.2), rgba(22,199,78,.06) 42%, transparent 70%);filter:blur(18px);animation:introBloom 2.8s ease both, cinematicFog 9s ease-in-out infinite;pointer-events:none;}
 .landing-intro-copy:after{content:"";position:absolute;left:50%;bottom:7vh;width:1px;height:72px;background:linear-gradient(180deg, transparent, rgba(22,199,78,.65), transparent);opacity:.7;animation:introBloom 2.8s ease 2.3s both;pointer-events:none;}
 .landing-typed-headline{z-index:1;text-shadow:0 0 44px rgba(22,199,78,.13),0 24px 80px rgba(0,0,0,.62);}
-.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.45s steps(18,end) forwards;}
-.landing-type-line-second{animation-delay:1.55s;animation-duration:1.05s;color:#fff;}
+.landing-type-line{display:block;width:max-content;max-width:100%;margin:0 auto;overflow:visible;color:#fff;}
+.landing-type-line-second{color:#fff;}
+.landing-word{display:inline-block;opacity:0;transform:translateY(28px);filter:blur(9px);animation:wordReveal .9s cubic-bezier(.2,0,0,1) forwards;animation-delay:calc(.48s + var(--word-index,0) * .19s);}
 .landing-fear-word{color:#16C74E;}
 .landing-type-line-caret{position:relative;}
 .landing-type-line-caret:after{content:"";display:inline-block;width:.08em;height:.82em;margin-left:.08em;background:#16C74E;vertical-align:-.05em;animation:caretBlink .78s steps(1,end) infinite;}
 .landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
 .landing-after-intro{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;margin-top:100dvh;padding:24px 0 0;will-change:transform,opacity;opacity:var(--after-opacity,0);transform:translate3d(0,var(--after-y,90px),0);}
 .landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;min-height:205dvh!important;}
-@media(prefers-reduced-motion:reduce){.landing-type-line{clip-path:none!important;}.landing-type-line-caret:after{display:none!important;}}
-.a11y-reduce-motion .landing-type-line{clip-path:none!important;}
+@media(prefers-reduced-motion:reduce){.landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}.landing-type-line-caret:after{display:none!important;}.landing-flow-canvas{opacity:.42!important;}}
+.a11y-reduce-motion .landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}
 .a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
 .ch{box-shadow:0 10px 32px rgba(13,15,20,0.035);}
@@ -277,7 +281,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .landing-type-line-caret:after{display:none!important;}
 }
 @media(min-width:761px) and (max-width:1180px){
-  .landing-cursor,.landing-progress{display:none!important;}
+  .landing-progress{display:none!important;}
   .landing-cinematic-root .landing-hero{min-height:auto!important;padding:92px 24px 68px!important;display:block!important;text-align:center!important;}
   .landing-intro-copy{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:clamp(500px,78dvh,680px)!important;transform:none!important;opacity:1!important;padding:68px 18px 30px!important;}
   .landing-after-intro{position:relative!important;margin-top:0!important;padding-top:0!important;opacity:1!important;transform:none!important;}
@@ -300,7 +304,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:auto;}
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
   .landing-cinematic-sweep,.landing-halo{animation:none!important;}
-  .landing-cursor,.landing-progress{display:none!important;}
+  .landing-progress{display:none!important;}
   .fear-board-tool-grid,.fear-board-suite-grid{grid-template-columns:1fr!important;}
   .fear-board-tool-grid .fear-board-tool:last-child,.fear-board-suite-grid .fear-board-tool:last-child{grid-column:auto!important;}
   .fear-board-page{padding:104px 14px 44px!important;}
@@ -1091,6 +1095,174 @@ function Navbar({setScreen,notify,onOpenPanel,forceVisible=false}){
   );
 }
 
+function FearFlowCanvas(){
+  const canvasRef=useRef(null);
+  useEffect(()=>{
+    const canvas=canvasRef.current;
+    if(!canvas)return;
+    const ctx=canvas.getContext("2d",{alpha:true});
+    if(!ctx)return;
+    const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const coarse=window.matchMedia?.("(pointer: coarse)")?.matches;
+    let width=1;
+    let height=1;
+    let ratio=1;
+    let frame=0;
+    let running=true;
+    let visible=true;
+    let tick=0;
+    let particles=[];
+    const pointer={x:0,y:0,active:false,lastMove:0};
+
+    const palette=[
+      [18,199,78],
+      [70,235,130],
+      [180,255,208],
+      [27,144,78],
+    ];
+    const resize=()=>{
+      const rect=canvas.getBoundingClientRect();
+      width=Math.max(1,Math.round(rect.width));
+      height=Math.max(1,Math.round(rect.height));
+      ratio=Math.min(window.devicePixelRatio||1,coarse ? 1.15 : 1.5);
+      canvas.width=Math.round(width*ratio);
+      canvas.height=Math.round(height*ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.fillStyle="#050506";
+      ctx.fillRect(0,0,width,height);
+    };
+    const makeParticle=(x,y,power=1)=>{
+      const angle=Math.random()*Math.PI*2;
+      const speed=(.35+Math.random()*1.8)*power;
+      const color=palette[Math.floor(Math.random()*palette.length)];
+      const life=70+Math.random()*115;
+      return{
+        x,y,px:x,py:y,
+        vx:Math.cos(angle)*speed,
+        vy:Math.sin(angle)*speed,
+        seed:Math.random()*1000,
+        phase:Math.random()*Math.PI*2,
+        life,maxLife:life,
+        width:.45+Math.random()*2.1,
+        color,
+      };
+    };
+    const splat=(x,y,power=1,count=8)=>{
+      const cap=coarse ? 95 : 190;
+      for(let i=0;i<count&&particles.length<cap;i++){
+        const spread=(8+Math.random()*42)*power;
+        const angle=Math.random()*Math.PI*2;
+        particles.push(makeParticle(x+Math.cos(angle)*spread,y+Math.sin(angle)*spread,power));
+      }
+    };
+    const loadBurst=()=>{
+      particles=[];
+      const count=coarse ? 54 : 110;
+      for(let i=0;i<count;i++){
+        const angle=Math.random()*Math.PI*2;
+        const radius=Math.pow(Math.random(),.65)*Math.min(width,height)*.34;
+        particles.push(makeParticle(width*.5+Math.cos(angle)*radius,height*.46+Math.sin(angle)*radius,1.25));
+      }
+    };
+    const drawStatic=()=>{
+      ctx.clearRect(0,0,width,height);
+      ctx.fillStyle="#050506";
+      ctx.fillRect(0,0,width,height);
+      const glow=ctx.createRadialGradient(width*.5,height*.44,0,width*.5,height*.44,Math.max(width,height)*.55);
+      glow.addColorStop(0,"rgba(22,199,78,.22)");
+      glow.addColorStop(.38,"rgba(17,115,56,.12)");
+      glow.addColorStop(1,"rgba(5,5,6,0)");
+      ctx.fillStyle=glow;
+      ctx.fillRect(0,0,width,height);
+    };
+    const move=e=>{
+      if(e.clientY>height*1.08)return;
+      pointer.x=e.clientX;
+      pointer.y=e.clientY;
+      pointer.active=true;
+      pointer.lastMove=performance.now();
+      splat(pointer.x,pointer.y,coarse ? 0.7 : 1,coarse ? 3 : 6);
+    };
+    const touchMove=e=>{
+      const touch=e.touches?.[0];
+      if(touch)move(touch);
+    };
+    const animate=now=>{
+      if(!running)return;
+      frame=requestAnimationFrame(animate);
+      if(!visible||document.hidden||reduced)return;
+      tick+=.012;
+      const autoX=width*.5+Math.cos(tick*.78)*Math.min(width*.24,230);
+      const autoY=height*.45+Math.sin(tick*1.12)*Math.min(height*.2,150);
+      const usingPointer=pointer.active&&now-pointer.lastMove<1300;
+      const targetX=usingPointer?pointer.x:autoX;
+      const targetY=usingPointer?pointer.y:autoY;
+      if(Math.floor(tick*100)%4===0)splat(targetX,targetY,.68,coarse ? 1 : 2);
+
+      ctx.globalCompositeOperation="source-over";
+      ctx.fillStyle="rgba(5,5,6,.052)";
+      ctx.fillRect(0,0,width,height);
+      ctx.globalCompositeOperation="lighter";
+      const next=[];
+      for(const p of particles){
+        p.px=p.x;
+        p.py=p.y;
+        const flow=Math.sin((p.y+p.seed)*.008+tick*2.1)+Math.cos((p.x-p.seed)*.006-tick*1.4);
+        const angle=flow*1.65+p.phase;
+        p.vx=p.vx*.975+Math.cos(angle)*.055;
+        p.vy=p.vy*.975+Math.sin(angle)*.055;
+        const dx=targetX-p.x;
+        const dy=targetY-p.y;
+        const dist=Math.max(30,Math.hypot(dx,dy));
+        if(dist<250){
+          const pull=(1-dist/250)*.038;
+          p.vx+=(-dy/dist)*pull*6+(dx/dist)*pull;
+          p.vy+=(dx/dist)*pull*6+(dy/dist)*pull;
+        }
+        p.x+=p.vx;
+        p.y+=p.vy;
+        p.life-=1;
+        const age=p.life/p.maxLife;
+        if(p.life>0&&p.x>-80&&p.x<width+80&&p.y>-80&&p.y<height+80){
+          const alpha=Math.sin(Math.PI*Math.min(1,age))*(coarse ? 0.18 : 0.25);
+          const [r,g,b]=p.color;
+          ctx.strokeStyle=`rgba(${r},${g},${b},${Math.max(0,alpha)})`;
+          ctx.lineWidth=p.width*(.7+age);
+          ctx.lineCap="round";
+          ctx.beginPath();
+          ctx.moveTo(p.px,p.py);
+          ctx.quadraticCurveTo((p.px+p.x)*.5,(p.py+p.y)*.5,p.x,p.y);
+          ctx.stroke();
+          next.push(p);
+        }
+      }
+      particles=next;
+      ctx.globalCompositeOperation="source-over";
+    };
+
+    resize();
+    reduced?drawStatic():loadBurst();
+    const observer=window.IntersectionObserver?new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting!==false;},{threshold:0}):null;
+    observer?.observe(canvas);
+    const resizeObserver=window.ResizeObserver?new ResizeObserver(()=>{resize();reduced?drawStatic():loadBurst();}):null;
+    resizeObserver?.observe(canvas);
+    if(!resizeObserver)window.addEventListener("resize",resize,{passive:true});
+    window.addEventListener("pointermove",move,{passive:true});
+    window.addEventListener("touchmove",touchMove,{passive:true});
+    if(!reduced)frame=requestAnimationFrame(animate);
+    return()=>{
+      running=false;
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      resizeObserver?.disconnect();
+      if(!resizeObserver)window.removeEventListener("resize",resize);
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("touchmove",touchMove);
+    };
+  },[]);
+  return <canvas ref={canvasRef} className="landing-flow-canvas" aria-hidden="true"/>;
+}
+
 function LandingPage({setScreen,notify,onOpenPanel}){
   const [email,setEmail]=useState("");
   const [joined,setJoined]=useState(false);
@@ -1098,7 +1270,6 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const [activeDemo,setActiveDemo]=useState("feed");
   const [cursor,setCursor]=useState({x:50,y:24});
   const [scrollProgress,setScrollProgress]=useState(0);
-  const cursorRef=useRef(null);
   const cursorFrame=useRef(0);
   useEffect(()=>{
     let active=true;
@@ -1110,10 +1281,6 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       const w=window.innerWidth||1;
       const h=window.innerHeight||1;
       const next={x:(e.clientX/w)*100,y:(e.clientY/h)*100};
-      if(cursorRef.current){
-        cursorRef.current.style.left=`${next.x}%`;
-        cursorRef.current.style.top=`${next.y}%`;
-      }
       if(!cursorFrame.current){
         cursorFrame.current=requestAnimationFrame(()=>{
           cursorFrame.current=0;
@@ -1232,20 +1399,22 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
-      <div ref={cursorRef} className="landing-cursor" style={{left:`${cursor.x}%`,top:`${cursor.y}%`}}/>
       <div className="landing-progress" aria-hidden="true"><span style={{height:`${scrollProgress}%`}}/></div>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:"0 0 auto 0",height:"62vh",background:"radial-gradient(circle at 50% 0%, rgba(22,199,78,0.16), transparent 48%)",pointerEvents:"none"}}/>
-        <div className="landing-ambient" style={{position:"absolute",left:"7%",top:"18%",width:170,height:170,borderRadius:"50%",background:"radial-gradient(circle, rgba(22,199,78,.22), transparent 68%)",filter:"blur(2px)",pointerEvents:"none"}}/>
-        <div className="landing-ambient" style={{position:"absolute",right:"8%",bottom:"22%",width:260,height:260,borderRadius:"50%",background:"radial-gradient(circle, rgba(255,255,255,.08), transparent 70%)",animationDelay:"-4s",pointerEvents:"none"}}/>
-        <div className="landing-orbit" style={{position:"absolute",width:"min(760px,82vw)",height:"min(760px,82vw)",border:"1px solid rgba(255,255,255,.075)",borderRadius:"50%",pointerEvents:"none"}}>
-          <span style={{position:"absolute",left:"50%",top:-5,width:10,height:10,borderRadius:"50%",background:C.accent,boxShadow:"0 0 28px rgba(22,199,78,.8)"}}/>
-          <span style={{position:"absolute",right:"7%",bottom:"18%",width:8,height:8,borderRadius:"50%",background:"rgba(255,255,255,.72)"}}/>
-        </div>
+        <FearFlowCanvas/>
+        <div className="landing-flow-scrim" aria-hidden="true"/>
+        <div className="landing-flow-grain" aria-hidden="true"/>
         <div className="landing-intro-copy">
           <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(52px,7vw,104px)",fontWeight:800,color:"#fff",lineHeight:0.96,letterSpacing:0,marginBottom:28,maxWidth:1080,position:"relative"}} className="landing-typed-headline">
-            <span className="landing-type-line"><span>Your first step</span></span>
-            <span className="landing-type-line landing-type-line-second landing-type-line-caret"><span>is </span><span className="landing-fear-word">fear.</span></span>
+            <span className="landing-type-line">
+              <span className="landing-word" style={{"--word-index":0}}>Your</span>{" "}
+              <span className="landing-word" style={{"--word-index":1}}>first</span>{" "}
+              <span className="landing-word" style={{"--word-index":2}}>step</span>
+            </span>
+            <span className="landing-type-line landing-type-line-second landing-type-line-caret">
+              <span className="landing-word" style={{"--word-index":3}}>is</span>{" "}
+              <span className="landing-word landing-fear-word" style={{"--word-index":4}}>fear.</span>
+            </span>
           </h1>
         </div>
         <div className="landing-after-intro">
