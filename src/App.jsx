@@ -233,6 +233,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
 .theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
+.theme-dark .signup-form-panel .signup-fast-note{background:rgba(22,199,78,.13)!important;border-color:rgba(22,199,78,.34)!important;color:#9AF4B8!important;}
+.theme-dark .signup-form-panel .signup-title{color:#F7F8FA!important;}
 .app-view button,.app-view input,.app-view textarea{max-width:100%;}
 .app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
 .app-view button{white-space:nowrap;}
@@ -681,6 +683,130 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 }
 @media(prefers-reduced-motion:reduce){.global-flow-wave.is-fallback:before{animation:none!important;}}
 .a11y-reduce-motion .global-flow-wave.is-fallback:before{animation:none!important;}
+.fs2-root{--fs-ink:#080A09;--fs-surface:#F3F6F4;--fs-muted:#A5ADA8;--fs-green:#16C74E;background:var(--fs-ink);color:#fff;min-height:100dvh;overflow:clip;position:relative;}
+.fs2-root button{letter-spacing:0;}
+.fs2-intro{height:112dvh;position:relative;display:grid;place-items:center;padding:24px;isolation:isolate;}
+.fs2-intro-copy{position:fixed;inset:0;display:grid;place-items:center;padding:24px;pointer-events:none;z-index:1;opacity:var(--intro-opacity,1);transform:translate3d(0,var(--intro-y,0),0) scale(var(--intro-scale,1));will-change:transform,opacity;}
+.fs2-intro h1{font-family:Georgia,serif;font-size:76px;line-height:.94;text-align:center;letter-spacing:0;max-width:900px;text-wrap:balance;text-shadow:0 18px 70px rgba(0,0,0,.58);}
+.fs2-intro-line{display:block;width:max-content;max-width:100%;margin:auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.65s steps(24,end) forwards;}
+.fs2-intro-line:last-child{animation-delay:1.7s;}
+.fs2-intro-line:last-child:after{content:"";display:inline-block;width:.07em;height:.76em;background:var(--fs-green);margin-left:.08em;animation:caretBlink .78s steps(1,end) infinite;}
+.fs2-scroll-mark{position:absolute;bottom:7dvh;left:50%;width:1px;height:64px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.66),transparent);animation:cueFloat 2.2s ease-in-out infinite;}
+.fs2-flow{position:relative;z-index:2;margin-top:-12dvh;background:linear-gradient(180deg,transparent 0,#080A09 5%);}
+.fs2-section{position:relative;padding:118px max(28px,calc((100vw - 1180px)/2));}
+.fs2-eyebrow{display:flex;align-items:center;gap:10px;color:var(--fs-green);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px;}
+.fs2-eyebrow:before{content:"";width:30px;height:1px;background:currentColor;}
+.fs2-opening{min-height:94dvh;display:grid;align-content:center;grid-template-columns:minmax(0,1.15fr) minmax(300px,.65fr);gap:80px;padding-top:168px;padding-bottom:110px;border-bottom:1px solid rgba(255,255,255,.07);}
+.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-family:Georgia,serif;font-size:68px;line-height:.97;letter-spacing:0;text-wrap:balance;}
+.fs2-opening-copy{align-self:end;padding-bottom:8px;}
+.fs2-opening-copy p{color:rgba(255,255,255,.58);font-size:17px;line-height:1.75;margin-bottom:28px;}
+.fs2-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.fs2-primary,.fs2-secondary{min-height:48px;border-radius:999px;padding:0 20px;font-size:14px;font-weight:900;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;}
+.fs2-primary{background:var(--fs-green);color:#fff;box-shadow:0 18px 48px rgba(22,199,78,.2);}
+.fs2-primary:hover{transform:translateY(-2px);box-shadow:0 24px 58px rgba(22,199,78,.28);}
+.fs2-secondary{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.13);}
+.fs2-secondary:hover{background:rgba(255,255,255,.1);}
+.fs2-story{height:330dvh;position:relative;}
+.fs2-story-sticky{height:100dvh;position:sticky;top:0;display:grid;grid-template-columns:minmax(300px,.72fr) minmax(0,1.28fr);gap:70px;align-items:center;padding:88px max(28px,calc((100vw - 1180px)/2)) 56px;overflow:hidden;}
+.fs2-story-copy{position:relative;min-height:390px;display:flex;flex-direction:column;justify-content:center;}
+.fs2-story-number{font-family:Georgia,serif;color:rgba(255,255,255,.18);font-size:26px;margin-bottom:24px;}
+.fs2-story-copy h2{font-family:Georgia,serif;font-size:60px;line-height:.96;letter-spacing:0;text-wrap:balance;margin-bottom:20px;}
+.fs2-story-copy p{color:rgba(255,255,255,.56);font-size:16px;line-height:1.75;max-width:470px;}
+.fs2-story-nav{display:flex;gap:8px;margin-top:34px;}
+.fs2-story-nav button{width:40px;height:4px;border:0;border-radius:99px;background:rgba(255,255,255,.14);transition:width .3s ease,background .3s ease;color:transparent;overflow:hidden;font-size:0;}
+.fs2-story-nav button.active{width:72px;background:var(--fs-green);}
+.fs2-product-frame{height:min(600px,calc(100dvh - 170px));min-height:500px;background:rgba(245,248,246,.96);color:#101311;border-radius:14px;padding:12px;box-shadow:0 50px 150px rgba(0,0,0,.46);transform:perspective(1400px) rotateY(-2deg);transition:transform .45s ease;position:relative;overflow:hidden;}
+.fs2-product-frame:hover{transform:perspective(1400px) rotateY(0deg) translateY(-4px);}
+.fs2-product-bar{height:54px;background:#0C0E0D;color:#fff;border-radius:8px;display:flex;align-items:center;padding:0 16px;gap:18px;}
+.fs2-product-brand{font-family:Georgia,serif;font-size:19px;font-weight:800;white-space:nowrap;}
+.fs2-product-brand span{color:var(--fs-green);}
+.fs2-product-tabs{display:flex;gap:4px;overflow:hidden;}
+.fs2-product-tabs span{padding:7px 9px;color:rgba(255,255,255,.46);font-size:11px;font-weight:800;white-space:nowrap;}
+.fs2-product-tabs span.active{background:#E2F8EA;color:#14823B;border-radius:6px;}
+.fs2-live{margin-left:auto;font-size:10px;font-weight:900;color:#83EAA6;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.fs2-live:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fs-green);box-shadow:0 0 0 5px rgba(22,199,78,.1);}
+.fs2-product-body{height:calc(100% - 64px);padding:24px;display:grid;align-content:stretch;background:linear-gradient(145deg,#F7FAF8,#E9EFEB);border-radius:8px;margin-top:10px;position:relative;overflow:hidden;}
+.fs2-preview{display:grid;height:100%;animation:fadeUp .42s ease both;}
+.fs2-profile-preview{grid-template-rows:150px auto;}
+.fs2-cover{background:linear-gradient(120deg,#101812,#238A45 70%,#6DE48E);border-radius:7px;position:relative;overflow:hidden;}
+.fs2-cover:after{content:"";position:absolute;inset:-30%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 34%);transform:translateX(28%);}
+.fs2-profile-info{padding:0 22px 18px;position:relative;}
+.fs2-avatar{width:96px;height:96px;border-radius:50%;background:#101311;color:#fff;border:6px solid #F5F8F6;display:grid;place-items:center;font-family:Georgia,serif;font-size:28px;font-weight:800;margin-top:-48px;position:relative;}
+.fs2-profile-info h3{font-family:Georgia,serif;font-size:34px;margin:14px 0 5px;}
+.fs2-profile-info p{color:#67706A;font-size:13px;line-height:1.55;max-width:480px;}
+.fs2-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px;}
+.fs2-stats div{padding:13px;background:#fff;border-radius:7px;}
+.fs2-stats b{display:block;font-size:18px;}.fs2-stats span{font-size:10px;color:#7B837E;text-transform:uppercase;font-weight:800;letter-spacing:.8px;}
+.fs2-people-preview{align-content:center;gap:10px;}
+.fs2-person{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:12px;background:#fff;padding:14px;border-radius:8px;}
+.fs2-person-avatar{width:48px;height:48px;border-radius:50%;background:#E2F8EA;color:#14823B;display:grid;place-items:center;font-weight:900;}
+.fs2-person b{display:block;font-size:14px;margin-bottom:3px;}.fs2-person small{display:block;color:#7B837E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fs2-person button{border:0;background:#101311;color:#fff;border-radius:999px;padding:9px 13px;font-size:11px;font-weight:900;}
+.fs2-message-preview{grid-template-columns:190px minmax(0,1fr);gap:10px;}
+.fs2-thread-list,.fs2-thread{background:#fff;border-radius:8px;padding:14px;}
+.fs2-thread-list b{font-size:12px;display:block;margin-bottom:16px;}.fs2-thread-person{padding:10px;border-radius:6px;margin-bottom:6px;font-size:11px;color:#626A65;}.fs2-thread-person.active{background:#E2F8EA;color:#146C34;font-weight:900;}
+.fs2-thread{display:flex;flex-direction:column;}.fs2-thread-title{font-weight:900;font-size:14px;padding-bottom:12px;border-bottom:1px solid #E7ECE9;}.fs2-bubbles{display:flex;flex-direction:column;gap:10px;justify-content:center;flex:1;}.fs2-bubble{max-width:78%;padding:11px 13px;border-radius:12px;background:#EEF2EF;color:#4D554F;font-size:12px;line-height:1.5;}.fs2-bubble.mine{margin-left:auto;background:#16C74E;color:#fff;}
+.fs2-opportunity-preview{align-content:center;}.fs2-opportunity{background:#fff;padding:26px;border-radius:8px;}.fs2-opportunity-top{display:flex;align-items:flex-start;gap:14px;}.fs2-company-mark{width:56px;height:56px;border-radius:8px;background:#101311;color:#fff;display:grid;place-items:center;font-family:Georgia,serif;font-size:22px;}.fs2-opportunity h3{font-size:24px;margin-bottom:5px;}.fs2-opportunity p{color:#6A726D;font-size:13px;line-height:1.6;}.fs2-opportunity-meta{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0;}.fs2-opportunity-meta span{background:#EFF4F0;padding:8px 10px;border-radius:5px;font-size:11px;font-weight:800;color:#58615B;}.fs2-opportunity button{background:#16C74E;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-weight:900;}
+.fs2-social{background:var(--fs-surface);color:#0B0E0C;min-height:110dvh;display:grid;align-content:center;}
+.fs2-social .fs2-eyebrow{color:#12813A;}
+.fs2-social-head{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.6fr);gap:72px;align-items:end;margin-bottom:80px;}
+.fs2-social-head p{font-size:17px;line-height:1.75;color:#5E6861;}
+.fs2-social-rail{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #CCD5CF;border-bottom:1px solid #CCD5CF;}
+.fs2-social-item{padding:28px 24px;min-height:190px;border-right:1px solid #CCD5CF;display:flex;flex-direction:column;justify-content:space-between;}
+.fs2-social-item:last-child{border-right:0;}.fs2-social-item span{font-family:Georgia,serif;font-size:30px;color:#18A646;}.fs2-social-item b{font-size:17px;margin-bottom:8px;display:block;}.fs2-social-item p{font-size:13px;line-height:1.6;color:#69726C;}
+.fs2-why{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.7fr);gap:80px;align-items:center;background:linear-gradient(145deg,#0A0C0B,#101A13);}
+.fs2-why-copy p{font-size:17px;line-height:1.8;color:rgba(255,255,255,.57);max-width:580px;margin:24px 0 30px;}
+.fs2-acronym{display:grid;gap:2px;}
+.fs2-acronym-row{display:grid;grid-template-columns:54px 1fr;align-items:center;gap:18px;padding:17px 0;border-bottom:1px solid rgba(255,255,255,.09);}
+.fs2-acronym-row:last-child{border-bottom:0;}.fs2-acronym-row span{font-family:Georgia,serif;font-size:44px;color:var(--fs-green);}.fs2-acronym-row b{font-size:22px;font-weight:800;}
+.fs2-access{background:#0A0C0B;}
+.fs2-access-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.55fr);gap:70px;align-items:end;margin-bottom:62px;}
+.fs2-access-head p{font-size:16px;line-height:1.7;color:rgba(255,255,255,.56);}
+.fs2-plans{display:grid;grid-template-columns:1.08fr .92fr;gap:16px;}
+.fs2-plan{background:#F3F6F4;color:#0B0E0C;border-radius:10px;padding:34px;min-height:360px;display:flex;flex-direction:column;}
+.fs2-plan.pro{background:linear-gradient(145deg,#122018,#0B0E0C);color:#fff;box-shadow:inset 0 0 0 1px rgba(73,221,118,.18);}
+.fs2-plan-label{font-size:11px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:#13843B;margin-bottom:24px;}.fs2-plan h3{font-family:Georgia,serif;font-size:42px;margin-bottom:10px;}.fs2-plan p{font-size:14px;line-height:1.65;color:#657069;max-width:520px;}.fs2-plan.pro p{color:rgba(255,255,255,.55);}
+.fs2-plan-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:28px 0;}.fs2-plan-list span{font-size:12px;font-weight:800;display:flex;align-items:center;gap:8px;}.fs2-plan-list span:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fs-green);}
+.fs2-plan .fs2-actions{margin-top:auto;}
+.fs2-cta{min-height:90dvh;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 65%,rgba(22,199,78,.2),transparent 34%),#080A09;}
+.fs2-cta-inner{max-width:860px;}.fs2-cta p{font-size:18px;line-height:1.75;color:rgba(255,255,255,.57);max-width:620px;margin:24px auto 34px;}.fs2-cta .fs2-actions{justify-content:center;}
+.fs2-footer{padding:28px max(24px,calc((100vw - 1180px)/2));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;border-top:1px solid rgba(255,255,255,.08);background:#080A09;}.fs2-footer-brand{font-family:Georgia,serif;font-size:18px;font-weight:800;}.fs2-footer-brand span{color:var(--fs-green);}.fs2-footer small{color:rgba(255,255,255,.3);}.fs2-footer-links{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;}.fs2-footer-links button{background:transparent;border:0;color:rgba(255,255,255,.46);font-size:11px;padding:8px;}
+.app-view{background:rgba(7,9,8,.94)!important;}
+.theme-dark .app-topbar{background:rgba(8,10,9,.88)!important;backdrop-filter:blur(24px)!important;min-height:64px!important;}
+.theme-dark .desktop-feed-side>div,.theme-dark .mobile-profile-summary,.theme-dark .composer-card,.theme-dark .post-card,.theme-dark .directory-grid .ch,.theme-dark .message-list,.theme-dark .message-panel,.theme-dark .profile-stats>div,.theme-dark .edit-sheet{border-radius:12px!important;border-color:rgba(255,255,255,.08)!important;box-shadow:none!important;}
+.theme-dark .app-view button{box-shadow:none!important;}
+.theme-dark .app-view .glow{animation:none!important;}
+.cookie-notice{left:50%!important;right:auto!important;bottom:14px!important;transform:translateX(-50%);width:min(760px,calc(100% - 28px));}
+.cookie-card{max-width:760px!important;border-radius:12px!important;padding:12px 14px!important;gap:14px!important;flex-wrap:nowrap!important;}
+.cookie-card>div:first-child{min-width:0;}.cookie-card p{font-size:12px!important;line-height:1.4!important;}.cookie-actions{margin-top:0!important;flex:0 0 auto;}.cookie-actions button{padding:9px 12px!important;font-size:11px!important;}
+.signup-brand{position:fixed;top:20px;left:24px;z-index:20;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.55);color:#0D0F14;font-family:Georgia,serif;font-size:19px;font-weight:900;padding:8px 12px;border-radius:999px;box-shadow:0 12px 38px rgba(0,0,0,.14);}
+.signup-brand span{color:#16C74E;}
+.signup-copy{position:relative;overflow:hidden;}
+.signup-copy:after{content:"";position:absolute;inset:auto -20% -42% 10%;height:70%;background:radial-gradient(ellipse,rgba(22,199,78,.2),transparent 65%);pointer-events:none;}
+.signup-form-panel{min-height:100dvh;align-items:flex-start!important;padding-top:52px!important;padding-bottom:52px!important;overflow:visible;}
+@media(max-width:900px){
+  .fs2-section{padding:84px 28px;}
+  .fs2-opening,.fs2-social-head,.fs2-why,.fs2-access-head{grid-template-columns:1fr;gap:36px;}
+  .fs2-opening{min-height:auto;padding-top:130px;padding-bottom:110px;}
+  .fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:54px;}
+  .fs2-story-sticky{grid-template-columns:1fr;gap:26px;padding:92px 28px 32px;align-content:center;}
+  .fs2-story-copy{min-height:230px;}.fs2-story-copy h2{font-size:48px;}.fs2-product-frame{height:440px;min-height:440px;transform:none;}.fs2-product-body{height:362px;padding:14px;}.fs2-cover{height:90px}.fs2-profile-preview{grid-template-rows:90px auto}.fs2-avatar{width:68px;height:68px;margin-top:-34px;border-width:4px;font-size:21px}.fs2-profile-info h3{font-size:26px;margin-top:8px}.fs2-stats{margin-top:12px}.fs2-message-preview{grid-template-columns:130px minmax(0,1fr)}
+  .fs2-social-rail{grid-template-columns:repeat(2,1fr);}.fs2-social-item:nth-child(2){border-right:0}.fs2-social-item:nth-child(-n+2){border-bottom:1px solid #CCD5CF}
+  .fs2-plans{grid-template-columns:1fr;}.fs2-footer{grid-template-columns:1fr;text-align:center}.fs2-footer-links{justify-content:center}
+}
+@media(max-width:600px){
+  .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}.fs2-scroll-mark{bottom:5dvh;height:44px}
+  .fs2-flow{margin-top:-4dvh;background:linear-gradient(180deg,transparent,#080A09 2%)}
+  .fs2-section{padding:68px 18px}.fs2-opening{padding-top:94px;padding-bottom:78px;gap:30px}.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:40px;line-height:1.02}.fs2-opening-copy p,.fs2-social-head p,.fs2-why-copy p,.fs2-cta p{font-size:15px}.fs2-primary,.fs2-secondary{width:100%;min-height:50px}
+  .fs2-story{height:auto}.fs2-story-sticky{height:auto;position:relative;padding:78px 14px;display:block}.fs2-story-copy{min-height:0;padding:0 4px;margin-bottom:28px}.fs2-story-copy h2{font-size:40px;line-height:1}.fs2-story-copy p{font-size:14px}.fs2-story-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.fs2-story-nav button,.fs2-story-nav button.active{width:100%;height:38px;border-radius:999px;font-size:10px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);font-weight:900}.fs2-story-nav button.active{color:#fff;background:var(--fs-green)}.fs2-product-frame{height:462px;min-height:462px;padding:8px;border-radius:10px}.fs2-product-bar{height:48px;padding:0 10px}.fs2-product-tabs span{display:none}.fs2-product-tabs span.active{display:block}.fs2-live{font-size:9px}.fs2-product-body{height:396px;margin-top:8px;padding:10px}.fs2-profile-info{padding:0 10px}.fs2-profile-info p{font-size:11px}.fs2-stats{grid-template-columns:1fr 1fr}.fs2-stats div:last-child{display:none}.fs2-people-preview{gap:7px}.fs2-person{grid-template-columns:42px minmax(0,1fr);padding:10px}.fs2-person-avatar{width:42px;height:42px}.fs2-person button{display:none}.fs2-message-preview{grid-template-columns:1fr}.fs2-thread-list{display:none}.fs2-opportunity{padding:18px}.fs2-opportunity h3{font-size:20px}.fs2-company-mark{width:46px;height:46px}.fs2-opportunity-meta span{padding:7px;font-size:10px}
+  .fs2-social{min-height:auto}.fs2-social-head{margin-bottom:42px}.fs2-social-rail{grid-template-columns:1fr}.fs2-social-item{border-right:0!important;border-bottom:1px solid #CCD5CF!important;min-height:142px;padding:22px 4px}.fs2-social-item:last-child{border-bottom:0!important}.fs2-social-item span{font-size:24px}.fs2-social-item p{max-width:300px}
+  .fs2-why{gap:54px}.fs2-acronym-row{grid-template-columns:42px 1fr;padding:13px 0}.fs2-acronym-row span{font-size:34px}.fs2-acronym-row b{font-size:18px}
+  .fs2-access-head{margin-bottom:38px}.fs2-plan{padding:24px 18px;min-height:0}.fs2-plan h3{font-size:34px}.fs2-plan-list{grid-template-columns:1fr;margin:22px 0}.fs2-cta{min-height:78dvh}.fs2-footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}.fs2-footer-links{gap:0}
+  .cookie-notice{width:calc(100% - 20px);bottom:calc(10px + env(safe-area-inset-bottom))!important}.cookie-card{display:block!important;padding:12px!important}.cookie-card>div:first-child b{font-size:13px!important}.cookie-card p{font-size:11px!important}.cookie-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important;margin-top:10px!important}.cookie-actions button{padding:8px 5px!important;font-size:10px!important;min-height:36px}
+  .signup-brand{position:absolute;top:18px;left:18px;font-size:19px}.signup-form-panel{padding-top:72px!important;padding-bottom:110px!important}
+}
+@media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary{transition:none!important}}
+.a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}
 @supports not (overflow:clip){
   html,body,#root,.app-view,.landing-cinematic-root{overflow-x:hidden!important;}
 }
@@ -783,6 +909,7 @@ const GhostBtn=({children,onClick,style={}})=>(
 
 const iconPaths = {
   check:<path d="M20 6 9 17l-5-5"/>,
+  arrowRight:<><path d="M5 12h14"/><path d="m14 7 5 5-5 5"/></>,
   close:<path d="M18 6 6 18M6 6l12 12"/>,
   info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>,
   sparkle:<path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"/>,
@@ -1497,6 +1624,159 @@ function FearFlowCanvas(){
     };
   },[]);
   return <canvas ref={canvasRef} className="landing-flow-canvas" aria-hidden="true"/>;
+}
+
+function LandingExperience({setScreen,notify,onOpenPanel}){
+  const [activeChapter,setActiveChapter]=useState(0);
+  const storyRef=useRef(null);
+  const cursorGlowRef=useRef(null);
+  useEffect(()=>{
+    let frame=0;
+    const move=e=>{
+      if(frame)return;
+      frame=requestAnimationFrame(()=>{
+        frame=0;
+        if(cursorGlowRef.current)cursorGlowRef.current.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0) translate(-50%,-50%)`;
+      });
+    };
+    const scroll=()=>{
+      const doc=document.documentElement;
+      const y=window.scrollY||0;
+      const intro=Math.min(1,Math.max(0,y/Math.max(1,window.innerHeight*.88)));
+      doc.style.setProperty("--intro-y",`${Math.round(intro*-150)}px`);
+      doc.style.setProperty("--intro-scale",`${1-intro*.14}`);
+      doc.style.setProperty("--intro-opacity",`${Math.max(0,1-intro*1.15)}`);
+      const story=storyRef.current;
+      if(story&&window.innerWidth>600){
+        const rect=story.getBoundingClientRect();
+        const travel=Math.max(1,story.offsetHeight-window.innerHeight);
+        const progress=Math.min(1,Math.max(0,-rect.top/travel));
+        const next=Math.min(3,Math.floor(progress*4));
+        setActiveChapter(previous=>previous===next?previous:next);
+      }
+    };
+    window.addEventListener("pointermove",move,{passive:true});
+    window.addEventListener("scroll",scroll,{passive:true});
+    scroll();
+    return()=>{
+      window.removeEventListener("pointermove",move);
+      window.removeEventListener("scroll",scroll);
+      if(frame)cancelAnimationFrame(frame);
+    };
+  },[]);
+
+  const chapters=[
+    {label:"01 / Identity",tab:"Profile",title:"Show people where you are going.",copy:"Build a profile around your direction, your work, and the opportunity you want next. You do not need the perfect title to become visible."},
+    {label:"02 / People",tab:"Discover",title:"Find people already moving.",copy:"Discover students, creators, early professionals, and collaborators who understand the future you are trying to build."},
+    {label:"03 / Conversation",tab:"Messages",title:"Turn interest into a real conversation.",copy:"Follow up, ask the clear question, and build relationships without needing a formal introduction first."},
+    {label:"04 / Opportunity",tab:"Deals",title:"See the opening. Take the shot.",copy:"Find jobs, gigs, internships, projects, and volunteer roles that match the direction you want to move in."},
+  ];
+  const chapter=chapters[activeChapter]||chapters[0];
+  const people=[
+    ["NS","Nia Sol","Food · Looking for a first internship"],
+    ["JK","Jules Kade","Fashion · Building a portfolio"],
+    ["OP","Oren Pike","Exploring · Looking for collaborators"],
+    ["MV","Mara Vale","Brand · Preparing a first pitch"],
+  ];
+  const socialMoves=[
+    ["01","Be seen","Create a profile that makes your direction, questions, and progress visible."],
+    ["02","Find people","Discover the students, operators, creators, and collaborators in your lane."],
+    ["03","Start talking","Use posts, follows, groups, and DMs to turn curiosity into connection."],
+    ["04","Move forward","Find opportunities and keep the relationships behind your next step moving."],
+  ];
+  const acronym=[["F","False"],["E","Evidence"],["A","Appearing"],["R","Real"]];
+
+  const preview=()=>{
+    if(activeChapter===1)return(
+      <div className="fs2-preview fs2-people-preview">
+        {people.map(([initials,name,detail])=><div className="fs2-person" key={name}><span className="fs2-person-avatar">{initials}</span><span><b>{name}</b><small>{detail}</small></span><button type="button">Connect</button></div>)}
+      </div>
+    );
+    if(activeChapter===2)return(
+      <div className="fs2-preview fs2-message-preview">
+        <div className="fs2-thread-list"><b>Messages</b>{["Mara Vale","Nia Sol","Oren Pike"].map((name,index)=><div key={name} className={`fs2-thread-person ${index===0?"active":""}`}>{name}</div>)}</div>
+        <div className="fs2-thread"><div className="fs2-thread-title">Mara Vale</div><div className="fs2-bubbles"><div className="fs2-bubble">I saw your post about brand work. Are you still looking for feedback?</div><div className="fs2-bubble mine">Yes. I am sending my first pitch this week. Could I ask you one question?</div><div className="fs2-bubble">Absolutely. Send it over.</div></div></div>
+      </div>
+    );
+    if(activeChapter===3)return(
+      <div className="fs2-preview fs2-opportunity-preview">
+        <div className="fs2-opportunity"><div className="fs2-opportunity-top"><span className="fs2-company-mark">f.</span><div><h3>Community and content internship</h3><p>Early-stage team · Remote friendly · Entry level</p></div></div><div className="fs2-opportunity-meta"><span>Matched to your profile</span><span>Portfolio optional</span><span>Posted today</span></div><p>Help shape community stories, support social content, and learn how an early product grows from the inside.</p><button type="button" style={{marginTop:22}}>View opportunity</button></div>
+      </div>
+    );
+    return(
+      <div className="fs2-preview fs2-profile-preview">
+        <div className="fs2-cover"/>
+        <div className="fs2-profile-info"><div className="fs2-avatar">MV</div><h3>Mara Vale</h3><p>@mara.moves · Brand Management</p><p style={{marginTop:9}}>Building my first portfolio, looking for feedback, and finding people who make the next move feel possible.</p><div className="fs2-stats"><div><b>6</b><span>Posts</span></div><div><b>18</b><span>Followers</span></div><div><b>4</b><span>Saved roles</span></div></div></div>
+      </div>
+    );
+  };
+
+  return(
+    <div className="landing-root landing-cinematic-root fs2-root">
+      <FearFlowCanvas/>
+      <div ref={cursorGlowRef} className="landing-cursor-glow" aria-hidden="true"/>
+      <section className="fs2-intro" aria-labelledby="fs2-intro-title">
+        <div className="landing-flow-scrim"/>
+        <div className="landing-flow-grain"/>
+        <div className="fs2-intro-copy">
+          <h1 id="fs2-intro-title"><span className="fs2-intro-line">Your first step</span><span className="fs2-intro-line">is <span style={{color:C.accent}}>fear.</span></span></h1>
+        </div>
+        <span className="fs2-scroll-mark" aria-hidden="true"/>
+      </section>
+
+      <main className="fs2-flow">
+        <section id="platform" className="fs2-section fs2-opening">
+          <div>
+            <div className="fs2-eyebrow">Early access is live</div>
+            <h2>Your future should not depend on already knowing the right people.</h2>
+          </div>
+          <div className="fs2-opening-copy">
+            <p>fear.social is a social network for the moment before momentum. Build a profile, find people in your direction, start conversations, and discover the opportunities that make your next move real.</p>
+            <div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Create your account <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>scrollToSection("activity")}>See how it works</button></div>
+          </div>
+        </section>
+
+        <section ref={storyRef} className="fs2-story" aria-label="How fear.social moves with you">
+          <div className="fs2-story-sticky">
+            <div className="fs2-story-copy">
+              <div className="fs2-story-number">{chapter.label}</div>
+              <h2>{chapter.title}</h2>
+              <p>{chapter.copy}</p>
+              <div className="fs2-story-nav" aria-label="Product chapters">{chapters.map((item,index)=><button type="button" key={item.label} className={activeChapter===index?"active":""} aria-label={`Show ${item.tab}`} aria-pressed={activeChapter===index} onClick={()=>setActiveChapter(index)}>{item.tab}</button>)}</div>
+            </div>
+            <div className="fs2-product-frame" aria-label={`${chapter.tab} product preview`}>
+              <div className="fs2-product-bar"><span className="fs2-product-brand">fear<span>.</span>social</span><div className="fs2-product-tabs">{chapters.map((item,index)=><span key={item.tab} className={activeChapter===index?"active":""}>{item.tab}</span>)}</div><span className="fs2-live">Product preview</span></div>
+              <div className="fs2-product-body">{preview()}</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="activity" className="fs2-section fs2-social">
+          <div className="fs2-social-head"><div><div className="fs2-eyebrow">Social by design</div><h2>Built for the person you are becoming.</h2></div><p>This is not another job board and it is not only for founders. It is a network where the small moves before the breakthrough become visible, social, and easier to keep making.</p></div>
+          <div className="fs2-social-rail">{socialMoves.map(([num,title,copy])=><div className="fs2-social-item" key={title}><span>{num}</span><div><b>{title}</b><p>{copy}</p></div></div>)}</div>
+        </section>
+
+        <section className="fs2-section fs2-why">
+          <div className="fs2-why-copy"><div className="fs2-eyebrow">Why the name</div><h2>Fear feels like proof. It usually is not.</h2><p>False Evidence Appearing Real describes the moment uncertainty starts speaking like fact. The outcome is unknown, the first message feels exposed, and waiting feels safer. fear.social gives you somewhere to take the step anyway.</p><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("why")}>Read the story</button></div></div>
+          <div className="fs2-acronym" aria-label="False Evidence Appearing Real">{acronym.map(([letter,word])=><div className="fs2-acronym-row" key={letter}><span>{letter}</span><b>{word}</b></div>)}</div>
+        </section>
+
+        <section id="pricing" className="fs2-section fs2-access">
+          <div className="fs2-access-head"><div><div className="fs2-eyebrow">Start now. Grow later.</div><h2>Early access is open.</h2></div><p>The social platform is free to join today. FEAR Pro will add a focused toolkit for the work, habits, media, technology, and information behind your next chapter.</p></div>
+          <div className="fs2-plans">
+            <article className="fs2-plan"><div className="fs2-plan-label">Available now</div><h3>fear.social</h3><p>Your profile, people, posts, groups, messages, and opportunities in one social network built for first moves.</p><div className="fs2-plan-list"><span>Public or private profile</span><span>Posts, likes, comments, saves</span><span>People and groups</span><span>Messages and opportunities</span></div><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Join free</button><button className="fs2-secondary" style={{color:"#111",borderColor:"#D7DED9",background:"#fff"}} onClick={()=>setScreen("login")}>Log in</button></div></article>
+            <article id="board" className="fs2-plan pro"><div className="fs2-plan-label">Coming with FEAR Pro</div><h3>fear. board</h3><p>A future workspace connecting personal branding, lifestyle guidance, production, AI building, market intelligence, mentorship, and fear.club.</p><div className="fs2-plan-list"><span>fear.agency</span><span>fear.style</span><span>fear.prod</span><span>fearai + finance</span></div><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("board")}>Preview what is coming</button></div></article>
+          </div>
+        </section>
+
+        <section id="cta" className="fs2-section fs2-cta">
+          <div className="fs2-cta-inner"><div className="fs2-eyebrow" style={{justifyContent:"center"}}>Your move</div><h2>Become easier to find.<br/>Make the future easier to reach.</h2><p>Create your free account, tell people where you are going, and meet the ones who can help you move.</p><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Take your first step <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>setScreen("login")}>I already have an account</button></div></div>
+        </section>
+      </main>
+
+      <footer className="fs2-footer"><div className="fs2-footer-brand">fear<span>.</span>social</div><small>© 2026 fear.social · Empowering tomorrow's founders today.</small><div className="fs2-footer-links"><button onClick={()=>setScreen("why")}>Why fear?</button><button onClick={()=>onOpenPanel("privacy")}>Privacy</button><button onClick={()=>onOpenPanel("terms")}>Terms</button><button onClick={()=>onOpenPanel("accessibility")}>Accessibility</button><button onClick={()=>notify("Contact: contact@fear.social","info")}>Contact</button></div></footer>
+    </div>
+  );
 }
 
 function LandingPage({setScreen,notify,onOpenPanel}){
@@ -2261,12 +2541,13 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   );
   return(
     <div className="signup-root" style={{minHeight:"100vh",background:C.dark,display:"flex"}}>
+      <button className="signup-brand" onClick={()=>setScreen("landing")} aria-label="Return to fear.social home">fear<span>.</span>social</button>
       <div className="signup-copy" style={{flex:1,background:GR2,display:"flex",alignItems:"center",justifyContent:"center",padding:72}}>
         <div style={{maxWidth:520}}>
-          <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>The community<br/>you've been<br/>looking for.</div>
-          <p style={{fontSize:16,color:"rgba(255,255,255,0.42)",lineHeight:1.85,marginBottom:44}}>Real profiles, posts, and activity counts. One platform built for you.</p>
+          <div style={{fontFamily:"Georgia,serif",fontSize:56,fontWeight:700,color:"#fff",letterSpacing:0,lineHeight:1.02,marginBottom:28}}>Your next move<br/>starts with<br/><span style={{color:C.accent}}>people.</span></div>
+          <p style={{fontSize:16,color:"rgba(255,255,255,0.48)",lineHeight:1.85,marginBottom:44}}>Create a profile for where you are going, then meet the people and find the openings that can help you get there.</p>
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
-            {[["network","Connect with people around your exact interests"],["brain","Guided mentorship coming with FEAR Pro"],["megaphone","Build in public with real support"],["zap","Find collaborators, jobs, and gigs"]].map(([icon,text])=>(
+            {[["user","Make your direction visible"],["network","Find people who understand the move"],["briefcase","Discover jobs, gigs, projects, and volunteer roles"]].map(([icon,text])=>(
               <div key={text} style={{display:"flex",alignItems:"center",gap:14}}>
                 <div style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:C.accent}}><Icon name={icon} size={19}/></div>
                 <span style={{fontSize:15,color:"rgba(255,255,255,0.55)"}}>{text}</span>
@@ -2283,9 +2564,9 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           </div>
           {mode==="signup"?<>
           <div style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontSize:10,fontWeight:950,letterSpacing:1.4,textTransform:"uppercase",marginBottom:10}}><span style={{width:6,height:6,borderRadius:"50%",background:C.accent}}/> Early access is live</div>
-          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create account</div>
+          <div className="signup-title" style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create account</div>
           <div style={{fontSize:14,color:C.muted,marginBottom:24,lineHeight:1.55}}>Start free. No card. You will enter the platform immediately after creating your account.</div>
-          <div style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"11px 12px",marginBottom:22,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={16} color="currentColor"/> Fast signup with email confirmation sent automatically.</div>
+          <div className="signup-fast-note" style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"11px 12px",marginBottom:22,color:C.accent,fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="check" size={16} color="currentColor"/> Fast signup with email confirmation sent automatically.</div>
           <div style={{display:"flex",flexDirection:"column",gap:18}}>
             {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
               <div key={key}>
@@ -2425,7 +2706,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   },[applyBackendState]);
   useEffect(()=>{
     let active=true;
-    api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>notify("Offline mode: changes are saved in this browser","info"));
+    api("/bootstrap").then(data=>{if(active)applyBackendState(data);}).catch(()=>{if(active)notify("Offline mode: changes are saved in this browser","info");});
     return()=>{active=false;};
   },[applyBackendState,notify]);
   useEffect(()=>{
@@ -4246,7 +4527,7 @@ export default function App(){
           <Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="board"||screen==="why"}/>
         )}
         {screen==="landing"&&(
-          <LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>
+          <LandingExperience setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>
         )}
         {screen==="board"&&<FearBoardComingSoonPage setScreen={setScreen}/>}
         {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
