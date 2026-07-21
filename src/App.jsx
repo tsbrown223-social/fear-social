@@ -691,7 +691,6 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-intro-line{display:block;width:max-content;max-width:100%;margin:auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.65s steps(24,end) forwards;}
 .fs2-intro-line:last-child{animation-delay:1.7s;}
 .fs2-intro-line:last-child:after{content:"";display:inline-block;width:.07em;height:.76em;background:var(--fs-green);margin-left:.08em;animation:caretBlink .78s steps(1,end) infinite;}
-.fs2-scroll-mark{position:absolute;bottom:7dvh;left:50%;width:1px;height:64px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.66),transparent);animation:cueFloat 2.2s ease-in-out infinite;}
 .fs2-flow{position:relative;z-index:2;margin-top:-12dvh;background:linear-gradient(180deg,transparent 0,#080A09 5%);}
 .fs2-section{position:relative;padding:118px max(28px,calc((100vw - 1180px)/2));}
 .fs2-eyebrow{display:flex;align-items:center;gap:10px;color:var(--fs-green);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px;}
@@ -795,7 +794,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-plans{grid-template-columns:1fr;}.fs2-footer{grid-template-columns:1fr;text-align:center}.fs2-footer-links{justify-content:center}
 }
 @media(max-width:600px){
-  .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}.fs2-scroll-mark{bottom:5dvh;height:44px}
+  .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}
   .fs2-flow{margin-top:-4dvh;background:linear-gradient(180deg,transparent,#080A09 2%)}
   .fs2-section{padding:68px 18px}.fs2-opening{padding-top:94px;padding-bottom:78px;gap:30px}.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:40px;line-height:1.02}.fs2-opening-copy p,.fs2-social-head p,.fs2-why-copy p,.fs2-cta p{font-size:15px}.fs2-primary,.fs2-secondary{width:100%;min-height:50px}
   .fs2-story{height:auto}.fs2-story-sticky{height:auto;position:relative;padding:78px 14px;display:block}.fs2-story-copy{min-height:0;padding:0 4px;margin-bottom:28px}.fs2-story-copy h2{font-size:40px;line-height:1}.fs2-story-copy p{font-size:14px}.fs2-story-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.fs2-story-nav button,.fs2-story-nav button.active{width:100%;height:38px;border-radius:999px;font-size:10px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);font-weight:900}.fs2-story-nav button.active{color:#fff;background:var(--fs-green)}.fs2-product-frame{height:462px;min-height:462px;padding:8px;border-radius:10px}.fs2-product-bar{height:48px;padding:0 10px}.fs2-product-tabs span{display:none}.fs2-product-tabs span.active{display:block}.fs2-live{font-size:9px}.fs2-product-body{height:396px;margin-top:8px;padding:10px}.fs2-profile-info{padding:0 10px}.fs2-profile-info p{font-size:11px}.fs2-stats{grid-template-columns:1fr 1fr}.fs2-stats div:last-child{display:none}.fs2-people-preview{gap:7px}.fs2-person{grid-template-columns:42px minmax(0,1fr);padding:10px}.fs2-person-avatar{width:42px;height:42px}.fs2-person button{display:none}.fs2-message-preview{grid-template-columns:1fr}.fs2-thread-list{display:none}.fs2-opportunity{padding:18px}.fs2-opportunity h3{font-size:20px}.fs2-company-mark{width:46px;height:46px}.fs2-opportunity-meta span{padding:7px;font-size:10px}
@@ -1721,7 +1720,6 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
         <div className="fs2-intro-copy">
           <h1 id="fs2-intro-title"><span className="fs2-intro-line">Your first step</span><span className="fs2-intro-line">is <span style={{color:C.accent}}>fear.</span></span></h1>
         </div>
-        <span className="fs2-scroll-mark" aria-hidden="true"/>
       </section>
 
       <main className="fs2-flow">
