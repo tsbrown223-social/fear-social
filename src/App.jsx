@@ -1114,6 +1114,146 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-panel-actions{grid-template-columns:1fr!important;}
   .fs2-intro h1{font-size:39px!important;}
 }
+.cookie-notice{
+  left:50%!important;
+  right:auto!important;
+  bottom:max(14px,env(safe-area-inset-bottom))!important;
+  width:min(820px,calc(100% - 28px))!important;
+  transform:translateX(-50%)!important;
+  overflow:visible!important;
+  pointer-events:none;
+}
+.cookie-card{
+  position:relative;
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:20px!important;
+  padding:15px 16px!important;
+  overflow:hidden!important;
+  color:#F4F7F5!important;
+  background:rgba(10,13,11,.94)!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  border-radius:8px!important;
+  box-shadow:0 26px 80px rgba(0,0,0,.42),0 0 0 1px rgba(20,199,77,.04) inset!important;
+  backdrop-filter:blur(26px) saturate(120%);
+  -webkit-backdrop-filter:blur(26px) saturate(120%);
+  pointer-events:auto;
+}
+.cookie-card:before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent 0%,#16C74E 24%,#16C74E 76%,transparent 100%);
+  opacity:.86;
+}
+.cookie-copy{
+  min-width:0;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr);
+  align-items:center;
+  gap:12px;
+}
+.cookie-mark{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  color:#24D660;
+  background:rgba(22,199,78,.11);
+  border:1px solid rgba(36,214,96,.22);
+  border-radius:6px;
+}
+.cookie-kicker{
+  display:block;
+  margin-bottom:3px;
+  color:#28D964;
+  font-size:9px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.cookie-card .cookie-title{
+  display:block;
+  margin:0 0 3px!important;
+  color:#F7F9F7!important;
+  font-size:14px!important;
+  line-height:1.2!important;
+}
+.cookie-card .cookie-description{
+  margin:0;
+  color:rgba(244,247,245,.62)!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+.cookie-actions{
+  display:grid!important;
+  grid-template-columns:repeat(3,auto)!important;
+  gap:7px!important;
+  margin:0!important;
+  flex:0 0 auto!important;
+}
+.cookie-actions button{
+  min-height:40px;
+  padding:9px 12px!important;
+  border-radius:6px!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  letter-spacing:0!important;
+  white-space:nowrap;
+}
+.cookie-essential{
+  color:rgba(247,249,247,.78)!important;
+  background:transparent!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+}
+.cookie-manage{
+  color:#F7F9F7!important;
+  background:rgba(255,255,255,.06)!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+}
+.cookie-accept{
+  color:#061008!important;
+  background:#25D760!important;
+  border:1px solid #25D760!important;
+  box-shadow:0 10px 28px rgba(22,199,78,.18);
+}
+.cookie-actions button:hover{transform:translateY(-1px);}
+.cookie-actions button:focus-visible{outline:2px solid #72EE97!important;outline-offset:2px;}
+@media(max-width:760px){
+  .cookie-notice{
+    left:8px!important;
+    right:8px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    max-height:calc(100dvh - 16px)!important;
+    transform:none!important;
+    overflow-y:auto!important;
+  }
+  .cookie-card{
+    display:block!important;
+    padding:14px!important;
+  }
+  .cookie-copy{grid-template-columns:34px minmax(0,1fr);gap:10px;}
+  .cookie-mark{width:34px;height:34px;}
+  .cookie-card .cookie-description{font-size:11px!important;line-height:1.4!important;}
+  .cookie-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    margin-top:12px!important;
+  }
+  .cookie-actions button{width:100%;min-width:0;min-height:40px;padding:8px 5px!important;}
+  .cookie-accept{grid-column:1/-1;grid-row:1;}
+}
+@media(max-width:360px){
+  .cookie-actions{grid-template-columns:1fr!important;}
+  .cookie-accept{grid-column:auto;}
+}
 @media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary{transition:none!important}}
 .a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}
 @supports not (overflow:clip){
@@ -5063,16 +5203,20 @@ function AccessibilityPanel({settings,setSettings,themeMode,setThemeMode,onClose
 function CookieConsent({consent,setConsent,onManage}){
   if(consent.choice)return null;
   return (
-    <div className="cookie-notice" role="region" aria-label="Cookie notice" style={{position:"fixed",left:18,right:18,bottom:18,zIndex:8500,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
-      <div className="cookie-card" style={{maxWidth:920,width:"100%",background:"#fff",border:`1px solid ${C.border}`,borderRadius:20,padding:18,boxShadow:"0 24px 90px rgba(0,0,0,.22)",display:"flex",gap:16,alignItems:"center",flexWrap:"wrap",pointerEvents:"auto"}}>
-        <div style={{flex:"1 1 320px"}}>
-          <b style={{display:"block",fontSize:15,color:C.text,marginBottom:4}}>Cookie and privacy choices</b>
-          <p style={{fontSize:13,color:C.muted,lineHeight:1.55}}>Essential storage keeps sign-in and preferences working. Optional cookies stay off unless you allow them.</p>
+    <div className="cookie-notice" role="region" aria-label="Cookie and privacy choices" aria-live="polite" style={{position:"fixed",zIndex:8500,display:"flex",justifyContent:"center"}}>
+      <div className="cookie-card">
+        <div className="cookie-copy">
+          <span className="cookie-mark" aria-hidden="true"><Icon name="lock" size={17}/></span>
+          <div>
+            <span className="cookie-kicker">Your privacy</span>
+            <b className="cookie-title">Choose what stays on</b>
+            <p className="cookie-description">Essential storage keeps fear.social working. Optional cookies remain off until you allow them.</p>
+          </div>
         </div>
-        <div className="cookie-actions" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button onClick={()=>setConsent({choice:"essential",analytics:false,marketing:false})} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.text}}>Essential only</button>
-          <button onClick={onManage} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent}}>Manage</button>
-          <button onClick={()=>setConsent({choice:"all",analytics:true,marketing:true})} className="bs" style={{background:"#111318",border:"none",borderRadius:999,padding:"10px 14px",fontSize:13,fontWeight:900,color:"#fff"}}>Accept all</button>
+        <div className="cookie-actions">
+          <button onClick={()=>setConsent({choice:"essential",analytics:false,marketing:false})} className="bs cookie-essential">Essential only</button>
+          <button onClick={onManage} className="bs cookie-manage">Manage</button>
+          <button onClick={()=>setConsent({choice:"all",analytics:true,marketing:true})} className="bs cookie-accept">Accept all</button>
         </div>
       </div>
     </div>
