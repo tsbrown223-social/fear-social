@@ -79,6 +79,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .soft-blink{animation:softBlink 2.6s ease-in-out infinite;}
 .landing-root{cursor:default;}
 .landing-flow-canvas{position:absolute;inset:0 0 auto 0;width:100%;height:100dvh;z-index:0;pointer-events:none;opacity:var(--intro-opacity,1);transition:opacity .12s linear;will-change:opacity;}
+.landing-cursor-glow{position:fixed;left:0;top:0;width:clamp(420px,42vw,650px);height:clamp(420px,42vw,650px);z-index:0;pointer-events:none;border-radius:50%;transform:translate3d(50vw,24vh,0) translate(-50%,-50%);background:radial-gradient(circle,rgba(22,199,78,.2) 0%,rgba(22,199,78,.09) 30%,rgba(22,199,78,.035) 48%,transparent 70%);filter:blur(14px);mix-blend-mode:screen;opacity:var(--intro-opacity,1);will-change:transform,opacity;}
 .landing-flow-scrim{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;background:radial-gradient(112% 92% at 50% 47%,rgba(5,5,6,.68) 0%,rgba(5,5,6,.58) 25%,rgba(5,5,6,.34) 54%,rgba(5,5,6,.08) 100%);}
 .landing-flow-grain{position:absolute;inset:0 0 auto 0;height:100dvh;z-index:0;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");mix-blend-mode:soft-light;}
 .landing-progress{display:none;position:fixed;right:20px;top:18vh;width:3px;height:64vh;border-radius:999px;background:rgba(255,255,255,.08);z-index:80;overflow:hidden;}
@@ -127,7 +128,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .landing-scroll-cue{animation:cueFloat 2.2s ease-in-out infinite;}
 .landing-after-intro{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;margin-top:100dvh;padding:24px 0 0;will-change:transform,opacity;opacity:var(--after-opacity,0);transform:translate3d(0,var(--after-y,90px),0);}
 .landing-hero{padding:0 32px 96px!important;justify-content:flex-start!important;min-height:205dvh!important;}
-@media(prefers-reduced-motion:reduce){.landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}.landing-type-line-caret:after{display:none!important;}.landing-flow-canvas{opacity:.42!important;}}
+@media(prefers-reduced-motion:reduce){.landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}.landing-type-line-caret:after{display:none!important;}.landing-flow-canvas{opacity:.42!important;}.landing-cursor-glow{filter:blur(18px)!important;}}
 .a11y-reduce-motion .landing-word{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;}
 .a11y-reduce-motion .landing-type-line-caret:after{display:none!important;}
 .ch{transition:all 0.22s ease;}.ch:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(22,199,78,0.12);border-color:rgba(22,199,78,0.3)!important;}
@@ -302,6 +303,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 @media(max-width:760px){
   html,body,#root{width:100%;max-width:100%;overflow-x:clip;}
   body{background:#050506;-webkit-font-smoothing:antialiased;touch-action:auto;}
+  .landing-cursor-glow{width:360px;height:360px;filter:blur(18px);background:radial-gradient(circle,rgba(22,199,78,.12) 0%,rgba(22,199,78,.05) 34%,transparent 70%);}
   .ticker,.preview-float,.preview-sweep,.signal-rise,.soft-blink,.landing-orbit,.landing-ambient,.landing-scan,.landing-motion-card{animation:none!important;}
   .landing-cinematic-sweep,.landing-halo{animation:none!important;}
   .landing-progress{display:none!important;}
@@ -1270,6 +1272,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   const [activeDemo,setActiveDemo]=useState("feed");
   const [cursor,setCursor]=useState({x:50,y:24});
   const [scrollProgress,setScrollProgress]=useState(0);
+  const cursorGlowRef=useRef(null);
   const cursorFrame=useRef(0);
   useEffect(()=>{
     let active=true;
@@ -1281,6 +1284,9 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       const w=window.innerWidth||1;
       const h=window.innerHeight||1;
       const next={x:(e.clientX/w)*100,y:(e.clientY/h)*100};
+      if(cursorGlowRef.current){
+        cursorGlowRef.current.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0) translate(-50%,-50%)`;
+      }
       if(!cursorFrame.current){
         cursorFrame.current=requestAnimationFrame(()=>{
           cursorFrame.current=0;
@@ -1402,6 +1408,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
       <div className="landing-progress" aria-hidden="true"><span style={{height:`${scrollProgress}%`}}/></div>
       <div className="landing-hero" style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"148px 32px 96px",textAlign:"center",overflow:"hidden"}}>
         <FearFlowCanvas/>
+        <div ref={cursorGlowRef} className="landing-cursor-glow" aria-hidden="true"/>
         <div className="landing-flow-scrim" aria-hidden="true"/>
         <div className="landing-flow-grain" aria-hidden="true"/>
         <div className="landing-intro-copy">
