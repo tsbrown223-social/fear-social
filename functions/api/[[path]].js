@@ -487,8 +487,25 @@ async function updateNotification(db, id, status, providerId = "", error = "") {
 
 function emailDeliveryError(notification) {
   if (notification?.sent) return "";
-  if (notification?.queued) return "Verification email is not available yet. Please contact contact@fear.social for access.";
-  return "Verification email could not be sent right now. Please try again shortly.";
+  if (notification?.queued) return "Your verification email is still being processed. Wait a moment, then try again.";
+  return "We could not send your verification email right now. Check the address and try again in a moment.";
+}
+
+function emailContent(subject, payload = {}) {
+  const verificationCode = String(payload.verificationCode || "").replace(/\D/g, "").slice(0, 6);
+  if (verificationCode.length === 6) {
+    const purpose = payload.purpose === "password" ? "reset your password" : "finish creating your account";
+    return {
+      html: `<!doctype html><html><body style="margin:0;background:#080A09;color:#101311;font-family:Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden">Use code ${escapeHtml(verificationCode)} to ${escapeHtml(purpose)} on fear.social.</div><div style="padding:32px 14px"><div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #DCE4DE;border-radius:20px;overflow:hidden"><div style="padding:24px 28px;background:#0B0E0C;color:#FFFFFF;font-family:Georgia,serif;font-size:25px;font-weight:700">fear<span style="color:#16C74E">.</span>social</div><div style="padding:34px 28px"><p style="margin:0 0 10px;color:#138A3B;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase">Email verification</p><h1 style="margin:0 0 14px;font-family:Georgia,serif;font-size:34px;line-height:1.08;color:#101311">Your first step is almost complete.</h1><p style="margin:0 0 24px;color:#5D6861;font-size:16px;line-height:1.65">Enter this code on fear.social to ${escapeHtml(purpose)}.</p><div style="margin:0 0 24px;padding:20px;border-radius:14px;background:#EAFBF0;border:1px solid #AFE8C1;color:#0D7D33;text-align:center;font-size:36px;font-weight:900;letter-spacing:8px">${escapeHtml(verificationCode)}</div><p style="margin:0;color:#69736C;font-size:14px;line-height:1.6">This code expires in 30 minutes. If you did not request it, you can safely ignore this email.</p></div><div style="padding:18px 28px;border-top:1px solid #E7ECE8;color:#778079;font-size:12px;line-height:1.55">Need help? Reply to this email or contact <a href="mailto:${CONTACT_EMAIL}" style="color:#138A3B">${CONTACT_EMAIL}</a>.</div></div></div></body></html>`,
+      text: `${subject}\n\nYour fear.social verification code is ${verificationCode}.\n\nUse it to ${purpose}. This code expires in 30 minutes.\n\nIf you did not request this, ignore this email. Need help? Contact ${CONTACT_EMAIL}.`,
+    };
+  }
+
+  const lines = Object.entries(payload).map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</p>`).join("");
+  return {
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#111318"><h2>${escapeHtml(subject)}</h2>${lines}</div>`,
+    text: `${subject}\n\n${Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join("\n")}`,
+  };
 }
 
 const publicProfile = (user = {}) => {
@@ -519,25 +536,32 @@ async function sendEmailNotification(db, env, type, recipient, subject, payload)
 
   if (!env.RESEND_API_KEY) {
     await updateNotification(db, logId, "failed", "", "RESEND_API_KEY is not configured in Cloudflare Pages secrets.");
-    return { sent: false, queued: true, logId };
+    return { sent: false, queued: false, logId, code: "EMAIL_NOT_CONFIGURED" };
   }
 
-  const lines = Object.entries(payload).map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</p>`).join("");
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      from: env.EMAIL_FROM || DEFAULT_EMAIL_FROM,
-      to: recipient,
-      reply_to: CONTACT_EMAIL,
-      subject,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#111318"><h2>${escapeHtml(subject)}</h2>${lines}</div>`,
-      text: `${subject}\n\n${Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join("\n")}`,
-    }),
-  });
+  const content = emailContent(subject, payload);
+  let response;
+  try {
+    response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        from: env.EMAIL_FROM || DEFAULT_EMAIL_FROM,
+        to: recipient,
+        reply_to: CONTACT_EMAIL,
+        subject,
+        html: content.html,
+        text: content.text,
+      }),
+    });
+  } catch (err) {
+    const message = cleanText(err?.message || "Email provider could not be reached.", 300);
+    await updateNotification(db, logId, "failed", "", message);
+    return { sent: false, queued: false, logId, code: "EMAIL_PROVIDER_UNREACHABLE" };
+  }
 
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -589,22 +613,23 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
     console.warn("email verification log failed", err);
   }
 
-  const userNotification = await sendEmailNotification(db, env, "email_verification", normalizedEmail, "Your fear.social verification code", {
-    event: "Email verification requested",
+  const userNotification = await sendEmailNotification(db, env, "email_verification", normalizedEmail, `${code} is your fear.social verification code`, {
     purpose,
     email: normalizedEmail,
     username: handle,
     verificationCode: code,
     expiresAt,
   });
-  const ownerNotification = await sendOwnerNotification(db, env, "owner_email_verification", "fear.social email verification requested", {
-    event: "Email verification requested",
-    purpose,
-    email: normalizedEmail,
-    username: handle,
-    verificationCode: code,
-    expiresAt,
-  });
+
+  if (userNotification?.sent) {
+    await safeRun(
+      db,
+      "UPDATE email_verifications SET status = 'superseded' WHERE lower(email) = lower(?) AND purpose = ? AND status = 'pending' AND id <> ?",
+      [normalizedEmail, purpose, id]
+    );
+  } else {
+    await safeRun(db, "UPDATE email_verifications SET status = 'delivery_failed' WHERE id = ?", [id]);
+  }
 
   if (userNotification?.logId) {
     try {
@@ -617,7 +642,7 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
     }
   }
 
-  return { id, code, expiresAt, notification: userNotification, ownerNotification };
+  return { id, code, expiresAt, notification: userNotification };
 }
 
 async function getOrCreateUser(db, env, request, body = {}) {
@@ -1780,6 +1805,7 @@ async function handleRequest({ request, env, params }) {
       return json(
         {
           error: emailDeliveryError(verification?.notification),
+          code: verification?.notification?.code || "EMAIL_DELIVERY_FAILED",
           verificationSent: false,
           verificationQueued: Boolean(verification?.notification?.queued),
         },
@@ -1790,6 +1816,7 @@ async function handleRequest({ request, env, params }) {
       ok: true,
       verificationSent: Boolean(verification?.notification?.sent),
       verificationQueued: Boolean(verification?.notification?.queued),
+      expiresAt: verification?.expiresAt || "",
     });
   }
 
