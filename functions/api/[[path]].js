@@ -611,6 +611,12 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
       .run();
   } catch (err) {
     console.warn("email verification log failed", err);
+    return {
+      id,
+      code,
+      expiresAt,
+      notification: { sent: false, queued: false, code: "VERIFICATION_STORAGE_FAILED" },
+    };
   }
 
   const userNotification = await sendEmailNotification(db, env, "email_verification", normalizedEmail, `${code} is your fear.social verification code`, {
