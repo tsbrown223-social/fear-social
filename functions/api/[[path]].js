@@ -1498,10 +1498,83 @@ async function getProfileAccessRequests(db, userId) {
   };
 }
 
+async function getMessageThreads(db, user) {
+  const userId = user.id;
+  const [conversations, messages] = await Promise.all([
+    db
+      .prepare(
+        `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle, other.e2ee_public_key AS other_e2ee_public_key,
+          other.avatar_url AS other_avatar_url, other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
+         FROM conversations c
+         LEFT JOIN users other ON other.id = CASE
+           WHEN c.user_a_id = ? THEN c.user_b_id
+           WHEN c.user_b_id = ? THEN c.user_a_id
+           ELSE NULL
+         END
+         WHERE (c.user_a_id = ? OR c.user_b_id = ?)
+         ORDER BY datetime(COALESCE(c.updated_at, '1970-01-01')) DESC, c.id DESC`
+      )
+      .bind(userId, userId, userId, userId)
+      .all(),
+    db
+      .prepare(
+        `SELECT m.*
+         FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         LEFT JOIN message_deletions md ON md.message_id = m.id AND md.user_id = ?
+         WHERE (c.user_a_id = ? OR c.user_b_id = ?)
+           AND md.message_id IS NULL
+           AND m.unsent_at IS NULL
+         ORDER BY datetime(m.created_at), m.id`
+      )
+      .bind(userId, userId, userId)
+      .all(),
+  ]);
+  const hiddenAtByConversation = new Map(
+    (conversations.results || []).map((conversation) => [
+      conversation.id,
+      conversation.user_a_id === userId ? conversation.user_a_hidden_at : conversation.user_b_id === userId ? conversation.user_b_hidden_at : null,
+    ])
+  );
+  const messageGroups = new Map();
+  for (const message of messages.results || []) {
+    const hiddenAt = hiddenAtByConversation.get(message.conversation_id);
+    if (hiddenAt && new Date(message.created_at).getTime() <= new Date(hiddenAt).getTime()) continue;
+    const list = messageGroups.get(message.conversation_id) || [];
+    list.push({
+      id: message.id,
+      text: message.sync_text || message.text,
+      encryptedText: message.sync_text ? message.text : "",
+      author: message.user_id === userId ? "you" : message.user_id ? "them" : message.author,
+      time: timeAgo(message.created_at),
+      edited: Boolean(message.edited_at),
+      createdAt: message.created_at,
+      editedAt: message.edited_at || "",
+    });
+    messageGroups.set(message.conversation_id, list);
+  }
+
+  return (conversations.results || [])
+    .filter((conversation) => !hiddenAtByConversation.get(conversation.id) || (messageGroups.get(conversation.id) || []).length > 0)
+    .map((conversation) => ({
+      id: conversation.id,
+      userId: conversation.other_id || "",
+      name: conversation.other_name || conversation.name,
+      handle: conversation.other_handle || "",
+      av: initials(conversation.other_name || conversation.name || conversation.av),
+      avatarUrl: conversation.other_avatar_url || "",
+      e2eePublicKey: parseStoredE2EEPublicKey(conversation.other_e2ee_public_key),
+      verified: isVerifiedAccount({ name: conversation.other_name || conversation.name, handle: conversation.other_handle, verified_badge: conversation.other_verified_badge }),
+      online: Boolean(conversation.online),
+      thread: messageGroups.get(conversation.id) || [],
+      draft: "",
+    }));
+}
+
 async function getBootstrap(db, user) {
   const userId = user.id;
   await ensureOfficialDailyReelPost(db);
-  const [posts, people, events, mentors, conversations, stats, notifications, groups, opportunities, connections, accessRequests] = await Promise.all([
+  const [posts, people, events, mentors, messageThreads, stats, notifications, groups, opportunities, connections, accessRequests] = await Promise.all([
     getPosts(db, userId),
     db
       .prepare(
@@ -1542,21 +1615,7 @@ async function getBootstrap(db, user) {
       )
       .bind(userId)
       .all(),
-    db
-      .prepare(
-        `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle, other.e2ee_public_key AS other_e2ee_public_key,
-          other.avatar_url AS other_avatar_url, other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
-         FROM conversations c
-         LEFT JOIN users other ON other.id = CASE
-           WHEN c.user_a_id = ? THEN c.user_b_id
-           WHEN c.user_b_id = ? THEN c.user_a_id
-           ELSE NULL
-         END
-         WHERE (c.user_a_id = ? OR c.user_b_id = ?)
-         ORDER BY datetime(COALESCE(c.updated_at, '1970-01-01')) DESC, c.id DESC`
-      )
-      .bind(userId, userId, userId, userId)
-      .all(),
+    getMessageThreads(db, user),
     getStats(db),
     getNotifications(db, userId),
     getGroups(db, user),
@@ -1564,43 +1623,6 @@ async function getBootstrap(db, user) {
     getConnectionDirectory(db),
     getProfileAccessRequests(db, userId),
   ]);
-
-  const messages = await db
-    .prepare(
-      `SELECT m.*
-       FROM messages m
-       JOIN conversations c ON c.id = m.conversation_id
-       LEFT JOIN message_deletions md ON md.message_id = m.id AND md.user_id = ?
-       WHERE (c.user_a_id = ? OR c.user_b_id = ?)
-         AND md.message_id IS NULL
-         AND m.unsent_at IS NULL
-       ORDER BY datetime(m.created_at), m.id`
-    )
-    .bind(userId, userId, userId)
-    .all();
-  const hiddenAtByConversation = new Map(
-    (conversations.results || []).map((conversation) => [
-      conversation.id,
-      conversation.user_a_id === userId ? conversation.user_a_hidden_at : conversation.user_b_id === userId ? conversation.user_b_hidden_at : null,
-    ])
-  );
-  const messageGroups = new Map();
-  for (const message of messages.results || []) {
-    const hiddenAt = hiddenAtByConversation.get(message.conversation_id);
-    if (hiddenAt && new Date(message.created_at).getTime() <= new Date(hiddenAt).getTime()) continue;
-    const list = messageGroups.get(message.conversation_id) || [];
-    list.push({
-      id: message.id,
-      text: message.sync_text || message.text,
-      encryptedText: message.sync_text ? message.text : "",
-      author: message.user_id === userId ? "you" : message.user_id ? "them" : message.author,
-      time: timeAgo(message.created_at),
-      edited: Boolean(message.edited_at),
-      createdAt: message.created_at,
-      editedAt: message.edited_at || "",
-    });
-    messageGroups.set(message.conversation_id, list);
-  }
 
   return {
     posts,
@@ -1638,21 +1660,7 @@ async function getBootstrap(db, user) {
       tags: mentor.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
       requested: Boolean(mentor.requested),
     })),
-    messages: (conversations.results || [])
-      .filter((conversation) => !hiddenAtByConversation.get(conversation.id) || (messageGroups.get(conversation.id) || []).length > 0)
-      .map((conversation) => ({
-      id: conversation.id,
-      userId: conversation.other_id || "",
-      name: conversation.other_name || conversation.name,
-      handle: conversation.other_handle || "",
-      av: initials(conversation.other_name || conversation.name || conversation.av),
-      avatarUrl: conversation.other_avatar_url || "",
-      e2eePublicKey: parseStoredE2EEPublicKey(conversation.other_e2ee_public_key),
-      verified: isVerifiedAccount({ name: conversation.other_name || conversation.name, handle: conversation.other_handle, verified_badge: conversation.other_verified_badge }),
-      online: Boolean(conversation.online),
-      thread: messageGroups.get(conversation.id) || [],
-      draft: "",
-    })),
+    messages: messageThreads,
     stats,
     notifications,
     groups,
@@ -2252,6 +2260,13 @@ async function handleRequest({ request, env, params }) {
     );
   }
 
+  if (method === "GET" && path === "/messages/live") {
+    return json(
+      { messages: await getMessageThreads(db, user), syncedAt: new Date().toISOString() },
+      { headers: { "cache-control": "private, no-store, max-age=0" } }
+    );
+  }
+
   if (method === "DELETE" && path === "/account") {
     const limited = await enforceRateLimit(db, request, "account-delete", 3, 3600);
     if (limited) return limited;
@@ -2824,9 +2839,11 @@ async function handleRequest({ request, env, params }) {
     if (!conversation.user_a_id || !conversation.user_b_id || (conversation.user_a_id !== user.id && conversation.user_b_id !== user.id)) {
       return json({ error: "Conversation access denied" }, { status: 403 });
     }
+    const requestedMessageId = cleanText(body.clientMessageId || "", 120);
+    const messageId = /^message-[a-z0-9-]{20,100}$/i.test(requestedMessageId) ? requestedMessageId : createId("message");
     await db
       .prepare("INSERT INTO messages (id, conversation_id, user_id, text, sync_text, author) VALUES (?, ?, ?, ?, ?, 'you')")
-      .bind(createId("message"), Number(segments[1]), user.id, text, syncText || (encryptedText ? "" : text))
+      .bind(messageId, Number(segments[1]), user.id, text, syncText || (encryptedText ? "" : text))
       .run();
     await safeRun(db, "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(segments[1])]);
     const targetUserId = conversation.user_a_id === user.id ? conversation.user_b_id : conversation.user_a_id;

@@ -3033,6 +3033,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [selectedProfile,setSelectedProfile]=useState(null);
   const [profileReturnView,setProfileReturnView]=useState("discover");
   const [profileMetric,setProfileMetric]=useState("Posts");
+  const messageSyncInFlight=useRef(false);
   useEffect(()=>{
     const online=()=>setConnectionState("connecting");
     const offline=()=>setConnectionState("offline");
@@ -3050,6 +3051,24 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [profileDraft,setProfileDraft]=useState(profile);
   const [blockedUserIds,setBlockedUserIds]=useLocalState("fear-blocked-user-ids",[]);
   useEffect(()=>setProfileDraft(profile),[profile]);
+  const mergeLiveMessages=useCallback((incoming)=>{
+    if(!Array.isArray(incoming))return;
+    setMessages(current=>{
+      const currentThreads=Array.isArray(current)?current:[];
+      const currentById=new Map(currentThreads.map(thread=>[String(thread.id),thread]));
+      return incoming.map(thread=>{
+        const existing=currentById.get(String(thread.id));
+        const remoteThread=Array.isArray(thread.thread)?thread.thread:[];
+        const remoteIds=new Set(remoteThread.map(message=>String(message?.id||"")));
+        const pendingMessages=(existing?.thread||[]).filter(message=>message?.pending&&!remoteIds.has(String(message?.id||"")));
+        return {
+          ...thread,
+          draft:existing?.draft||"",
+          thread:pendingMessages.length?[...remoteThread,...pendingMessages]:remoteThread,
+        };
+      });
+    });
+  },[setMessages]);
   const applyBackendState=useCallback((data)=>{
     if(data.profile){
       setProfile(p=>({...p,...data.profile}));
@@ -3059,7 +3078,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(data.people)setPeople(data.people);
     if(data.events)setEvents(data.events);
     if(data.mentors)setMentors(data.mentors);
-    if(data.messages)setMessages(data.messages);
+    if(data.messages)mergeLiveMessages(data.messages);
     if(data.groups)setGroups(data.groups);
     if(data.opportunities)setUserDeals(data.opportunities);
     if(data.notifications)setNotifications(data.notifications);
@@ -3067,7 +3086,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(data.accessRequests)setAccessRequests(data.accessRequests);
     if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[setAccessRequests,setConnections,setEvents,setGroups,setMentors,setMessages,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
+  },[mergeLiveMessages,setAccessRequests,setConnections,setEvents,setGroups,setMentors,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     setConnectionState("online");
@@ -3079,6 +3098,50 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     api("/bootstrap").then(data=>{if(active){setConnectionState("online");applyBackendState(data);}}).catch(()=>{if(active){setConnectionState("offline");notify("Offline mode: changes are saved in this browser","info");}});
     return()=>{active=false;};
   },[applyBackendState,notify]);
+  const syncLiveMessages=useCallback(async()=>{
+    if(messageSyncInFlight.current||!navigator.onLine||document.visibilityState==="hidden")return;
+    messageSyncInFlight.current=true;
+    try{
+      const data=await api("/messages/live");
+      mergeLiveMessages(data.messages);
+      setConnectionState("online");
+    }catch{
+      if(navigator.onLine)setConnectionState("connecting");
+    }finally{
+      messageSyncInFlight.current=false;
+    }
+  },[mergeLiveMessages]);
+  useEffect(()=>{
+    if(!profile.id)return undefined;
+    let active=true;
+    let timer;
+    const delay=view==="messages"?3000:12000;
+    const schedule=()=>{
+      window.clearTimeout(timer);
+      if(active)timer=window.setTimeout(run,delay);
+    };
+    const run=async()=>{
+      if(!active)return;
+      await syncLiveMessages();
+      schedule();
+    };
+    const wake=()=>{
+      if(!active||document.visibilityState==="hidden"||!navigator.onLine)return;
+      window.clearTimeout(timer);
+      void run();
+    };
+    timer=window.setTimeout(run,view==="messages"?500:2500);
+    document.addEventListener("visibilitychange",wake);
+    window.addEventListener("focus",wake);
+    window.addEventListener("online",wake);
+    return()=>{
+      active=false;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange",wake);
+      window.removeEventListener("focus",wake);
+      window.removeEventListener("online",wake);
+    };
+  },[profile.id,syncLiveMessages,view]);
   useEffect(()=>{
     if(!profile.id||!crypto?.subtle)return;
     let active=true;
@@ -3554,16 +3617,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(!text)return;
     const issue=moderationIssue(text);
     if(issue)return notify(`This message was blocked by the safety filter for ${issue}. Edit it before sending.`,"error");
-    const optimisticId=`local-message-${Date.now()}`;
+    const optimisticId=`message-${globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
     setMessages(ms=>ms.map(m=>{
       if(m.id!==id||!m.draft.trim())return m;
       notify(`Message sent to ${m.name}`);
-      return {...m,thread:[...m.thread,{id:optimisticId,text:m.draft.trim(),author:"you",time:"Just now"}],draft:""};
+      return {...m,thread:[...m.thread,{id:optimisticId,text:m.draft.trim(),author:"you",time:"Just now",pending:true}],draft:""};
     }));
     try{
-      const data=await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text})});
+      const data=await callBackend(`/messages/${id}/send`,{method:"POST",body:JSON.stringify({text,clientMessageId:optimisticId})});
       setActiveConversationId(id);
-      if(data.messages)setMessages(data.messages.map(message=>message.id===id?{...message,draft:""}:message));
+      if(data.messages)mergeLiveMessages(data.messages);
     }catch(err){
       setMessages(ms=>ms.map(m=>m.id===id?{...m,draft:text,thread:m.thread.filter(message=>message.id!==optimisticId)}:m));
       notify(err.message||"Could not send message","error");
@@ -3577,7 +3640,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     setActiveConversationId(null);
     try{
       const data=await callBackend(`/messages/${id}`,{method:"DELETE"});
-      if(data.messages)setMessages(data.messages);
+      if(data.messages)mergeLiveMessages(data.messages);
       notify("Chat deleted");
     }catch(err){
       notify(err.message||"Chat deleted locally. Cloud sync failed.","error");
@@ -3598,7 +3661,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.map(message=>message.id===messageId?{...message,text:body,edited:true,time:message.time||"Just now"}:message)}:thread));
     try{
       const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/edit`,{method:"PUT",body:JSON.stringify({text:body})});
-      if(data.messages)setMessages(data.messages);
+      if(data.messages)mergeLiveMessages(data.messages);
       notify("Message updated");
     }catch(err){
       setMessages(previous);
@@ -3610,7 +3673,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.filter(message=>message.id!==messageId)}:thread));
     try{
       const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/delete`,{method:"DELETE"});
-      if(data.messages)setMessages(data.messages);
+      if(data.messages)mergeLiveMessages(data.messages);
       notify("Message deleted from your view");
     }catch(err){
       setMessages(previous);
@@ -3623,7 +3686,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     setMessages(ms=>ms.map(thread=>thread.id===threadId?{...thread,thread:thread.thread.filter(message=>message.id!==messageId)}:thread));
     try{
       const data=await callBackend(`/messages/${encodeURIComponent(messageId)}/unsend`,{method:"DELETE"});
-      if(data.messages)setMessages(data.messages);
+      if(data.messages)mergeLiveMessages(data.messages);
       notify("Message unsent");
     }catch(err){
       setMessages(previous);
@@ -4445,6 +4508,8 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
   const [decrypted,setDecrypted]=useState({});
   const [editing,setEditing]=useState(null);
   const syncedMessageIdsRef=useRef(new Set());
+  const messageFeedRef=useRef(null);
+  const visibleThreadRef=useRef("");
   useEffect(()=>{if(activeConversationId&&safeMessages.some(m=>m.id===activeConversationId))setActive(activeConversationId);},[activeConversationId,messages]);
   useEffect(()=>{if(!safeMessages.some(m=>m.id===active))setActive(safeMessages[0]?.id);},[active,messages]);
   useEffect(()=>{
@@ -4472,6 +4537,17 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
     return()=>{cancelled=true;};
   },[messages,profileId,syncMessageText]);
   const thread=safeMessages.find(m=>m.id===active)||safeMessages[0];
+  const latestMessageId=thread?.thread?.length?String(thread.thread[thread.thread.length-1]?.id||`${thread.id}-${thread.thread.length}`):"empty";
+  useEffect(()=>{
+    const feed=messageFeedRef.current;
+    if(!feed||!thread)return;
+    const changedThread=visibleThreadRef.current!==String(thread.id);
+    const nearBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<180;
+    if(changedThread||nearBottom){
+      window.requestAnimationFrame(()=>{feed.scrollTop=feed.scrollHeight;});
+    }
+    visibleThreadRef.current=String(thread.id);
+  },[latestMessageId,thread?.id]);
   const messageKey=(msg,threadId,i)=>typeof msg==="string"?`${threadId}-${i}`:msg.id||`${threadId}-${i}`;
   const messageText=(msg,threadId="",i=0)=>{
     const raw=typeof msg==="string"?msg:String(msg?.text||"");
@@ -4479,7 +4555,7 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
     return raw;
   };
   const messageAuthor=msg=>typeof msg==="string"?"them":msg?.author||"them";
-  const canEditMessage=(msg,text)=>messageAuthor(msg)==="you"&&typeof msg==="object"&&msg.id&&!String(msg.id).startsWith("local-message-")&&text&&!text.startsWith("Decrypting")&&!text.startsWith("Encrypted message unavailable");
+  const canEditMessage=(msg,text)=>messageAuthor(msg)==="you"&&typeof msg==="object"&&msg.id&&!msg.pending&&!String(msg.id).startsWith("local-message-")&&text&&!text.startsWith("Decrypting")&&!text.startsWith("Encrypted message unavailable");
   const saveMessageEdit=async(threadId,msg)=>{
     if(!editing||editing.id!==msg.id)return;
     await editMessage?.(threadId,msg.id,editing.text);
@@ -4515,14 +4591,14 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
                 {thread.userId&&<button onClick={()=>onBlockUser?.(thread)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button>}
               </div>
             </div>
-            <div className="message-feed" aria-live="polite" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>
+            <div ref={messageFeedRef} className="message-feed" aria-live="polite" aria-relevant="additions text" style={{flex:1,padding:"20px 0",display:"flex",flexDirection:"column",gap:10,overflowY:"auto"}}>
               {thread.thread.length===0&&<div style={{alignSelf:"center",textAlign:"center",color:C.muted,fontSize:14,marginTop:40}}>Say hello and make the first step easy.</div>}
               {thread.thread.map((msg,i)=>{
                 const mine=messageAuthor(msg)==="you";
                 const messageId=messageKey(msg,thread.id,i);
                 const text=messageText(msg,thread.id,i);
                 const editable=canEditMessage(msg,text);
-                const persistent=typeof msg==="object"&&msg.id&&!String(msg.id).startsWith("local-message-");
+                const persistent=typeof msg==="object"&&msg.id&&!msg.pending&&!String(msg.id).startsWith("local-message-");
                 const isEditing=editing?.id===messageId;
                 return (
                   <div key={messageId} className="message-row" style={{alignSelf:mine?"flex-end":"flex-start",maxWidth:"70%",display:"grid",gap:4,justifyItems:mine?"end":"start"}}>
