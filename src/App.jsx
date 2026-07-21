@@ -655,6 +655,32 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-shell{padding-left:8px!important;padding-right:8px!important;}
   .composer-card,.post-card,.mobile-profile-summary{border-radius:16px!important;}
 }
+.global-flow-wave{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at 50% 115%,rgba(22,199,78,.1),transparent 54%);opacity:.34;transition:opacity .45s ease;contain:strict;}
+.global-flow-wave canvas{display:block;width:100%;height:100%;opacity:.92;filter:saturate(.9) contrast(1.04);}
+.global-flow-wave-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,6,.3),transparent 30%,rgba(5,5,6,.18) 72%,rgba(5,5,6,.5));}
+.global-flow-wave.is-fallback:before{content:"";position:absolute;inset:-20%;background:radial-gradient(ellipse at 42% 108%,rgba(22,199,78,.22),transparent 45%),radial-gradient(ellipse at 70% 86%,rgba(2,73,37,.2),transparent 38%);filter:blur(36px);animation:ambientDrift 12s ease-in-out infinite;}
+.global-flow-wave[data-screen="landing"]{opacity:.24;}
+.global-flow-wave[data-screen="signup"],.global-flow-wave[data-screen="login"]{opacity:.28;}
+.global-flow-wave[data-screen="board"],.global-flow-wave[data-screen="why"]{opacity:.4;}
+.theme-light .global-flow-wave{opacity:.07;filter:saturate(.55);}
+.theme-light .global-flow-wave[data-screen="landing"],.theme-light .global-flow-wave[data-screen="board"],.theme-light .global-flow-wave[data-screen="why"]{opacity:.2;}
+.landing-root,.signup-root,.verify-shell,.fear-board-page,.why-page,.app-view{position:relative;z-index:1;}
+.theme-dark .app-view{background:rgba(5,5,6,.9)!important;}
+.theme-dark .fear-board-page,.theme-dark .why-page{background:rgba(5,5,6,.82)!important;}
+.theme-dark .signup-root{background:rgba(12,13,16,.9)!important;}
+.theme-dark .verify-shell{background:radial-gradient(circle at 50% 0%,rgba(22,199,78,.14),transparent 34%),rgba(5,5,6,.84)!important;}
+.landing-cinematic-root{background:rgba(5,5,6,.84)!important;}
+.landing-cinematic-root .landing-dark-section,.landing-cinematic-root .landing-immersive-stage,.landing-cinematic-root .landing-signal-engine,.landing-cinematic-root .landing-workflow,.landing-cinematic-root .landing-why,.landing-cinematic-root .landing-board,.landing-cinematic-root .landing-footer{background-color:rgba(5,5,6,.84)!important;}
+.app-topbar,.landing-nav,.app-shell{position:relative;z-index:2;}
+@media(max-width:760px){
+  .global-flow-wave{opacity:.22;}
+  .global-flow-wave[data-screen="landing"]{opacity:.16;}
+  .global-flow-wave[data-screen="signup"],.global-flow-wave[data-screen="login"]{opacity:.12;}
+  .global-flow-wave[data-screen="app"]{opacity:.16;}
+  .theme-dark .signup-root{background:linear-gradient(180deg,rgba(8,10,10,.95),rgba(5,5,6,.9))!important;}
+}
+@media(prefers-reduced-motion:reduce){.global-flow-wave.is-fallback:before{animation:none!important;}}
+.a11y-reduce-motion .global-flow-wave.is-fallback:before{animation:none!important;}
 @supports not (overflow:clip){
   html,body,#root,.app-view,.landing-cinematic-root{overflow-x:hidden!important;}
 }
@@ -1089,6 +1115,218 @@ function Navbar({setScreen,notify,onOpenPanel,forceVisible=false}){
         <button onClick={()=>setScreen("signup")} className="bs landing-nav-join" style={{background:"#111318",border:"1px solid #111318",borderRadius:999,padding:"9px 18px",color:"#fff",fontSize:13,fontWeight:900,whiteSpace:"nowrap"}}>Join free</button>
       </div>
       </div>
+    </div>
+  );
+}
+
+function FlowWaveScene({screen,reducedMotion=false}){
+  const canvasRef=useRef(null);
+  useEffect(()=>{
+    const canvas=canvasRef.current;
+    if(!canvas)return undefined;
+    let disposed=false;
+    let renderer=null;
+    let geometry=null;
+    let material=null;
+    let motesGeometry=null;
+    let motesMaterial=null;
+    let animationFrame=0;
+    const parent=canvas.parentElement;
+    const cleanup=[];
+    const fail=()=>{
+      canvas.dataset.ready="fallback";
+      parent?.classList.add("is-fallback");
+    };
+    const init=async()=>{
+      try{
+        const THREE=await import(/* @vite-ignore */"https://unpkg.com/three@0.143.0/build/three.module.js");
+        if(disposed)return;
+        const mobile=window.matchMedia?.("(max-width: 760px)")?.matches;
+        const coarse=window.matchMedia?.("(pointer: coarse)")?.matches;
+        const scene3d=new THREE.Scene();
+        const camera=new THREE.PerspectiveCamera(44,1,.1,180);
+        camera.position.set(0,7.4,16);
+        renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false,powerPreference:"high-performance"});
+        renderer.setClearColor(0x000000,0);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1:1.35));
+        geometry=new THREE.PlaneGeometry(42,74,mobile?54:116,mobile?88:176);
+        const uniforms={
+          uTime:{value:0},
+          uStream:{value:0},
+          uPointer:{value:new THREE.Vector2(0,0)},
+          uPointerPower:{value:0},
+          uWave:{value:1},
+        };
+        material=new THREE.ShaderMaterial({
+          uniforms,
+          transparent:true,
+          depthWrite:false,
+          blending:THREE.AdditiveBlending,
+          vertexShader:`
+            uniform float uTime;
+            uniform float uStream;
+            uniform float uWave;
+            uniform float uPointerPower;
+            uniform vec2 uPointer;
+            varying float vEnergy;
+            varying float vFade;
+            vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+            vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+            vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+            vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-.85373472095314*r;}
+            float snoise(vec3 v){
+              const vec2 C=vec2(1.0/6.0,1.0/3.0);
+              const vec4 D=vec4(0.0,.5,1.0,2.0);
+              vec3 i=floor(v+dot(v,C.yyy));
+              vec3 x0=v-i+dot(i,C.xxx);
+              vec3 g=step(x0.yzx,x0.xyz);
+              vec3 l=1.0-g;
+              vec3 i1=min(g.xyz,l.zxy);
+              vec3 i2=max(g.xyz,l.zxy);
+              vec3 x1=x0-i1+C.xxx;
+              vec3 x2=x0-i2+C.yyy;
+              vec3 x3=x0-D.yyy;
+              i=mod289(i);
+              vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+              float n_=1.0/7.0;
+              vec3 ns=n_*D.wyz-D.xzx;
+              vec4 j=p-49.0*floor(p*ns.z*ns.z);
+              vec4 x_=floor(j*ns.z);
+              vec4 y_=floor(j-7.0*x_);
+              vec4 x=x_*ns.x+ns.yyyy;
+              vec4 y=y_*ns.x+ns.yyyy;
+              vec4 h=1.0-abs(x)-abs(y);
+              vec4 b0=vec4(x.xy,y.xy);
+              vec4 b1=vec4(x.zw,y.zw);
+              vec4 s0=floor(b0)*2.0+1.0;
+              vec4 s1=floor(b1)*2.0+1.0;
+              vec4 sh=-step(h,vec4(0.0));
+              vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+              vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+              vec3 p0=vec3(a0.xy,h.x);
+              vec3 p1=vec3(a0.zw,h.y);
+              vec3 p2=vec3(a1.xy,h.z);
+              vec3 p3=vec3(a1.zw,h.w);
+              vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+              p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+              vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+              m=m*m;
+              return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+            }
+            void main(){
+              vec3 p=vec3(position.x,0.0,position.y);
+              float travel=p.z+uStream;
+              float broad=snoise(vec3(p.x*.09,travel*.065,uTime*.055));
+              float detail=snoise(vec3(p.x*.22,travel*.16,uTime*.11+4.0));
+              float wave=(broad*2.7+detail*.72)*uWave;
+              float ridge=pow(max(0.0,broad),2.0)*2.2*uWave;
+              p.y=wave+ridge-1.15;
+              float pointerDistance=length(p.xz-uPointer);
+              float pointerLift=exp(-pointerDistance*.32)*uPointerPower;
+              p.y+=pointerLift*1.35;
+              p.x+=(p.x-uPointer.x)*pointerLift*.025;
+              vec4 mvPosition=modelViewMatrix*vec4(p,1.0);
+              float perspective=clamp(19.0/-mvPosition.z,.38,2.2);
+              gl_PointSize=(1.12+max(0.0,p.y)*.18+pointerLift*.55)*perspective;
+              gl_Position=projectionMatrix*mvPosition;
+              vEnergy=clamp((p.y+3.2)/7.2,0.0,1.0)+pointerLift*.22;
+              vFade=smoothstep(38.0,8.0,length(p.xz));
+            }
+          `,
+          fragmentShader:`
+            varying float vEnergy;
+            varying float vFade;
+            void main(){
+              vec2 q=gl_PointCoord-.5;
+              float circle=smoothstep(.5,.12,length(q));
+              vec3 deep=vec3(.006,.09,.045);
+              vec3 bright=vec3(.20,.91,.53);
+              vec3 color=mix(deep,bright,clamp(vEnergy,0.0,1.0));
+              gl_FragColor=vec4(color,circle*vFade*(.32+vEnergy*.58));
+            }
+          `,
+        });
+        scene3d.add(new THREE.Points(geometry,material));
+
+        const moteCount=mobile?42:110;
+        const motePositions=new Float32Array(moteCount*3);
+        for(let i=0;i<moteCount;i+=1){
+          motePositions[i*3]=(Math.random()-.5)*34;
+          motePositions[i*3+1]=Math.random()*8-1;
+          motePositions[i*3+2]=-Math.random()*52+10;
+        }
+        motesGeometry=new THREE.BufferGeometry();
+        motesGeometry.setAttribute("position",new THREE.BufferAttribute(motePositions,3));
+        motesMaterial=new THREE.PointsMaterial({color:0x5eff9a,size:mobile?.035:.045,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending});
+        const motes=new THREE.Points(motesGeometry,motesMaterial);
+        scene3d.add(motes);
+
+        const pointer={targetX:0,targetY:0,x:0,y:0,power:0,last:0};
+        const onPointer=e=>{
+          pointer.targetX=(e.clientX/window.innerWidth-.5)*2;
+          pointer.targetY=(e.clientY/window.innerHeight-.5)*2;
+          pointer.last=performance.now();
+        };
+        const onResize=()=>{
+          const width=Math.max(1,window.innerWidth);
+          const height=Math.max(1,window.innerHeight);
+          camera.aspect=width/height;
+          camera.updateProjectionMatrix();
+          renderer?.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1:1.35));
+          renderer?.setSize(width,height,false);
+        };
+        window.addEventListener("pointermove",onPointer,{passive:true});
+        window.addEventListener("resize",onResize,{passive:true});
+        cleanup.push(()=>window.removeEventListener("pointermove",onPointer),()=>window.removeEventListener("resize",onResize));
+        onResize();
+        const clock=new THREE.Clock();
+        let smoothScroll=0;
+        const renderFrame=()=>{
+          if(disposed)return;
+          const elapsed=clock.getElapsedTime();
+          const maxScroll=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
+          const scrollTarget=Math.min(1,window.scrollY/maxScroll);
+          smoothScroll+=(scrollTarget-smoothScroll)*.055;
+          pointer.x+=(pointer.targetX-pointer.x)*.12;
+          pointer.y+=(pointer.targetY-pointer.y)*.12;
+          const recentlyMoved=performance.now()-pointer.last<900;
+          pointer.power+=(Number(recentlyMoved)-pointer.power)*.08;
+          uniforms.uTime.value=elapsed;
+          uniforms.uStream.value=elapsed*(mobile?.65:.9)+smoothScroll*18;
+          uniforms.uWave.value=1+smoothScroll*.62;
+          uniforms.uPointer.value.set(pointer.x*9,-7+(-pointer.y*.5+.5)*23);
+          uniforms.uPointerPower.value=coarse?0:pointer.power;
+          camera.position.x=pointer.x*.6;
+          camera.position.y=7.4-smoothScroll*3.6+pointer.y*.22;
+          camera.position.z=16-smoothScroll*4.8;
+          camera.lookAt(pointer.x*.3,-.4-smoothScroll*.55,-7-smoothScroll*7);
+          motes.rotation.y=elapsed*.006;
+          renderer.render(scene3d,camera);
+          canvas.dataset.ready="true";
+          canvas.dataset.frames=String((Number(canvas.dataset.frames)||0)+1);
+          if(!reducedMotion)animationFrame=requestAnimationFrame(renderFrame);
+        };
+        renderFrame();
+      }catch{
+        fail();
+      }
+    };
+    init();
+    return()=>{
+      disposed=true;
+      cancelAnimationFrame(animationFrame);
+      cleanup.forEach(fn=>fn());
+      geometry?.dispose();
+      material?.dispose();
+      motesGeometry?.dispose();
+      motesMaterial?.dispose();
+      renderer?.dispose();
+    };
+  },[reducedMotion]);
+  return(
+    <div className="global-flow-wave" data-screen={screen} aria-hidden="true">
+      <canvas ref={canvasRef}/>
+      <div className="global-flow-wave-scrim"/>
     </div>
   );
 }
@@ -4003,8 +4241,13 @@ export default function App(){
       <style>{css}</style>
       <ToastCtx toasts={toasts} remove={remove}/>
       <div className={a11yClass} style={{minHeight:"100vh",background:screen==="app"&&themeMode==="light"?C.bg:C.dark}}>
-        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&<Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="board"||screen==="why"}/>}
-        {screen==="landing"&&<LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>}
+        <FlowWaveScene screen={screen} reducedMotion={accessibility.reduceMotion}/>
+        {screen!=="signup"&&screen!=="login"&&screen!=="app"&&(
+          <Navbar setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel} forceVisible={screen==="board"||screen==="why"}/>
+        )}
+        {screen==="landing"&&(
+          <LandingPage setScreen={setScreen} notify={notify} onOpenPanel={setOpenPanel}/>
+        )}
         {screen==="board"&&<FearBoardComingSoonPage setScreen={setScreen}/>}
         {screen==="why"&&<WhyFearPage setScreen={setScreen}/>}
         {(screen==="signup"||screen==="login")&&<SignupPage setScreen={setScreen} notify={notify} setProfile={setProfile} initialMode={screen==="login"?"login":"signup"}/>}
