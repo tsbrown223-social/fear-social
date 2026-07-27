@@ -231,11 +231,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .theme-dark .dm-thread-button[data-active="true"] .dm-thread-name{color:#fff!important;}
 .theme-dark .dm-thread-button[data-active="true"] .dm-thread-preview{color:rgba(255,255,255,0.72)!important;}
 .theme-dark .dm-thread-button[data-active="false"] .dm-thread-preview{color:rgba(255,255,255,0.44)!important;}
-.theme-dark .signup-form-panel,.theme-dark .signup-form-panel>div,.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
-.theme-dark .signup-form-panel input,.theme-dark .signup-form-panel [style*="background: rgb(240, 242, 245)"]{background:#0B0C0E!important;color:#F7F8FA!important;border-color:#252830!important;}
-.theme-dark .signup-form-panel div,.theme-dark .signup-form-panel label,.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
-.signup-form-panel .signup-fast-note,.theme-dark .signup-form-panel .signup-fast-note{background:#102A19!important;border-color:#2F8C4F!important;color:#E6FFEE!important;}
-.theme-dark .signup-form-panel .signup-title{color:#F7F8FA!important;}
+.theme-dark .cookie-card{background:#101114!important;color:#F7F8FA!important;border-color:#252830!important;}
+.theme-dark .cookie-card p,.theme-dark .cookie-card b{color:rgba(255,255,255,0.72)!important;}
 .app-view button,.app-view input,.app-view textarea{max-width:100%;}
 .app-view button,.app-view label.bs{line-height:1.15;overflow-wrap:normal;word-break:keep-all;}
 .app-view button{white-space:nowrap;}
@@ -783,6 +780,38 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .signup-copy{position:relative;overflow:hidden;}
 .signup-copy:after{content:"";position:absolute;inset:auto -20% -42% 10%;height:70%;background:radial-gradient(ellipse,rgba(22,199,78,.2),transparent 65%);pointer-events:none;}
 .signup-form-panel{min-height:100dvh;align-items:flex-start!important;padding-top:52px!important;padding-bottom:52px!important;overflow:visible;}
+.auth-card{width:100%;max-width:410px;background:#fff;color:#0D0F14;border:1px solid #E4E8E5;border-radius:22px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.12);}
+.auth-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:#F1F4F2;border:1px solid #DDE3DF;border-radius:10px;padding:4px;margin-bottom:28px;}
+.auth-tabs button{min-height:42px;border:0;border-radius:7px;background:transparent;color:#68726B;font-size:13px;font-weight:900;}
+.auth-tabs button[aria-selected="true"]{background:#0E1511;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.12);}
+.auth-kicker{display:inline-flex;align-items:center;gap:7px;color:#118C3B;font-size:10px;font-weight:950;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px;}
+.auth-kicker span{width:6px;height:6px;border-radius:50%;background:#16C74E;}
+.auth-title{font-family:Georgia,serif;font-size:34px;line-height:1.04;letter-spacing:0;color:#0D0F14;margin:0 0 8px;}
+.auth-intro{font-size:14px;line-height:1.55;color:#69736C;margin:0 0 22px;}
+.signup-form-panel .signup-fast-note{display:flex;gap:8px;align-items:center;background:#EAF9EF;border:1px solid #BDE8CA;border-radius:10px;padding:10px 12px;margin-bottom:20px;color:#176D35;font-size:12px;font-weight:900;line-height:1.35;}
+.auth-form{display:flex;flex-direction:column;gap:16px;}
+.auth-field{display:block;}
+.auth-field label{display:block;margin-bottom:7px;color:#556159;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;}
+.auth-field input{width:100%;min-height:50px;background:#F5F7F5;border:1.5px solid #D9E0DB;border-radius:10px;padding:13px 14px;color:#0D0F14;font-size:16px;transition:border-color .18s ease,box-shadow .18s ease;}
+.auth-field input:not(:placeholder-shown){border-color:#9BCFAB;}
+.auth-field small{display:block;margin-top:6px;color:#6B756E;font-size:12px;line-height:1.4;}
+.auth-field small.auth-error,.auth-error{color:#AA2E2E;}
+.auth-password-control{position:relative;}
+.auth-password-control input{padding-right:68px;}
+.auth-password-control button{position:absolute;right:7px;top:50%;transform:translateY(-50%);min-width:50px;min-height:36px;border:0;border-radius:7px;background:#E6ECE8;color:#26322A;font-size:12px;font-weight:900;}
+.auth-terms{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;padding:12px;border:1px solid #DDE3DF;border-radius:10px;background:#F7F9F7;cursor:pointer;}
+.auth-terms.is-accepted{background:#EAF9EF;border-color:#A9DDB9;}
+.auth-terms>input{width:18px;height:18px;margin:1px 0 0;accent-color:#16C74E;}
+.auth-terms span{color:#59655D;font-size:12px;line-height:1.5;}
+.auth-terms button{border:0;background:transparent;padding:0;color:#118C3B;font:inherit;font-weight:900;text-decoration:underline;}
+.auth-message{border-radius:10px;padding:11px 12px;background:#EAF9EF;border:1px solid #BDE8CA;color:#176D35;font-size:12px;font-weight:800;line-height:1.5;}
+.auth-message.error{background:#FFF0F0;border-color:#F2B8B8;color:#A92D2D;}
+.auth-message.info{background:#EFF5FF;border-color:#C7D8F2;color:#28517D;}
+.auth-form>button[type="submit"]{min-height:50px;border-radius:10px!important;font-size:15px!important;}
+.auth-text-button,.auth-secondary-button{width:100%;min-height:44px;border:0;border-radius:9px;background:transparent;color:#118C3B;font-size:13px;font-weight:900;}
+.auth-secondary-button{border:1px solid #DDE3DF;color:#4D5851;background:#F7F9F7;}
+.auth-footnote{margin:0;text-align:center;color:#7A847D;font-size:11px;}
+.auth-code-input{text-align:center;font-size:24px!important;font-weight:900;letter-spacing:7px;}
 
 /* Product workspace: one visual language across every signed-in surface. */
 .app-view{--app-bg:#080A09;--app-panel:#101311;--app-panel-2:#141815;--app-line:rgba(255,255,255,.09);--app-copy:#F5F7F5;--app-muted:rgba(245,247,245,.56);--app-soft:rgba(245,247,245,.72);background:var(--app-bg)!important;color:var(--app-copy)!important;isolation:isolate;}
@@ -1096,9 +1125,21 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .camera-sheet{padding-bottom:env(safe-area-inset-bottom)!important;}
   .camera-sheet video{max-height:48dvh!important;}
   .signup-root{width:100%!important;overflow-x:hidden!important;}
-  .signup-form-panel{width:100%!important;max-width:100%!important;padding:68px 12px 40px!important;}
-  .signup-form-panel>div{width:100%!important;max-width:440px!important;padding:20px 16px!important;border-radius:20px!important;}
+  .signup-form-panel{width:100%!important;max-width:100%!important;min-height:100dvh!important;padding:68px 12px calc(24px + env(safe-area-inset-bottom))!important;align-items:flex-start!important;background:linear-gradient(180deg,#F3F7F4,#EAF8EF)!important;}
+  .signup-form-panel>.auth-card{width:100%!important;max-width:440px!important;margin:0 auto!important;padding:20px 16px!important;border-radius:18px!important;background:#fff!important;color:#0D0F14!important;border:1px solid #DCE4DE!important;box-shadow:0 16px 46px rgba(13,15,20,.1)!important;}
   .signup-form-panel input,.signup-form-panel textarea,.signup-form-panel select{max-width:100%!important;font-size:16px!important;}
+  .auth-tabs{margin-bottom:22px!important;}
+  .auth-title{font-size:31px!important;}
+  .auth-intro{margin-bottom:18px!important;}
+  .auth-form{gap:14px!important;}
+  .auth-field input{min-height:52px!important;}
+  .auth-password-control button{min-height:38px!important;}
+  .auth-terms{padding:11px!important;}
+  .verify-shell{min-height:100dvh!important;padding:66px 12px calc(18px + env(safe-area-inset-bottom))!important;align-items:flex-start!important;overflow-y:auto!important;}
+  .verify-card{width:100%!important;margin:0 auto!important;padding:22px 16px!important;border-radius:18px!important;}
+  .verify-card h1{font-size:34px!important;}
+  .verify-card .verify-actions{grid-template-columns:1fr!important;}
+  .verify-card [style*="grid-template-columns: repeat(3"]{grid-template-columns:1fr!important;}
   .verify-code-input{font-size:26px!important;letter-spacing:5px!important;}
   .cookie-notice{left:8px!important;right:8px!important;width:auto!important;max-height:calc(100dvh - 16px)!important;overflow-y:auto!important;overscroll-behavior:contain;transform:none!important;}
   .toast-stack{top:68px!important;max-height:calc(100dvh - 84px)!important;overflow-y:auto!important;}
@@ -1351,8 +1392,8 @@ const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
   </div>
   );
 };
-const GBtn=({children,onClick,sm=false,lg=false,full=false,className="",disabled=false,style={}})=>(
-  <button disabled={disabled} onClick={onClick} className={`bs ${className}`.trim()} style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:disabled?"not-allowed":"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",opacity:disabled?0.55:1,...style}}>{children}</button>
+const GBtn=({children,onClick,type="button",sm=false,lg=false,full=false,className="",disabled=false,style={}})=>(
+  <button type={type} disabled={disabled} onClick={onClick} className={`bs ${className}`.trim()} style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:disabled?"not-allowed":"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",opacity:disabled?0.55:1,...style}}>{children}</button>
 );
 const GhostBtn=({children,onClick,style={}})=>(
   <button onClick={onClick} className="bs" style={{background:"transparent",color:C.accent,border:`1.5px solid ${C.accent}`,borderRadius:9,fontWeight:700,padding:"10px 22px",fontSize:14,cursor:"pointer",...style}}>{children}</button>
@@ -3037,14 +3078,17 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   useEffect(()=>{
     setMode(initialMode);
     setStep(0);
+    setPasswordStep(0);
     setAuthMessage(null);
   },[initialMode]);
-  const [form,setForm]=useState({name:"",username:"",email:"",password:"",confirmPassword:""});
+  const [form,setForm]=useState({name:"",username:"",email:"",password:""});
   const [login,setLogin]=useState({identifier:"",password:""});
   const [passwordSetup,setPasswordSetup]=useState({identifier:"",code:"",password:"",confirmPassword:""});
   const [passwordStep,setPasswordStep]=useState(0);
   const [acceptedTerms,setAcceptedTerms]=useState(false);
   const [showTerms,setShowTerms]=useState(false);
+  const [showPassword,setShowPassword]=useState(false);
+  const [recoveryDestination,setRecoveryDestination]=useState("");
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const [busy,setBusy]=useState(false);
@@ -3055,11 +3099,13 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     const timer=window.setInterval(()=>setResendSeconds(seconds=>Math.max(0,seconds-1)),1000);
     return()=>window.clearInterval(timer);
   },[resendSeconds]);
+  useEffect(()=>{
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  },[mode,passwordStep,step]);
   const emailReady=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim());
-  const usernameReady=form.username.length>=2;
-  const passwordReady=form.password.length>=8&&form.password===form.confirmPassword;
-  const valid=form.name.trim()&&usernameReady&&emailReady&&passwordReady&&acceptedTerms;
-  const loginValid=login.identifier&&login.password;
+  const passwordReady=form.password.length>=8;
+  const valid=form.name.trim()&&emailReady&&passwordReady&&acceptedTerms;
+  const loginValid=login.identifier.trim()&&login.password;
   const passwordSetupReady=passwordSetup.password.length>=8&&passwordSetup.password===passwordSetup.confirmPassword;
   const requestCode=async(resend=false)=>{
     if(busy||(resend&&resendSeconds>0))return;
@@ -3068,15 +3114,21 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     setBusy(true);
     setAuthMessage(null);
     try{
-      const nextProfile={name:form.name.trim(),username:form.username,handle:`@${form.username}`,email:form.email.trim().toLowerCase()};
-      await api("/auth/request-code",{method:"POST",body:JSON.stringify({email:nextProfile.email,username:form.username,purpose:"signup"})});
+      const nextProfile={name:form.name.trim(),email:form.email.trim().toLowerCase()};
+      const requestedUsername=form.username||cleanUsername(nextProfile.name);
+      const response=await api("/auth/request-code",{
+        method:"POST",
+        body:JSON.stringify({email:nextProfile.email,username:requestedUsername,purpose:"signup"}),
+        timeout:30000,
+      });
+      setForm(current=>({...current,email:nextProfile.email,username:response.username||requestedUsername}));
       setCode("");
       setStep(1);
       setResendSeconds(30);
       setAuthMessage({type:"success",text:resend?"A new code is on its way.":"Verification code sent."});
       notify(resend?"New verification code sent":"Check your email for your verification code");
     }catch(err){
-      if(err.status===409&&/already has an account/i.test(err.message||"")){
+      if(err.code==="ACCOUNT_EXISTS"||(err.status===409&&/already has an account/i.test(err.message||""))){
         setLogin(current=>({...current,identifier:form.email.trim().toLowerCase()}));
         setMode("login");
         setStep(0);
@@ -3095,26 +3147,44 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     setBusy(true);
     setAuthMessage(null);
     try{
-      const saved=await api("/auth/login",{method:"POST",body:JSON.stringify(login)});
+      const saved=await api("/auth/login",{
+        method:"POST",
+        body:JSON.stringify({...login,identifier:login.identifier.trim()}),
+        timeout:20000,
+      });
       setProfile(p=>({...p,...saved.profile}));
       setScreen("app");
       notify("Signed in");
     }catch(err){
-      setAuthMessage({type:"error",text:err.message||"Could not sign in. Check your details and try again."});
+      if(err.code==="PASSWORD_REQUIRED"){
+        setPasswordSetup(current=>({...current,identifier:login.identifier.trim()}));
+        setMode("password");
+        setPasswordStep(0);
+        setAuthMessage({type:"info",text:"This account needs a password. We can set one in under a minute."});
+      }else{
+        setAuthMessage({type:"error",text:err.code==="INVALID_CREDENTIALS"?"That email, username, or password did not match. Try again or reset your password.":err.message||"Could not sign in. Check your details and try again."});
+      }
       notify(err.message||"Could not sign in","error");
     }finally{
       setBusy(false);
     }
   };
   const requestPasswordCode=async()=>{
-    if(busy)return;
+    if(busy||(passwordStep===1&&resendSeconds>0))return;
     if(!passwordSetup.identifier){setAuthMessage({type:"error",text:"Enter the username or email on your account."});return;}
     setBusy(true);
     setAuthMessage(null);
     try{
-      await api("/auth/request-code",{method:"POST",body:JSON.stringify({identifier:passwordSetup.identifier,purpose:"password"})});
+      const response=await api("/auth/request-code",{
+        method:"POST",
+        body:JSON.stringify({identifier:passwordSetup.identifier.trim(),purpose:"password"}),
+        timeout:30000,
+      });
+      setPasswordSetup(current=>({...current,identifier:passwordSetup.identifier.trim(),code:""}));
+      setRecoveryDestination(response.maskedEmail||"the email on your account");
       setPasswordStep(1);
-      setAuthMessage({type:"success",text:"Password code sent. Check Spam or Junk if it is not in your inbox."});
+      setResendSeconds(30);
+      setAuthMessage({type:"success",text:`Code sent to ${response.maskedEmail||"the email on your account"}.`});
       notify("Password code sent");
     }catch(err){
       setAuthMessage({type:"error",text:err.message||"Could not send password code."});
@@ -3129,12 +3199,14 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     setBusy(true);
     setAuthMessage(null);
     try{
-      await api("/auth/password",{method:"POST",body:JSON.stringify({identifier:passwordSetup.identifier,code:passwordSetup.code,password:passwordSetup.password,purpose:"password"})});
-      setLogin({identifier:passwordSetup.identifier,password:passwordSetup.password});
-      setMode("login");
-      setPasswordStep(0);
-      setAuthMessage({type:"success",text:"Password saved. Log in with it below."});
-      notify("Password ready. You can log in now.");
+      const saved=await api("/auth/password",{
+        method:"POST",
+        body:JSON.stringify({identifier:passwordSetup.identifier.trim(),code:passwordSetup.code,password:passwordSetup.password,purpose:"password"}),
+        timeout:20000,
+      });
+      setProfile(p=>({...p,...saved.profile}));
+      setScreen("app");
+      notify("Password updated. You're signed in.");
     }catch(err){
       setAuthMessage({type:"error",text:err.message||"Could not set password."});
       notify(err.message||"Could not set password","error");
@@ -3146,9 +3218,13 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     if(code.length!==6||busy)return;
     setBusy(true);
     setAuthMessage(null);
-    const nextProfile={name:form.name,username:form.username,handle:`@${form.username}`,email:form.email};
+    const nextProfile={name:form.name.trim(),username:form.username,handle:`@${form.username}`,email:form.email.trim().toLowerCase()};
     try{
-      const saved=await api("/auth/verify",{method:"POST",body:JSON.stringify({email:form.email,code,purpose:"signup",profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-13-safety"})});
+      const saved=await api("/auth/verify",{
+        method:"POST",
+        body:JSON.stringify({email:nextProfile.email,code,purpose:"signup",profile:nextProfile,password:form.password,acceptedTerms:true,termsVersion:"2026-07-13-safety"}),
+        timeout:20000,
+      });
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       setBusy(false);
@@ -3181,7 +3257,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
               <span style={{width:9,height:9,borderRadius:"50%",background:C.accent,boxShadow:"0 0 0 6px rgba(22,199,78,0.14)"}}/>
               <span style={{fontSize:12,fontWeight:900,letterSpacing:1.5,textTransform:"uppercase",color:"rgba(255,255,255,0.58)"}}>Secure code</span>
             </div>
-            <input aria-label="Six digit email verification code" autoComplete="one-time-code" value={code} autoFocus onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&code.length===6&&enterApp()} placeholder="000000" inputMode="numeric" className="if verify-code-input" style={{width:"100%",background:"#fff",border:`2px solid ${code.length===6?C.accent:"transparent"}`,borderRadius:16,padding:"18px 16px",fontSize:30,fontWeight:950,letterSpacing:8,textAlign:"center",color:C.text,boxShadow:code.length===6?"0 0 0 5px rgba(22,199,78,0.16)":"none",transition:"all .18s ease"}}/>
+            <input aria-label="Six digit email verification code" autoComplete="one-time-code" enterKeyHint="done" pattern="[0-9]*" value={code} autoFocus onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&code.length===6&&enterApp()} placeholder="000000" inputMode="numeric" className="if verify-code-input" style={{width:"100%",background:"#fff",border:`2px solid ${code.length===6?C.accent:"transparent"}`,borderRadius:16,padding:"18px 16px",fontSize:30,fontWeight:950,letterSpacing:8,textAlign:"center",color:C.text,boxShadow:code.length===6?"0 0 0 5px rgba(22,199,78,0.16)":"none",transition:"all .18s ease"}}/>
           </div>
           <div className="verify-actions" style={{display:"grid",gridTemplateColumns:"1fr auto",gap:10,alignItems:"center"}}>
             <GBtn full disabled={code.length!==6||busy} onClick={enterApp} style={{padding:"14px 18px",fontWeight:900}}>{busy?"Verifying…":"Verify and create account →"}</GBtn>
@@ -3224,92 +3300,96 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
         </div>
       </div>
       <div className="signup-form-panel" style={{width:520,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:56}}>
-        <div style={{width:"100%",maxWidth:400}}>
-          <div role="tablist" aria-label="Account mode" style={{display:"flex",gap:8,background:C.bg,border:`1px solid ${C.border}`,borderRadius:12,padding:4,marginBottom:28}}>
-            <button role="tab" aria-selected={mode==="signup"} onClick={()=>{setMode("signup");setAuthMessage(null);}} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="signup"?"#fff":C.muted,background:mode==="signup"?C.accent:"transparent"}}>Sign up</button>
-            <button role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>{setMode("login");setAuthMessage(null);}} className="bs" style={{flex:1,border:"none",borderRadius:9,padding:"10px 12px",fontSize:13,fontWeight:900,color:mode==="login"||mode==="password"?"#fff":C.muted,background:mode==="login"||mode==="password"?C.accent:"transparent"}}>Log in</button>
+        <div className="auth-card">
+          <div className="auth-tabs" role="tablist" aria-label="Account mode">
+            <button type="button" role="tab" aria-selected={mode==="signup"} onClick={()=>{setMode("signup");setAuthMessage(null);}}>Sign up</button>
+            <button type="button" role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>{setMode("login");setAuthMessage(null);}}>Log in</button>
           </div>
           {mode==="signup"?<>
-          <div style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontSize:10,fontWeight:950,letterSpacing:1.4,textTransform:"uppercase",marginBottom:10}}><span style={{width:6,height:6,borderRadius:"50%",background:C.accent}}/> Early access is live</div>
-          <div className="signup-title" style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Create account</div>
-          <div style={{fontSize:14,color:C.muted,marginBottom:24,lineHeight:1.55}}>Start free in two quick steps. Enter your details, then confirm the code sent to your email.</div>
-          <div className="signup-fast-note" style={{display:"flex",gap:8,alignItems:"center",background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:14,padding:"11px 12px",marginBottom:22,color:"#176D35",fontSize:12,fontWeight:900,lineHeight:1.35}}><Icon name="mail" size={16} color="currentColor"/> Step 1 of 2 · Set up your account</div>
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            {[["Full name","text","Your name","name"],["Username","text","username","username"],["Email","email","you@example.com","email"]].map(([label,type,ph,key])=>(
-              <div key={key}>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>{label}</label>
-                <input aria-label={label} autoComplete={key==="name"?"name":key==="email"?"email":"username"} type={type} value={form[key]} onChange={e=>setForm(f=>({...f,[key]:key==="username"?cleanUsername(e.target.value):e.target.value}))} placeholder={ph} className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form[key]?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-                {key==="username"&&form.username&&<div style={{fontSize:12,color:C.muted,marginTop:6}}>Your profile will be @{form.username}</div>}
-                {key==="username"&&form.username&&!usernameReady&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Use at least 2 letters or numbers.</div>}
-                {key==="email"&&form.email&&!emailReady&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Enter a complete email address.</div>}
+            <div className="auth-kicker"><span/> Early access is live</div>
+            <h1 className="auth-title">Create your account</h1>
+            <p className="auth-intro">One short form, then a 6-digit email code. Your username can be personalized later.</p>
+            <div className="signup-fast-note"><Icon name="mail" size={16} color="currentColor"/> Step 1 of 2: account details</div>
+            <form className="auth-form" onSubmit={event=>{event.preventDefault();requestCode(false);}}>
+              <div className="auth-field">
+                <label htmlFor="signup-name">Full name</label>
+                <input id="signup-name" autoComplete="name" enterKeyHint="next" value={form.name} onChange={event=>setForm(current=>({...current,name:event.target.value}))} placeholder="Your name" className="if"/>
               </div>
-            ))}
-            <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Password</label>
-              <input aria-label="Password" autoComplete="new-password" aria-describedby="signup-password-help" type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder="Create a password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form.password.length>=8?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-              <div id="signup-password-help" style={{fontSize:12,color:form.password&&form.password.length<8?"#D64545":C.muted,marginTop:6}}>Use at least 8 characters.</div>
-            </div>
-            <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Confirm password</label>
-              <input aria-label="Confirm password" autoComplete="new-password" aria-invalid={Boolean(form.confirmPassword&&form.confirmPassword!==form.password)} type="password" value={form.confirmPassword} onChange={e=>setForm(f=>({...f,confirmPassword:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&requestCode(false)} placeholder="Confirm your password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${form.confirmPassword&&form.confirmPassword===form.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-              {form.confirmPassword&&form.confirmPassword!==form.password&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Passwords need to match.</div>}
-            </div>
-            <label style={{display:"flex",alignItems:"flex-start",gap:10,border:`1px solid ${acceptedTerms?C.aSoft:C.border}`,background:acceptedTerms?C.aLight:C.bg,borderRadius:12,padding:13,cursor:"pointer"}}>
-              <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)} style={{marginTop:2,accentColor:C.accent,flexShrink:0}}/>
-              <span style={{fontSize:12,color:C.muted,lineHeight:1.55}}>I agree to the <button type="button" onClick={e=>{e.preventDefault();setShowTerms(true);}} style={{background:"none",border:"none",padding:0,color:C.accent,fontWeight:900,textDecoration:"underline",cursor:"pointer"}}>Terms and Conditions</button>, including the community rules prohibiting abusive, hateful, explicit, harassing, or otherwise objectionable content.</span>
-            </label>
-            {authMessage&&<div role="status" aria-live="polite" style={{borderRadius:12,padding:"11px 12px",background:authMessage.type==="error"?"#FFF0F0":C.aLight,border:`1px solid ${authMessage.type==="error"?"#F2B8B8":C.aSoft}`,color:authMessage.type==="error"?"#A92D2D":"#176D35",fontSize:12,fontWeight:800,lineHeight:1.5}}>{authMessage.text}</div>}
-            <GBtn full disabled={busy} onClick={()=>requestCode(false)}>{busy?"Sending code…":"Continue to email verification →"}</GBtn>
-            <div style={{fontSize:12,color:C.dim,textAlign:"center"}}>Free forever · No credit card</div>
-          </div>
+              <div className="auth-field">
+                <label htmlFor="signup-email">Email</label>
+                <input id="signup-email" autoComplete="email" autoCapitalize="none" spellCheck={false} enterKeyHint="next" inputMode="email" type="email" value={form.email} onChange={event=>setForm(current=>({...current,email:event.target.value}))} placeholder="you@example.com" className="if"/>
+                {form.email&&!emailReady&&<small className="auth-error">Enter a complete email address.</small>}
+              </div>
+              <div className="auth-field">
+                <label htmlFor="signup-password">Password</label>
+                <div className="auth-password-control">
+                  <input id="signup-password" autoComplete="new-password" enterKeyHint="done" aria-describedby="signup-password-help" type={showPassword?"text":"password"} value={form.password} onChange={event=>setForm(current=>({...current,password:event.target.value}))} placeholder="At least 8 characters" className="if"/>
+                  <button type="button" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button>
+                </div>
+                <small id="signup-password-help" className={form.password&&form.password.length<8?"auth-error":""}>Use at least 8 characters.</small>
+              </div>
+              <label className={`auth-terms ${acceptedTerms?"is-accepted":""}`}>
+                <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
+                <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
+              </label>
+              {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
+              <GBtn type="submit" full disabled={busy}>{busy?"Sending code…":"Continue"}</GBtn>
+              <p className="auth-footnote">Free to join. No credit card required.</p>
+            </form>
           </>:mode==="login"?<>
-          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Log in</div>
-          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Access your existing fear.social account.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
-              <input aria-label="Username or email" autoComplete="username" value={login.identifier} onChange={e=>setLogin(l=>({...l,identifier:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&loginWithPassword()} placeholder="username or email" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${login.identifier?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-            </div>
-            <div>
-              <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Password</label>
-              <input aria-label="Password" autoComplete="current-password" type="password" value={login.password} onChange={e=>setLogin(l=>({...l,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&loginWithPassword()} placeholder="Password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${login.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-            </div>
-            {authMessage&&<div role="status" aria-live="polite" style={{borderRadius:12,padding:"11px 12px",background:authMessage.type==="error"?"#FFF0F0":C.aLight,border:`1px solid ${authMessage.type==="error"?"#F2B8B8":C.aSoft}`,color:authMessage.type==="error"?"#A92D2D":"#176D35",fontSize:12,fontWeight:800,lineHeight:1.5}}>{authMessage.text}</div>}
-            <GBtn full disabled={busy} onClick={loginWithPassword}>{busy?"Logging in…":"Log in →"}</GBtn>
-            <button onClick={()=>{setMode("password");setPasswordStep(0);}} className="bs" style={{background:"transparent",border:"none",color:C.accent,fontSize:13,fontWeight:900}}>Set or reset password</button>
-            <button onClick={()=>setMode("signup")} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Need an account? Sign up</button>
-          </div>
+            <h1 className="auth-title">Welcome back</h1>
+            <p className="auth-intro">Use the email or username already connected to your account.</p>
+            <form className="auth-form" onSubmit={event=>{event.preventDefault();loginWithPassword();}}>
+              <div className="auth-field">
+                <label htmlFor="login-identifier">Email or username</label>
+                <input id="login-identifier" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="next" value={login.identifier} onChange={event=>setLogin(current=>({...current,identifier:event.target.value}))} placeholder="you@example.com" className="if"/>
+              </div>
+              <div className="auth-field">
+                <label htmlFor="login-password">Password</label>
+                <div className="auth-password-control">
+                  <input id="login-password" autoComplete="current-password" enterKeyHint="go" type={showPassword?"text":"password"} value={login.password} onChange={event=>setLogin(current=>({...current,password:event.target.value}))} placeholder="Your password" className="if"/>
+                  <button type="button" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button>
+                </div>
+              </div>
+              {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
+              <GBtn type="submit" full disabled={busy}>{busy?"Logging in…":"Log in"}</GBtn>
+              <button type="button" onClick={()=>{setPasswordSetup(current=>({...current,identifier:login.identifier.trim()}));setMode("password");setPasswordStep(0);setAuthMessage(null);}} className="auth-text-button">Forgot your password?</button>
+              <button type="button" onClick={()=>{setMode("signup");setAuthMessage(null);}} className="auth-secondary-button">New to fear.social? Create an account</button>
+            </form>
           </>:<>
-          <div style={{fontFamily:"Georgia,serif",fontSize:32,fontWeight:700,color:C.text,marginBottom:6,letterSpacing:0}}>Set password</div>
-          <div style={{fontSize:14,color:C.muted,marginBottom:36}}>Use your email or username. We'll send a code to the email on that account.</div>
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            {authMessage&&<div role="status" aria-live="polite" style={{borderRadius:12,padding:"11px 12px",background:authMessage.type==="error"?"#FFF0F0":C.aLight,border:`1px solid ${authMessage.type==="error"?"#F2B8B8":C.aSoft}`,color:authMessage.type==="error"?"#A92D2D":"#176D35",fontSize:12,fontWeight:800,lineHeight:1.5}}>{authMessage.text}</div>}
-            {passwordStep===0?<>
-              <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Username or email</label>
-                <input aria-label="Username or email" autoComplete="username" value={passwordSetup.identifier} onChange={e=>setPasswordSetup(p=>({...p,identifier:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&requestPasswordCode()} placeholder="username or email" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.identifier?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-              </div>
-              <GBtn full disabled={busy} onClick={requestPasswordCode}>{busy?"Sending code…":"Send password code →"}</GBtn>
-            </>:<>
-              <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Verification code</label>
-                <input aria-label="Password reset verification code" autoComplete="one-time-code" value={passwordSetup.code} onChange={e=>setPasswordSetup(p=>({...p,code:e.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="000000" inputMode="numeric" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.code.length===6?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,letterSpacing:4,transition:"all 0.2s"}}/>
-              </div>
-              <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>New password</label>
-                <input aria-label="New password" autoComplete="new-password" type="password" value={passwordSetup.password} onChange={e=>setPasswordSetup(p=>({...p,password:e.target.value}))} placeholder="Create a password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.password.length>=8?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-                <div style={{fontSize:12,color:passwordSetup.password&&passwordSetup.password.length<8?"#D64545":C.muted,marginTop:6}}>Use at least 8 characters.</div>
-              </div>
-              <div>
-                <label style={{fontSize:11,fontWeight:700,letterSpacing:0.8,color:C.muted,textTransform:"uppercase",display:"block",marginBottom:8}}>Confirm password</label>
-                <input aria-label="Confirm new password" autoComplete="new-password" aria-invalid={Boolean(passwordSetup.confirmPassword&&passwordSetup.confirmPassword!==passwordSetup.password)} type="password" value={passwordSetup.confirmPassword} onChange={e=>setPasswordSetup(p=>({...p,confirmPassword:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&savePassword()} placeholder="Confirm your password" className="if" style={{width:"100%",background:C.bg,border:`1.5px solid ${passwordSetup.confirmPassword&&passwordSetup.confirmPassword===passwordSetup.password?C.accent:C.border}`,borderRadius:10,padding:"13px 16px",color:C.text,fontSize:15,transition:"all 0.2s"}}/>
-                {passwordSetup.confirmPassword&&passwordSetup.confirmPassword!==passwordSetup.password&&<div style={{fontSize:12,color:"#D64545",marginTop:6}}>Passwords need to match.</div>}
-              </div>
-              <GBtn full disabled={busy} onClick={savePassword}>{busy?"Saving…":"Save password →"}</GBtn>
-              <button disabled={busy} onClick={requestPasswordCode} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Resend code</button>
-            </>}
-            <button onClick={()=>setMode("login")} className="bs" style={{background:"transparent",border:"none",color:C.muted,fontSize:13,fontWeight:800}}>Back to log in</button>
-          </div>
+            <h1 className="auth-title">{passwordStep===0?"Reset your password":"Create a new password"}</h1>
+            <p className="auth-intro">{passwordStep===0?"Enter your email or username and we’ll send a secure code.":`Enter the code sent to ${recoveryDestination||"your account email"}.`}</p>
+            <form className="auth-form" onSubmit={event=>{event.preventDefault();passwordStep===0?requestPasswordCode():savePassword();}}>
+              {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
+              {passwordStep===0?<>
+                <div className="auth-field">
+                  <label htmlFor="recovery-identifier">Email or username</label>
+                  <input id="recovery-identifier" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="send" value={passwordSetup.identifier} onChange={event=>setPasswordSetup(current=>({...current,identifier:event.target.value}))} placeholder="you@example.com" className="if"/>
+                </div>
+                <GBtn type="submit" full disabled={busy}>{busy?"Sending code…":"Send reset code"}</GBtn>
+              </>:<>
+                <div className="auth-field">
+                  <label htmlFor="recovery-code">6-digit code</label>
+                  <input id="recovery-code" aria-label="Password reset verification code" autoComplete="one-time-code" enterKeyHint="next" pattern="[0-9]*" value={passwordSetup.code} onChange={event=>setPasswordSetup(current=>({...current,code:event.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="000000" inputMode="numeric" className="if auth-code-input"/>
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="recovery-password">New password</label>
+                  <div className="auth-password-control">
+                    <input id="recovery-password" autoComplete="new-password" enterKeyHint="next" type={showPassword?"text":"password"} value={passwordSetup.password} onChange={event=>setPasswordSetup(current=>({...current,password:event.target.value}))} placeholder="At least 8 characters" className="if"/>
+                    <button type="button" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?"Hide passwords":"Show passwords"}>{showPassword?"Hide":"Show"}</button>
+                  </div>
+                  <small className={passwordSetup.password&&passwordSetup.password.length<8?"auth-error":""}>Use at least 8 characters.</small>
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="recovery-confirm">Confirm new password</label>
+                  <input id="recovery-confirm" autoComplete="new-password" enterKeyHint="done" aria-invalid={Boolean(passwordSetup.confirmPassword&&passwordSetup.confirmPassword!==passwordSetup.password)} type={showPassword?"text":"password"} value={passwordSetup.confirmPassword} onChange={event=>setPasswordSetup(current=>({...current,confirmPassword:event.target.value}))} placeholder="Repeat your new password" className="if"/>
+                  {passwordSetup.confirmPassword&&passwordSetup.confirmPassword!==passwordSetup.password&&<small className="auth-error">Passwords need to match.</small>}
+                </div>
+                <GBtn type="submit" full disabled={busy}>{busy?"Updating…":"Update password and sign in"}</GBtn>
+                <button type="button" disabled={busy||resendSeconds>0} onClick={requestPasswordCode} className="auth-text-button">{resendSeconds>0?`Resend code in ${resendSeconds}s`:"Resend code"}</button>
+              </>}
+              <button type="button" onClick={()=>{setMode("login");setPasswordStep(0);setAuthMessage(null);}} className="auth-secondary-button">Back to log in</button>
+            </form>
           </>}
         </div>
       </div>
@@ -3354,7 +3434,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   useEffect(()=>{
     const online=()=>setConnectionState("connecting");
     const offline=()=>setConnectionState("offline");
-    const expired=()=>{notify("Your session expired. Log in again to keep your account secure.","error");signOut();};
+    const expired=()=>{
+      clearSessionToken();
+      notify("Your session expired. Log in again to keep your account secure.","error");
+      setScreen("login");
+    };
     window.addEventListener("online",online);
     window.addEventListener("offline",offline);
     window.addEventListener("fear:session-expired",expired);
@@ -3363,7 +3447,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       window.removeEventListener("offline",offline);
       window.removeEventListener("fear:session-expired",expired);
     };
-  },[notify,signOut]);
+  },[notify,setScreen]);
   const [activeConversationId,setActiveConversationId]=useState(null);
   const [profileDraft,setProfileDraft]=useState(profile);
   const [blockedUserIds,setBlockedUserIds]=useLocalState("fear-blocked-user-ids",[]);
@@ -3412,7 +3496,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   },[applyBackendState]);
   useEffect(()=>{
     let active=true;
-    api("/bootstrap").then(data=>{if(active){setConnectionState("online");applyBackendState(data);}}).catch(()=>{if(active){setConnectionState("offline");notify("Offline mode: changes are saved in this browser","info");}});
+    api("/bootstrap").then(data=>{if(active){setConnectionState("online");applyBackendState(data);}}).catch(error=>{
+      if(!active||error?.status===401)return;
+      setConnectionState("offline");
+      notify("Offline mode: changes are saved in this browser","info");
+    });
     return()=>{active=false;};
   },[applyBackendState,notify]);
   const syncLiveMessages=useCallback(async()=>{
