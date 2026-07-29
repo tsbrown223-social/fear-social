@@ -974,7 +974,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .profile-hero{position:relative;overflow:hidden!important;}
 .profile-hero>div:first-child{position:relative;}
 .profile-hero>div:first-child:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(0,0,0,.38),transparent 44%,rgba(22,199,78,.1));pointer-events:none;}
-.profile-hero-copy h1{font-size:clamp(34px,4.4vw,54px)!important;line-height:.96!important;}
+.profile-hero-copy{container-type:inline-size;}
+.profile-hero-copy h1{font-size:clamp(30px,10cqi,54px)!important;line-height:1!important;word-break:normal!important;overflow-wrap:normal!important;hyphens:none!important;text-wrap:balance;}
+.profile-hero-copy h1>span,.profile-hero-copy h1>span>span:first-child{white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;hyphens:none!important;}
+.profile-public-hero-row{grid-template-columns:104px minmax(0,1fr)!important;}
+.profile-public-hero-row .profile-action-row{grid-column:2;justify-content:flex-start!important;margin-top:2px;}
 .profile-stat-button{border-radius:6px!important;transition:transform .18s ease,border-color .18s ease!important;}
 .profile-stat-button:hover{transform:translateY(-2px);border-color:rgba(22,199,78,.35)!important;}
 .settings-grid>div{position:relative;overflow:hidden;}
@@ -1164,8 +1168,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-action-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;justify-content:stretch!important;}
   .profile-action-row button{width:100%!important;min-width:0!important;justify-content:center!important;padding:10px 6px!important;}
   .profile-hero-copy{padding-top:31px!important;}
-  .profile-hero-copy h1{font-size:27px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
-  .profile-hero-copy h1 span{max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .profile-hero-copy h1{font-size:clamp(24px,12cqi,29px)!important;line-height:1.08!important;word-break:normal!important;overflow-wrap:normal!important;}
+  .profile-hero-copy h1 span{max-width:100%!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;}
   .profile-detail-chip{white-space:normal!important;overflow-wrap:anywhere!important;}
   .profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
   .profile-stat-button{min-width:0!important;padding:15px!important;}
@@ -1230,6 +1234,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-hero-row{grid-template-columns:66px minmax(0,1fr)!important;}
   .profile-hero-row>div:first-child,.profile-hero-row>div:first-child>div:first-child{width:66px!important;height:66px!important;}
   .profile-hero-copy h1{font-size:24px!important;}
+  .profile-hero-copy h1>span>span:first-child{overflow-wrap:anywhere!important;}
   .fs2-intro h1{font-size:39px!important;}
 }
 .cookie-notice{
@@ -3563,6 +3568,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [query,setQuery]=useState("");
   const [editProfile,setEditProfile]=useState(false);
   const [selectedProfile,setSelectedProfile]=useState(null);
+  const [pendingConnectionIds,setPendingConnectionIds]=useState([]);
   const [profileReturnView,setProfileReturnView]=useState("discover");
   const [profileMetric,setProfileMetric]=useState("Posts");
   const messageSyncInFlight=useRef(false);
@@ -3887,6 +3893,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     followers:Number(person.followers||0),
     mutual:Number(person.mutual||0),
     connected:Boolean(person.connected),
+    privateProfile:Boolean(person.privateProfile||person.privacy==="private"),
+    accessGranted:Boolean(person.accessGranted),
+    accessStatus:person.accessStatus||"",
+    locked:Boolean(person.locked),
     verified:isVerifiedIdentity(person),
   });
   const openProfile=(source,returnView=view)=>{
@@ -3954,8 +3964,12 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     }
   };
   const connect=async id=>{
+    if(!id||pendingConnectionIds.includes(id))return;
     const person=people.find(p=>p.id===id)||selectedProfile;
+    if(!person)return notify("That profile is not available right now.","error");
     const needsAccess=person?.privateProfile&&!person?.accessGranted&&!person?.connected;
+    const wasConnected=Boolean(person.connected);
+    setPendingConnectionIds(ids=>[...ids,id]);
     if(needsAccess){
       setPeople(ps=>ps.map(p=>p.id===id?{...p,accessStatus:"pending",locked:true}:p));
       if(selectedProfile?.id===id)setSelectedProfile(p=>({...p,accessStatus:"pending",locked:true}));
@@ -3963,12 +3977,29 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         await callBackend(`/people/${id}/access-request`,{method:"POST"});
         notify(`Access request sent to ${person.name}`);
       }catch(err){
+        setPeople(ps=>ps.map(p=>p.id===id?{...p,accessStatus:"",locked:true}:p));
+        if(selectedProfile?.id===id)setSelectedProfile(p=>({...p,accessStatus:"",locked:true}));
         notify(err.message||"Could not request access","error");
+      }finally{
+        setPendingConnectionIds(ids=>ids.filter(item=>item!==id));
       }
       return;
     }
-    setPeople(ps=>ps.map(p=>p.id===id?{...p,connected:!p.connected,followers:p.connected?p.followers-1:p.followers+1}:p));
-    try{await callBackend(`/people/${id}/connect`,{method:"POST"});}catch{}
+    const nextConnected=!wasConnected;
+    const updatePerson=p=>p.id===id?{...p,connected:nextConnected,followers:Math.max(0,Number(p.followers||0)+(nextConnected?1:-1))}:p;
+    setPeople(ps=>ps.map(updatePerson));
+    if(selectedProfile?.id===id)setSelectedProfile(p=>updatePerson(p));
+    try{
+      await callBackend(`/people/${id}/connect`,{method:"POST"});
+      notify(`${nextConnected?"Connected with":"Disconnected from"} ${person.name}`);
+    }catch(err){
+      const restorePerson=p=>p.id===id?{...p,connected:wasConnected,followers:Math.max(0,Number(p.followers||0)+(wasConnected?1:-1))}:p;
+      setPeople(ps=>ps.map(restorePerson));
+      if(selectedProfile?.id===id)setSelectedProfile(p=>restorePerson(p));
+      notify(err.message||`Could not ${nextConnected?"connect":"disconnect"} right now`,"error");
+    }finally{
+      setPendingConnectionIds(ids=>ids.filter(item=>item!==id));
+    }
   };
   const reviewAccessRequest=async(id,action)=>{
     try{
@@ -4463,7 +4494,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm disabled={p.accessStatus==="pending"} onClick={e=>{e.stopPropagation();connect(p.id);}}>{connectionButtonLabel(p)}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
@@ -4471,7 +4502,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         {view==="opportunities"&&<OpportunitiesView deals={rankedDeals} savedDeals={savedDeals} toggleSave={toggleDealSave} signalInterest={signalDealInterest} postOpportunity={postOpportunity} profile={profile}/>}
         {view==="settings"&&<SettingsView profile={profile} setView={setView} setEditProfile={setEditProfile} updateProfilePrivacy={updateProfilePrivacy} accessRequests={accessRequests} reviewAccessRequest={reviewAccessRequest} openProfile={person=>openProfile(person,"settings")} openBoard={()=>setScreen("board")} interfaceSettings={interfaceSettings} setInterfaceSettings={setInterfaceSettings} accessibility={accessibility} setAccessibility={setAccessibility} themeMode={themeMode} setThemeMode={setThemeMode} cookieConsent={cookieConsent} setCookieConsent={setCookieConsent} onOpenPanel={onOpenPanel} onDeleteAccount={deleteAccount} inviteFriend={inviteFriend} signOut={signOut}/>}
         {view==="profile"&&<ProfilePanel profile={profile} setEditProfile={setEditProfile} onDeleteAccount={deleteAccount} stats={statCards} posts={ownProfilePosts} followers={ownFollowers} following={ownFollowing} savedPosts={posts.filter(p=>p.saved)} openProfile={person=>openProfile(person,"profile")} initialMetric={profileMetric}/>}
-        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} onBack={()=>setView(profileReturnView)} onConnect={()=>{connect(publicProfile.id);notify(`${publicProfile.connected?"Disconnected from":"Connected with"} ${publicProfile.name}`);}} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
+        {view==="publicProfile"&&publicProfile&&<PublicProfilePanel profile={publicProfile} posts={publicProfilePosts} followers={connections.followersByUserId?.[publicProfile.id]||[]} following={connections.followingByUserId?.[publicProfile.id]||[]} connectionPending={pendingConnectionIds.includes(publicProfile.id)} onBack={()=>setView(profileReturnView)} onConnect={()=>connect(publicProfile.id)} onMessage={()=>startMessage(publicProfile)} onReport={()=>reportContent("user",publicProfile.id,`${publicProfile.name}'s profile`)} onBlock={()=>blockUser(publicProfile)} openProfile={person=>openProfile(person,"publicProfile")}/>}
         </div>
       </main>
       <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
@@ -5250,7 +5281,7 @@ function ProfilePanel({profile,setEditProfile,onDeleteAccount,stats,posts=[],fol
     </section>
   </div>;
 }
-function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,onConnect,onMessage,onReport,onBlock,openProfile}){
+function PublicProfilePanel({profile,posts=[],followers=[],following=[],connectionPending=false,onBack,onConnect,onMessage,onReport,onBlock,openProfile}){
   const [activeMetric,setActiveMetric]=useState("Posts");
   const locked=Boolean(profile.locked);
   const profileInitials=(profile.av||(profile.name||"FO").split(" ").map(s=>s[0]).slice(0,2).join("")).toUpperCase()||"FO";
@@ -5266,7 +5297,7 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
     <div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:12,boxShadow:"0 18px 44px rgba(15,23,42,0.04)"}}>
       <div style={{height:146,background:safeImageUrl(profile.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/>
       <div style={{padding:"0 28px 26px"}}>
-        <div className="profile-hero-row" style={{display:"grid",gridTemplateColumns:"104px minmax(0,1fr) auto",alignItems:"end",gap:18,marginTop:-38}}>
+        <div className="profile-hero-row profile-public-hero-row" style={{display:"grid",gridTemplateColumns:"104px minmax(0,1fr)",alignItems:"end",gap:18,marginTop:-38}}>
           <Av i={profileInitials} src={profile.avatarUrl} size={104} style={{background:"#fff",color:C.accent,border:"6px solid #fff",boxShadow:"0 12px 28px rgba(15,23,42,0.12)"}} online/>
           <div className="profile-hero-copy" style={{minWidth:0,paddingTop:44}}>
             <h1 style={{fontFamily:"Georgia,serif",fontSize:36,letterSpacing:0,overflowWrap:"anywhere",color:C.text,lineHeight:1.02}}><NameWithVerified name={profile.name} person={profile} size={20} nameStyle={{whiteSpace:"normal",overflow:"visible"}}/></h1>
@@ -5274,7 +5305,7 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],onBack,o
           </div>
           {profile.id&&<div className="profile-action-row" style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end",alignSelf:"center"}}>
             {!locked&&<button onClick={onMessage} className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap"}}><Icon name="send" size={15}/> Message</button>}
-            <GBtn onClick={onConnect} disabled={profile.accessStatus==="pending"} style={{background:profile.connected||profile.accessStatus==="pending"?"#fff":GR,color:profile.connected||profile.accessStatus==="pending"?C.accent:"#fff",boxShadow:"none",whiteSpace:"nowrap"}}>{connectionButtonLabel(profile)}</GBtn>
+            <GBtn onClick={onConnect} aria-busy={connectionPending} disabled={profile.accessStatus==="pending"||connectionPending} style={{background:profile.connected||profile.accessStatus==="pending"?"#fff":GR,color:profile.connected||profile.accessStatus==="pending"?C.accent:"#fff",boxShadow:"none",whiteSpace:"nowrap"}}>{connectionPending?"Working...":connectionButtonLabel(profile)}</GBtn>
             <button onClick={onReport} className="bs" style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Report</button>
             <button onClick={onBlock} className="bs" style={{background:"#fff",color:C.coral,border:`1px solid ${C.border}`,borderRadius:999,padding:"10px 14px",fontWeight:900,whiteSpace:"nowrap"}}>Block</button>
           </div>}
