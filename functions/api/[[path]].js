@@ -837,10 +837,25 @@ async function verifyAppleIdentityToken(idToken, clientId) {
 async function createOrLinkOAuthUser(db, request, profile) {
   const provider = String(profile.provider || "oauth").trim().toLowerCase();
   const providerLabel = provider === "apple" ? "Apple" : provider === "google" ? "Google" : "OAuth";
+  const subject = cleanText(profile.subject || "", 240);
   const email = cleanText(profile.email || "", 120).toLowerCase();
+  if (!subject) return { error: `${providerLabel} account did not provide a stable identity`, status: 400 };
   if (!isValidEmail(email)) return { error: `${providerLabel} account did not provide a valid email`, status: 400 };
-  let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+  const identity = await db
+    .prepare(
+      `SELECT u.*
+       FROM user_oauth_identities oi
+       JOIN users u ON u.id = oi.user_id
+       WHERE oi.provider = ? AND oi.subject = ? AND u.id <> 'demo-user'
+       LIMIT 1`
+    )
+    .bind(provider, subject)
+    .first();
+  let user = identity || (await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first());
   if (!user) {
+    if (!profile.allowCreate || profile.acceptedTerms !== true) {
+      return { error: `No fear.social account is connected to that ${providerLabel} account yet. Choose Sign up first.`, status: 404 };
+    }
     const username = normalizeUsername(profile.username || email.split("@")[0], "founder");
     const handle = `@${username}`;
     const handleOwner = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)").bind(handle).first();
@@ -849,8 +864,8 @@ async function createOrLinkOAuthUser(db, request, profile) {
     const sessionToken = crypto.randomUUID();
     await db
       .prepare(
-        `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, oauth_provider, oauth_subject, avatar_url)
-         VALUES (?, ?, ?, ?, ?, '', 'Exploring', 'I''m actively building', ?, CURRENT_TIMESTAMP, ?, ?, ?)`
+        `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, terms_accepted_at, terms_version, oauth_provider, oauth_subject, avatar_url)
+         VALUES (?, ?, ?, ?, ?, '', 'Exploring', 'I''m actively building', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?, ?)`
       )
       .bind(
         id,
@@ -859,8 +874,9 @@ async function createOrLinkOAuthUser(db, request, profile) {
         finalHandle,
         email,
         `Signed in with ${providerLabel}.`,
+        TERMS_VERSION,
         provider,
-        profile.subject || "",
+        subject,
         cleanMediaUrl(profile.picture || "", "image", 500)
       )
       .run();
@@ -872,14 +888,29 @@ async function createOrLinkOAuthUser(db, request, profile) {
     });
     await followDefaultAccounts(db, id);
     user = { id, token: sessionToken, name: profile.name || email.split("@")[0], handle: finalHandle, email };
-  } else {
-    await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
-      provider,
-      profile.subject || "",
-      cleanMediaUrl(profile.picture || "", "image", 500),
-      user.id,
-    ]);
   }
+  await db
+    .prepare(
+      `INSERT INTO user_oauth_identities (provider, subject, user_id, email_at_link, updated_at)
+       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(provider, subject)
+       DO UPDATE SET email_at_link = excluded.email_at_link, updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind(provider, subject, user.id, email)
+    .run();
+  const linkedIdentity = await db
+    .prepare("SELECT user_id FROM user_oauth_identities WHERE provider = ? AND subject = ?")
+    .bind(provider, subject)
+    .first();
+  if (!linkedIdentity || linkedIdentity.user_id !== user.id) {
+    return { error: `That ${providerLabel} account is already connected to another fear.social account.`, status: 409 };
+  }
+  await safeRun(db, "UPDATE users SET email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP), oauth_provider = ?, oauth_subject = ?, avatar_url = COALESCE(NULLIF(avatar_url, ''), NULLIF(?, '')), last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [
+    provider,
+    subject,
+    cleanMediaUrl(profile.picture || "", "image", 500),
+    user.id,
+  ]);
   const token = await createSession(db, user.id, crypto.randomUUID(), request);
   return { user, token };
 }
@@ -2110,11 +2141,22 @@ async function handleRequest({ request, env, params }) {
     );
   }
 
+  if (method === "GET" && path === "/auth/providers") {
+    return json({
+      google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+    });
+  }
+
   if (method === "GET" && path === "/auth/google/start") {
-    if (!env.GOOGLE_CLIENT_ID) {
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
       return json({ error: "Google sign-in is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloudflare Pages." }, { status: 501 });
     }
     const url = new URL(request.url);
+    const intent = url.searchParams.get("intent") === "signup" ? "signup" : "login";
+    const acceptedTerms = url.searchParams.get("acceptedTerms") === "true";
+    if (intent === "signup" && !acceptedTerms) {
+      return json({ error: "Accept the Terms and Conditions before creating an account with Google." }, { status: 400 });
+    }
     const redirectUri = env.GOOGLE_REDIRECT_URI || `${url.origin}/api/auth/google/callback`;
     const state = randomHex(16);
     const params = new URLSearchParams({
@@ -2125,20 +2167,28 @@ async function handleRequest({ request, env, params }) {
       prompt: "select_account",
       state,
     });
-    await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at) VALUES (?, 'google', ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString()]);
+    await safeRun(
+      db,
+      "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at, intent, accepted_terms) VALUES (?, 'google', ?, ?, ?, ?)",
+      [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString(), intent, acceptedTerms ? 1 : 0]
+    );
     return json({ ok: true, redirectUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}` });
   }
 
   if (method === "GET" && path === "/auth/google/callback") {
-    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return json({ error: "Google sign-in is not configured" }, { status: 501 });
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return oauthErrorRedirect("Google sign-in is not configured");
     const url = new URL(request.url);
+    const providerError = cleanText(url.searchParams.get("error") || "", 80);
+    if (providerError) {
+      return oauthErrorRedirect(providerError === "access_denied" ? "Google sign-in was canceled." : "Google could not complete sign-in.");
+    }
     const code = url.searchParams.get("code") || "";
     const state = url.searchParams.get("state") || "";
     const oauthState = await db
       .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'google' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
       .bind(state)
       .first();
-    if (!code || !oauthState) return json({ error: "Invalid Google sign-in state" }, { status: 400 });
+    if (!code || !oauthState) return oauthErrorRedirect("That Google sign-in request expired. Please try again.");
     await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -2152,20 +2202,23 @@ async function handleRequest({ request, env, params }) {
       }),
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenData.access_token) return json({ error: "Google token exchange failed" }, { status: 400 });
+    if (!tokenResponse.ok || !tokenData.access_token) return oauthErrorRedirect("Google could not complete sign-in. Please try again.");
     const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
       headers: { authorization: `Bearer ${tokenData.access_token}` },
     });
     const googleProfile = await profileResponse.json().catch(() => ({}));
-    if (!profileResponse.ok) return json({ error: "Google profile lookup failed" }, { status: 400 });
+    if (!profileResponse.ok) return oauthErrorRedirect("Google profile access failed. Please try again.");
+    if (googleProfile.email_verified !== true) return oauthErrorRedirect("Google has not verified the email on that account.");
     const linked = await createOrLinkOAuthUser(db, request, {
       provider: "google",
       subject: googleProfile.sub,
       email: googleProfile.email,
       name: googleProfile.name,
       picture: googleProfile.picture,
+      allowCreate: oauthState.intent === "signup",
+      acceptedTerms: Boolean(oauthState.accepted_terms),
     });
-    if (linked.error) return json({ error: linked.error }, { status: linked.status || 400 });
+    if (linked.error) return oauthErrorRedirect(linked.error);
     return new Response(null, {
       status: 302,
       headers: {

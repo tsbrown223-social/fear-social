@@ -811,6 +811,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .auth-form>button[type="submit"]{min-height:50px;border-radius:10px!important;font-size:15px!important;}
 .auth-text-button,.auth-secondary-button{width:100%;min-height:44px;border:0;border-radius:9px;background:transparent;color:#118C3B;font-size:13px;font-weight:900;}
 .auth-secondary-button{border:1px solid #DDE3DF;color:#4D5851;background:#F7F9F7;}
+.auth-google-button{width:100%;min-height:48px;border:1px solid #CAD2CC;border-radius:9px;background:#fff;color:#172019;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:11px;box-shadow:0 4px 14px rgba(13,21,16,.06);}
+.auth-google-button:hover{background:#F7F9F7;border-color:#AEBBB2;}
+.auth-google-button:disabled{cursor:not-allowed;opacity:.56;}
+.auth-divider{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:18px 0;color:#7A847D;font-size:11px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;}
+.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#DDE3DF;}
+.auth-oauth-terms{margin:0 0 12px;}
 .auth-help-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .auth-help-row button{min-height:48px;border:1px solid #DDE3DF;border-radius:9px;background:#F7F9F7;color:#3F4C44;font-size:12px;font-weight:900;line-height:1.25;padding:8px;white-space:normal;}
 .auth-footnote{margin:0;text-align:center;color:#7A847D;font-size:11px;}
@@ -1472,8 +1478,16 @@ const Av=({i,size=40,src="",grad=false,online=false,style={}})=>{
   </div>
   );
 };
-const GBtn=({children,onClick,type="button",sm=false,lg=false,full=false,className="",disabled=false,style={}})=>(
-  <button type={type} disabled={disabled} onClick={onClick} className={`bs ${className}`.trim()} style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:disabled?"not-allowed":"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",opacity:disabled?0.55:1,...style}}>{children}</button>
+const GBtn=({children,onClick,type="button",sm=false,lg=false,full=false,className="",disabled=false,style={},...props})=>(
+  <button type={type} disabled={disabled} onClick={onClick} className={`bs ${className}`.trim()} style={{background:GR,color:"#fff",border:"none",borderRadius:9,fontWeight:700,padding:lg?"15px 40px":sm?"7px 16px":"11px 24px",fontSize:lg?17:sm?12:14,cursor:disabled?"not-allowed":"pointer",letterSpacing:0.2,boxShadow:"0 4px 20px rgba(22,199,78,0.3)",whiteSpace:"nowrap",width:full?"100%":"auto",opacity:disabled?0.55:1,...style}} {...props}>{children}</button>
+);
+const GoogleMark=()=>(
+  <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19">
+    <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.91h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.4Z"/>
+    <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.43l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/>
+    <path fill="#FBBC05" d="M6.39 13.86A6.02 6.02 0 0 1 6.07 12c0-.65.11-1.28.32-1.86V7.52H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.48l3.35-2.62Z"/>
+    <path fill="#EA4335" d="M12 6.01c1.47 0 2.79.51 3.83 1.5L18.7 4.64A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.52l3.35 2.62C7.18 7.77 9.39 6.01 12 6.01Z"/>
+  </svg>
 );
 const GhostBtn=({children,onClick,style={}})=>(
   <button onClick={onClick} className="bs" style={{background:"transparent",color:C.accent,border:`1.5px solid ${C.accent}`,borderRadius:9,fontWeight:700,padding:"10px 22px",fontSize:14,cursor:"pointer",...style}}>{children}</button>
@@ -3177,6 +3191,8 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const [busy,setBusy]=useState(false);
+  const [oauthBusy,setOauthBusy]=useState(false);
+  const [authProviders,setAuthProviders]=useState({google:false});
   const [authMessage,setAuthMessage]=useState(null);
   const [resendSeconds,setResendSeconds]=useState(0);
   useEffect(()=>{
@@ -3187,11 +3203,54 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});
   },[mode,passwordStep,step,loginCodeStep]);
+  useEffect(()=>{
+    let active=true;
+    api("/auth/providers").then(providers=>{
+      if(active)setAuthProviders({google:Boolean(providers.google)});
+    }).catch(()=>{});
+    return()=>{active=false;};
+  },[]);
+  useEffect(()=>{
+    const hash=window.location.hash||"";
+    if(!hash.startsWith("#login?"))return;
+    const params=new URLSearchParams(hash.slice(hash.indexOf("?")+1));
+    if(params.get("oauth")!=="error")return;
+    setMode("login");
+    setAuthMessage({type:"error",text:params.get("message")||"Google sign-in did not finish. Please try again."});
+    window.history.replaceState(null,"","#login");
+  },[]);
   const emailReady=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim());
   const passwordReady=form.password.length>=8;
   const valid=form.name.trim()&&emailReady&&passwordReady&&acceptedTerms;
   const loginValid=login.identifier.trim()&&login.password;
   const passwordSetupReady=passwordSetup.password.length>=8&&passwordSetup.password===passwordSetup.confirmPassword;
+  const startGoogle=async()=>{
+    if(oauthBusy)return;
+    const intent=mode==="signup"?"signup":"login";
+    if(intent==="signup"&&!acceptedTerms){
+      setAuthMessage({type:"error",text:"Accept the Terms and Conditions before creating an account with Google."});
+      return;
+    }
+    setOauthBusy(true);
+    setAuthMessage(null);
+    try{
+      const response=await api(`/auth/google/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}`,{timeout:20000});
+      const redirect=new URL(response.redirectUrl);
+      if(redirect.origin!=="https://accounts.google.com")throw new Error("Unexpected Google sign-in destination");
+      window.location.assign(redirect.toString());
+    }catch(err){
+      setOauthBusy(false);
+      setAuthMessage({type:"error",text:err.message||"Google sign-in is unavailable right now."});
+    }
+  };
+  const googleButton=authProviders.google?(
+    <>
+      <button type="button" onClick={startGoogle} disabled={oauthBusy||busy} className="bs auth-google-button" aria-busy={oauthBusy}>
+        <GoogleMark/>{oauthBusy?"Opening Google…":"Continue with Google"}
+      </button>
+      <div className="auth-divider">or use email</div>
+    </>
+  ):null;
   const requestCode=async(resend=false)=>{
     if(busy||(resend&&resendSeconds>0))return;
     if(!acceptedTerms){setAuthMessage({type:"error",text:"Accept the Terms and Conditions to continue."});return;}
@@ -3431,7 +3490,12 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           {mode==="signup"?<>
             <div className="auth-kicker"><span/> Early access is live</div>
             <h1 className="auth-title">Create your account</h1>
-            <p className="auth-intro">One short form, then a 6-digit email code. Your username can be personalized later.</p>
+            <p className="auth-intro">{authProviders.google?"Use Google for the fastest setup, or create an account with email.":"One short form, then a 6-digit email code. Your username can be personalized later."}</p>
+            {authProviders.google&&<label className={`auth-terms auth-oauth-terms ${acceptedTerms?"is-accepted":""}`}>
+              <input aria-label="Agree to Terms and Conditions for Google signup" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
+              <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
+            </label>}
+            {googleButton}
             <div className="signup-fast-note"><Icon name="mail" size={16} color="currentColor"/> Step 1 of 2: account details</div>
             <form className="auth-form" onSubmit={event=>{event.preventDefault();requestCode(false);}}>
               <div className="auth-field">
@@ -3451,10 +3515,10 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
                 </div>
                 <small id="signup-password-help" className={form.password&&form.password.length<8?"auth-error":""}>Use at least 8 characters.</small>
               </div>
-              <label className={`auth-terms ${acceptedTerms?"is-accepted":""}`}>
+              {!authProviders.google&&<label className={`auth-terms ${acceptedTerms?"is-accepted":""}`}>
                 <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
                 <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
-              </label>
+              </label>}
               {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
               <GBtn type="submit" full disabled={busy}>{busy?"Sending code…":"Continue"}</GBtn>
               <p className="auth-footnote">Free to join. No credit card required.</p>
@@ -3462,6 +3526,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           </>:mode==="login"?<>
             <h1 className="auth-title">{loginCodeStep?"Check your email":"Welcome back"}</h1>
             <p className="auth-intro">{loginCodeStep?`Enter the secure code sent to ${recoveryDestination||"the email on your account"}.`:"Use the email or username already connected to your account."}</p>
+            {!loginCodeStep&&googleButton}
             <form className="auth-form" onSubmit={event=>{event.preventDefault();loginCodeStep?loginWithCode():loginWithPassword();}}>
               {!loginCodeStep?<>
                 <div className="auth-field">

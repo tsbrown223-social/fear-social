@@ -44,6 +44,18 @@ All product email should use `contact@fear.social`.
 - The `fear.social` sending domain must be verified in Resend before verification codes can be delivered from `contact@fear.social`.
 - User-facing email includes signup received confirmations and verification codes.
 
+### Google sign-in
+
+Google sign-in links verified Google identities to existing fear.social accounts by email without replacing their password. New accounts must accept the current Terms and Conditions before the OAuth flow begins.
+
+- OAuth client type: Web application
+- Authorized JavaScript origin: `https://fear.social`
+- Authorized redirect URI: `https://fear.social/api/auth/google/callback`
+- Cloudflare Pages secrets: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+- Cloudflare Pages variable: `GOOGLE_REDIRECT_URI=https://fear.social/api/auth/google/callback`
+
+The Google button is hidden automatically until both client credentials are configured.
+
 ## Build
 
 ```bash
