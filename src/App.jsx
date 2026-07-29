@@ -252,6 +252,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .suggested-person-main,.suggested-person-name,.suggested-person-meta{min-width:0;max-width:100%;}
 .suggested-person-actions button,.suggested-follow-btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;}
 .composer-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow:visible!important;}
+.composer-post-types,.composer-tools{display:contents;}
 .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-actions .composer-publish-btn{min-height:38px;white-space:nowrap!important;word-break:keep-all!important;overflow:hidden;text-overflow:ellipsis;display:inline-flex!important;align-items:center;justify-content:center;line-height:1.1;}
 .composer-actions .post-type-btn{min-width:82px;flex:0 0 auto;}
 .composer-actions .post-type-btn[data-label="Milestone"]{min-width:112px;}
@@ -810,6 +811,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .auth-form>button[type="submit"]{min-height:50px;border-radius:10px!important;font-size:15px!important;}
 .auth-text-button,.auth-secondary-button{width:100%;min-height:44px;border:0;border-radius:9px;background:transparent;color:#118C3B;font-size:13px;font-weight:900;}
 .auth-secondary-button{border:1px solid #DDE3DF;color:#4D5851;background:#F7F9F7;}
+.auth-help-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.auth-help-row button{min-height:48px;border:1px solid #DDE3DF;border-radius:9px;background:#F7F9F7;color:#3F4C44;font-size:12px;font-weight:900;line-height:1.25;padding:8px;white-space:normal;}
 .auth-footnote{margin:0;text-align:center;color:#7A847D;font-size:11px;}
 .auth-code-input{text-align:center;font-size:24px!important;font-weight:900;letter-spacing:7px;}
 
@@ -999,7 +1002,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-why{gap:54px}.fs2-acronym-row{grid-template-columns:42px 1fr;padding:13px 0}.fs2-acronym-row span{font-size:34px}.fs2-acronym-row b{font-size:18px}
   .fs2-access-head{margin-bottom:38px}.fs2-plan{padding:24px 18px;min-height:0}.fs2-plan h3{font-size:34px}.fs2-plan-list{grid-template-columns:1fr;margin:22px 0}.fs2-cta{min-height:78dvh}.fs2-footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}.fs2-footer-links{gap:0}
   .cookie-notice{width:calc(100% - 20px);bottom:calc(10px + env(safe-area-inset-bottom))!important}.cookie-card{display:block!important;padding:12px!important}.cookie-card>div:first-child b{font-size:13px!important}.cookie-card p{font-size:11px!important}.cookie-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important;margin-top:10px!important}.cookie-actions button{padding:8px 5px!important;font-size:10px!important;min-height:36px}
-  .signup-brand{position:absolute;top:18px;left:18px;font-size:19px}.signup-form-panel{padding-top:72px!important;padding-bottom:110px!important}
+  .signup-brand{position:absolute;top:18px;left:18px;font-size:19px}.signup-form-panel{padding-top:72px!important;padding-bottom:230px!important}
 }
 @media(max-width:760px){
   .app-view{padding-bottom:0!important;}
@@ -1068,34 +1071,44 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-view button,.app-view .bs,.app-view label.bs{max-width:100%;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;text-align:center;}
   .app-topbar button,.mobile-section-tabs button,.mobile-bottom-nav button,.post-actions button{white-space:nowrap!important;overflow-wrap:normal!important;}
   .global-flow-wave[data-screen="app"]{opacity:.19!important;}
-  .app-topbar{width:100%!important;height:62px!important;min-height:62px!important;padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;overflow:visible!important;background:rgba(7,9,8,.84)!important;}
+  .app-topbar{width:100%!important;height:58px!important;min-height:58px!important;padding-left:max(14px,env(safe-area-inset-left))!important;padding-right:max(14px,env(safe-area-inset-right))!important;overflow:visible!important;background:rgba(7,9,8,.88)!important;}
   .app-topbar-logo{min-width:0!important;flex:1 1 auto!important;white-space:nowrap!important;}
   .app-topbar>button{flex:0 0 auto!important;}
-  .app-shell{width:100%!important;max-width:100%!important;padding:12px max(10px,env(safe-area-inset-right)) calc(86px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;}
+  .app-topbar>button[aria-label*="unread notifications"]{display:none!important;}
+  .app-shell{width:100%!important;max-width:100%!important;padding:18px max(16px,env(safe-area-inset-right)) calc(94px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))!important;}
   .app-content-stage{animation-duration:.34s;}
-  .app-view-intro{grid-template-columns:minmax(0,1fr)!important;min-height:0!important;padding:28px 2px 22px!important;gap:8px!important;margin-bottom:14px!important;}
-  .app-view-intro-index{top:13px!important;left:2px!important;width:34px!important;}
-  .app-view-intro span{margin-bottom:9px!important;font-size:9px!important;}
-  .app-view-intro h1{font-size:32px!important;line-height:1.02!important;overflow-wrap:anywhere!important;text-wrap:balance;}
-  .app-view-intro p{font-size:13px!important;line-height:1.55!important;padding:0!important;}
+  .app-view-intro{grid-template-columns:minmax(0,1fr)!important;min-height:0!important;padding:18px 2px 18px!important;gap:6px!important;margin-bottom:18px!important;}
+  .app-view-intro-index{top:5px!important;left:2px!important;width:28px!important;}
+  .app-view-intro span{margin-bottom:7px!important;font-size:9px!important;}
+  .app-view-intro h1{font-size:29px!important;line-height:1.04!important;overflow-wrap:anywhere!important;text-wrap:balance;}
+  .app-view-intro p{font-size:13px!important;line-height:1.55!important;padding:0!important;max-width:38rem!important;}
   .app-view-intro-signal{left:2px;right:2px;}
   .mobile-app-search,.mobile-section-tabs,.feed-grid,.directory-wrap,.messages-grid,.profile-hero,.settings-grid{min-width:0!important;max-width:100%!important;}
-  .mobile-section-tabs{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain;}
-  .mobile-section-tabs button{width:auto!important;flex:0 0 auto!important;scroll-snap-align:start;border-radius:6px!important;}
-  .mobile-app-search input{border-radius:6px!important;background:rgba(15,18,16,.9)!important;backdrop-filter:blur(16px);}
+  .mobile-app-search{margin:0 0 10px!important;}
+  .mobile-section-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;margin:0 0 18px!important;padding:0!important;overflow:visible!important;scroll-snap-type:none!important;}
+  .mobile-section-tabs button{width:100%!important;min-width:0!important;min-height:40px!important;flex:none!important;padding:7px 3px!important;gap:3px!important;font-size:10px!important;scroll-snap-align:none;border-radius:7px!important;}
+  .mobile-section-tabs button svg{width:13px!important;height:13px!important;}
+  .mobile-app-search input{height:46px!important;border-radius:8px!important;background:rgba(15,18,16,.9)!important;backdrop-filter:blur(16px);}
   .theme-light .mobile-app-search input{background:rgba(255,255,255,.92)!important;}
   .mobile-profile-summary,.fs-app-composer,.post-card,.message-list,.message-panel,.profile-hero,.directory-grid>.ch,.settings-grid>div{border-radius:8px!important;}
+  .mobile-profile-summary{display:none!important;}
   .feed-mode-switch button span:first-child{font-size:15px!important;}
   .feed-mode-switch{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .feed-mode-switch button{width:100%!important;min-width:0!important;}
+  .feed-mode-switch{padding:4px!important;margin-bottom:14px!important;}
+  .feed-mode-switch button{width:100%!important;min-width:0!important;min-height:50px!important;padding:8px 5px!important;}
   .feed-mode-switch button span:last-child{white-space:normal!important;overflow-wrap:anywhere!important;}
-  .fs-app-composer{box-shadow:0 20px 60px rgba(0,0,0,.16)!important;}
-  .composer-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
-  .composer-actions .post-type-btn,.composer-actions .composer-media-btn{grid-column:auto!important;min-width:0!important;min-height:44px!important;padding:8px 6px!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere!important;}
-  .composer-publish-btn{grid-column:1/-1!important;min-height:46px!important;}
+  .fs-app-composer{padding:16px!important;margin-bottom:18px!important;box-shadow:0 20px 60px rgba(0,0,0,.13)!important;}
+  .fs-app-composer textarea{min-height:92px!important;}
+  .composer-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;overflow:visible!important;}
+  .composer-post-types{display:flex!important;gap:6px!important;width:100%!important;overflow-x:auto!important;padding:1px 0 4px!important;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:none;}
+  .composer-post-types::-webkit-scrollbar{display:none;}
+  .composer-post-types .post-type-btn{flex:0 0 auto!important;width:auto!important;min-width:78px!important;min-height:38px!important;padding:8px 11px!important;font-size:11px!important;white-space:nowrap!important;scroll-snap-align:start;}
+  .composer-tools{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;}
+  .composer-tools .composer-media-btn{grid-column:auto!important;width:100%!important;min-width:0!important;min-height:42px!important;padding:8px 6px!important;font-size:12px!important;white-space:nowrap!important;}
+  .composer-tools .composer-publish-btn{grid-column:1/-1!important;width:100%!important;min-width:0!important;min-height:44px!important;margin:0!important;}
   .post-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;padding:10px 12px!important;}
   .post-actions>button,.post-actions>span{min-width:0!important;min-height:42px!important;justify-content:center!important;margin:0!important;padding:7px 4px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
-  .post-card{padding:0!important;margin-bottom:10px!important;}
+  .post-card{padding:0!important;margin-bottom:16px!important;}
   .post-card>div:first-child{padding:16px!important;}
   .post-card>div:first-child>.profile-link{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:start!important;gap:10px!important;}
   .post-card>div:first-child>.profile-link>.avatar-shell{grid-column:1!important;}
@@ -1111,6 +1124,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-directory-card-actions .profile-card-followers{grid-column:1/-1!important;width:100%!important;min-width:0!important;}
   .profile-directory-card-actions button{width:100%!important;min-width:0!important;min-height:42px!important;padding:8px 6px!important;white-space:normal!important;overflow-wrap:anywhere!important;}
   .directory-title{font-size:30px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
+  .directory-grid{gap:14px!important;}
   .directory-grid,.directory-grid>*{width:100%!important;max-width:100%!important;min-width:0!important;}
   .view-local-heading{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;gap:10px!important;}
   .view-local-heading>div{min-width:0!important;}
@@ -1124,7 +1138,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .filter-row{display:flex!important;flex-wrap:nowrap!important;gap:7px!important;margin-left:0!important;margin-right:0!important;padding:2px 0 10px!important;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-width:none;}
   .filter-row::-webkit-scrollbar{display:none;}
   .filter-row button{flex:0 0 auto!important;max-width:220px!important;min-height:42px!important;padding:9px 12px!important;white-space:nowrap!important;}
-  .messages-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;min-height:0!important;}
+  .messages-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;min-height:0!important;}
   .message-list{display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:8px!important;min-height:0!important;max-height:none!important;height:auto!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;margin:0!important;padding:0 0 2px!important;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .message-list::-webkit-scrollbar{display:none;}
   .dm-thread-button{flex:0 0 min(78vw,264px)!important;width:auto!important;height:auto!important;min-width:0!important;min-height:72px!important;align-self:stretch!important;scroll-snap-align:start;}
@@ -1133,6 +1147,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-panel-header{align-items:flex-start!important;}
   .message-panel-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;}
   .message-panel-actions button{min-width:0!important;min-height:40px!important;padding:7px 6px!important;font-size:11px!important;white-space:normal!important;}
+  .message-panel-actions button:last-child:nth-child(odd){grid-column:1/-1!important;}
   .message-feed{min-height:240px!important;max-height:46svh!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
   .message-row{max-width:90%!important;overflow-wrap:anywhere!important;}
   .message-bubble{min-width:0!important;max-width:100%!important;width:auto!important;word-break:break-word!important;overflow-wrap:anywhere!important;}
@@ -1169,7 +1184,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .edit-actions button{width:100%!important;}
   .notification-row{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:center!important;}
   .notification-row.activity-unread>button:last-child{grid-column:1/-1!important;width:100%!important;}
-  .settings-grid>div{width:100%!important;max-width:100%!important;overflow:hidden!important;}
+  .settings-grid{gap:14px!important;}
+  .settings-grid>div{width:100%!important;max-width:100%!important;padding:18px!important;overflow:hidden!important;}
   .settings-grid button[role="switch"]{grid-template-columns:40px minmax(0,1fr) 44px!important;}
   .settings-grid button:not([role="switch"]){max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
   .modal-sheet{padding:20px 16px calc(20px + env(safe-area-inset-bottom))!important;}
@@ -1203,13 +1219,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-topbar{gap:5px!important;}
   .app-topbar-logo{font-size:17px!important;}
   .app-invite-button{display:none!important;}
-  .app-shell{padding-left:8px!important;padding-right:8px!important;}
-  .profile-action-row{grid-template-columns:1fr!important;}
-  .message-panel-actions{grid-template-columns:1fr!important;}
-  .app-view-intro h1{font-size:28px!important;}
-  .directory-title{font-size:27px!important;}
-  .composer-actions{grid-template-columns:1fr!important;}
-  .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-publish-btn{grid-column:1!important;}
+  .app-shell{padding-left:12px!important;padding-right:12px!important;}
+  .profile-action-row{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .message-panel-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .app-view-intro h1{font-size:27px!important;}
+  .directory-title{font-size:26px!important;}
   .post-card>div:first-child>.profile-link>div:last-child:not(:nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))!important;}
   .message-compose{grid-template-columns:minmax(0,1fr) 68px!important;}
   .message-compose button{width:68px!important;min-width:68px!important;}
@@ -1627,7 +1641,8 @@ class ApiError extends Error{
 }
 
 async function api(path,options={}){
-  const token=getSessionToken();
+  const isPublicAuthRequest=path.startsWith("/auth/")||path==="/waitlist";
+  const token=isPublicAuthRequest?"":getSessionToken();
   const controller=new AbortController();
   const timeout=window.setTimeout(()=>controller.abort(),options.timeout||15000);
   const requestId=crypto?.randomUUID?.()||`web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -1648,7 +1663,7 @@ async function api(path,options={}){
       try{localStorage.setItem("fear-session-token",data.token);}catch{}
     }
     if(!res.ok){
-      if(res.status===401&&token){
+      if(res.status===401&&token&&!isPublicAuthRequest){
         clearSessionToken();
         window.dispatchEvent(new CustomEvent("fear:session-expired"));
       }
@@ -3140,10 +3155,14 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     setMode(initialMode);
     setStep(0);
     setPasswordStep(0);
+    setLoginCodeStep(false);
+    setLoginCode("");
     setAuthMessage(null);
   },[initialMode]);
   const [form,setForm]=useState({name:"",username:"",email:"",password:""});
   const [login,setLogin]=useState({identifier:"",password:""});
+  const [loginCodeStep,setLoginCodeStep]=useState(false);
+  const [loginCode,setLoginCode]=useState("");
   const [passwordSetup,setPasswordSetup]=useState({identifier:"",code:"",password:"",confirmPassword:""});
   const [passwordStep,setPasswordStep]=useState(0);
   const [acceptedTerms,setAcceptedTerms]=useState(false);
@@ -3162,7 +3181,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   },[resendSeconds]);
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});
-  },[mode,passwordStep,step]);
+  },[mode,passwordStep,step,loginCodeStep]);
   const emailReady=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim());
   const passwordReady=form.password.length>=8;
   const valid=form.name.trim()&&emailReady&&passwordReady&&acceptedTerms;
@@ -3196,7 +3215,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
         setAuthMessage({type:"info",text:"That email already has an account. Enter your password below, or reset it."});
       }else{
         setAuthMessage({type:"error",text:err.message||"We could not send the verification email. Try again."});
-        notify(err.message||"Could not send verification code","error");
       }
     }finally{
       setBusy(false);
@@ -3225,7 +3243,49 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       }else{
         setAuthMessage({type:"error",text:err.code==="INVALID_CREDENTIALS"?"That email, username, or password did not match. Try again or reset your password.":err.message||"Could not sign in. Check your details and try again."});
       }
-      notify(err.message||"Could not sign in","error");
+    }finally{
+      setBusy(false);
+    }
+  };
+  const requestLoginCode=async()=>{
+    if(busy||(loginCodeStep&&resendSeconds>0))return;
+    const identifier=login.identifier.trim();
+    if(!identifier){setAuthMessage({type:"error",text:"Enter the email or username on your account."});return;}
+    setBusy(true);
+    setAuthMessage(null);
+    try{
+      const response=await api("/auth/request-code",{
+        method:"POST",
+        body:JSON.stringify({identifier,purpose:"login"}),
+        timeout:30000,
+      });
+      setLoginCode("");
+      setLoginCodeStep(true);
+      setRecoveryDestination(response.maskedEmail||"the email on your account");
+      setResendSeconds(30);
+      setAuthMessage({type:"success",text:`Sign-in code sent to ${response.maskedEmail||"the email on your account"}.`});
+    }catch(err){
+      setAuthMessage({type:"error",text:err.message||"Could not send a sign-in code."});
+    }finally{
+      setBusy(false);
+    }
+  };
+  const loginWithCode=async()=>{
+    if(busy)return;
+    if(loginCode.length!==6){setAuthMessage({type:"error",text:"Enter the complete 6-digit code."});return;}
+    setBusy(true);
+    setAuthMessage(null);
+    try{
+      const saved=await api("/auth/verify",{
+        method:"POST",
+        body:JSON.stringify({identifier:login.identifier.trim(),code:loginCode,purpose:"login"}),
+        timeout:20000,
+      });
+      setProfile(p=>({...p,...saved.profile}));
+      setScreen("app");
+      notify("Signed in");
+    }catch(err){
+      setAuthMessage({type:"error",text:err.message||"That code did not work. Request a new one and try again."});
     }finally{
       setBusy(false);
     }
@@ -3249,7 +3309,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       notify("Password code sent");
     }catch(err){
       setAuthMessage({type:"error",text:err.message||"Could not send password code."});
-      notify(err.message||"Could not send password code","error");
     }finally{
       setBusy(false);
     }
@@ -3270,7 +3329,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       notify("Password updated. You're signed in.");
     }catch(err){
       setAuthMessage({type:"error",text:err.message||"Could not set password."});
-      notify(err.message||"Could not set password","error");
     }finally{
       setBusy(false);
     }
@@ -3290,7 +3348,6 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     }catch(err){
       setBusy(false);
       setAuthMessage({type:"error",text:err.message||"That code did not work. Request a new one and try again."});
-      notify(err.message||"Could not verify email","error");
       return;
     }
     setScreen("app");
@@ -3363,8 +3420,8 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       <div className="signup-form-panel" style={{width:520,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:56}}>
         <div className="auth-card">
           <div className="auth-tabs" role="tablist" aria-label="Account mode">
-            <button type="button" role="tab" aria-selected={mode==="signup"} onClick={()=>{setMode("signup");setAuthMessage(null);}}>Sign up</button>
-            <button type="button" role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>{setMode("login");setAuthMessage(null);}}>Log in</button>
+            <button type="button" role="tab" aria-selected={mode==="signup"} onClick={()=>{setMode("signup");setLoginCodeStep(false);setAuthMessage(null);}}>Sign up</button>
+            <button type="button" role="tab" aria-selected={mode==="login"||mode==="password"} onClick={()=>{setMode("login");setLoginCodeStep(false);setAuthMessage(null);}}>Log in</button>
           </div>
           {mode==="signup"?<>
             <div className="auth-kicker"><span/> Early access is live</div>
@@ -3398,24 +3455,38 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
               <p className="auth-footnote">Free to join. No credit card required.</p>
             </form>
           </>:mode==="login"?<>
-            <h1 className="auth-title">Welcome back</h1>
-            <p className="auth-intro">Use the email or username already connected to your account.</p>
-            <form className="auth-form" onSubmit={event=>{event.preventDefault();loginWithPassword();}}>
-              <div className="auth-field">
-                <label htmlFor="login-identifier">Email or username</label>
-                <input id="login-identifier" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="next" value={login.identifier} onChange={event=>setLogin(current=>({...current,identifier:event.target.value}))} placeholder="you@example.com" className="if"/>
-              </div>
-              <div className="auth-field">
-                <label htmlFor="login-password">Password</label>
-                <div className="auth-password-control">
-                  <input id="login-password" autoComplete="current-password" enterKeyHint="go" type={showPassword?"text":"password"} value={login.password} onChange={event=>setLogin(current=>({...current,password:event.target.value}))} placeholder="Your password" className="if"/>
-                  <button type="button" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button>
+            <h1 className="auth-title">{loginCodeStep?"Check your email":"Welcome back"}</h1>
+            <p className="auth-intro">{loginCodeStep?`Enter the secure code sent to ${recoveryDestination||"the email on your account"}.`:"Use the email or username already connected to your account."}</p>
+            <form className="auth-form" onSubmit={event=>{event.preventDefault();loginCodeStep?loginWithCode():loginWithPassword();}}>
+              {!loginCodeStep?<>
+                <div className="auth-field">
+                  <label htmlFor="login-identifier">Email or username</label>
+                  <input id="login-identifier" autoComplete="username" autoCapitalize="none" spellCheck={false} enterKeyHint="next" value={login.identifier} onChange={event=>setLogin(current=>({...current,identifier:event.target.value}))} placeholder="you@example.com" className="if"/>
                 </div>
-              </div>
-              {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
-              <GBtn type="submit" full disabled={busy}>{busy?"Logging in…":"Log in"}</GBtn>
-              <button type="button" onClick={()=>{setPasswordSetup(current=>({...current,identifier:login.identifier.trim()}));setMode("password");setPasswordStep(0);setAuthMessage(null);}} className="auth-text-button">Forgot your password?</button>
-              <button type="button" onClick={()=>{setMode("signup");setAuthMessage(null);}} className="auth-secondary-button">New to fear.social? Create an account</button>
+                <div className="auth-field">
+                  <label htmlFor="login-password">Password</label>
+                  <div className="auth-password-control">
+                    <input id="login-password" autoComplete="current-password" enterKeyHint="go" type={showPassword?"text":"password"} value={login.password} onChange={event=>setLogin(current=>({...current,password:event.target.value}))} placeholder="Your password" className="if"/>
+                    <button type="button" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button>
+                  </div>
+                </div>
+                {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
+                <GBtn type="submit" full disabled={busy}>{busy?"Logging in…":"Log in"}</GBtn>
+                <div className="auth-help-row">
+                  <button type="button" onClick={requestLoginCode}>Use a sign-in code</button>
+                  <button type="button" onClick={()=>{setPasswordSetup(current=>({...current,identifier:login.identifier.trim()}));setMode("password");setPasswordStep(0);setAuthMessage(null);}}>Forgot password?</button>
+                </div>
+                <button type="button" onClick={()=>{setMode("signup");setAuthMessage(null);}} className="auth-secondary-button">New to fear.social? Create an account</button>
+              </>:<>
+                <div className="auth-field">
+                  <label htmlFor="login-code">6-digit sign-in code</label>
+                  <input id="login-code" aria-label="Sign-in verification code" autoComplete="one-time-code" enterKeyHint="go" pattern="[0-9]*" value={loginCode} onChange={event=>setLoginCode(event.target.value.replace(/\D/g,"").slice(0,6))} placeholder="000000" inputMode="numeric" className="if auth-code-input"/>
+                </div>
+                {authMessage&&<div className={`auth-message ${authMessage.type}`} role="status" aria-live="polite">{authMessage.text}</div>}
+                <GBtn type="submit" full disabled={busy||loginCode.length!==6}>{busy?"Signing in…":"Verify code and sign in"}</GBtn>
+                <button type="button" disabled={busy||resendSeconds>0} onClick={requestLoginCode} className="auth-text-button">{resendSeconds>0?`Resend code in ${resendSeconds}s`:"Resend code"}</button>
+                <button type="button" onClick={()=>{setLoginCodeStep(false);setLoginCode("");setAuthMessage(null);}} className="auth-secondary-button">Use password instead</button>
+              </>}
             </form>
           </>:<>
             <h1 className="auth-title">{passwordStep===0?"Reset your password":"Create a new password"}</h1>
@@ -4263,6 +4334,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       {action}
     </div>
   );
+  const mobileExploreView=["discover","events","groups","opportunities"].includes(view);
   const appLayoutClass=`app-view layout-${interfaceSettings.layout||"comfortable"} density-${interfaceSettings.density||"standard"}`;
   return(
     <div className={appLayoutClass} style={{minHeight:"100vh",background:C.bg}}>
@@ -4280,16 +4352,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
       <main id="app-main" className="app-shell" tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
-        <div className="mobile-app-search">
+        {(view==="discover"||searchTerm)&&<div className="mobile-app-search">
           <input type="search" aria-label="Search fear.social" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, groups..." className="if" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"13px 14px",fontSize:16,color:C.text,boxShadow:"0 10px 30px rgba(13,15,20,0.04)"}}/>
-        </div>
-        <div className="mobile-section-tabs" role="navigation" aria-label="More mobile navigation">
-          {[["events","fear.club","calendar"],["groups","Groups","network"],["opportunities","Deals","briefcase"]].map(([id,label,icon])=>(
+        </div>}
+        {mobileExploreView&&<div className="mobile-section-tabs" role="navigation" aria-label="Explore fear.social">
+          {[["discover","People","user"],["groups","Groups","network"],["opportunities","Deals","briefcase"],["events","Club","calendar"]].map(([id,label,icon])=>(
             <button key={id} type="button" className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}>
               <Icon name={icon} size={15} color="currentColor"/>{label}
             </button>
           ))}
-        </div>
+        </div>}
         <div key={`${view}-${searchTerm?"search":"view"}`} className="app-content-stage" data-view={view}>
         {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
         {!searchTerm&&viewMeta[view]&&<AppViewIntro {...viewMeta[view]} />}
@@ -4333,10 +4405,14 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                     <textarea aria-label="Create a post" value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
                     <MediaPreviewGrid media={composerMedia} onRemove={removeComposerMedia}/>
                     <div className="composer-actions" style={{display:"flex",gap:8,alignItems:"center",marginTop:12}}>
-                      {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} data-label={t} aria-pressed={postType===t} onClick={()=>setPostType(t)} className="bs post-type-btn" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.1}}>{t}</button>)}
-                      <button type="button" onClick={()=>setCameraOpen(true)} className="bs composer-media-btn" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Record</button>
-                      <label className="bs composer-media-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Upload<input aria-label="Attach photos or videos to post" type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
-                      <GBtn sm className="composer-publish-btn" disabled={!composer.trim()&&composerMedia.length===0} onClick={publish} style={{marginLeft:"auto"}}>Publish</GBtn>
+                      <div className="composer-post-types">
+                        {["Update","Ask","Milestone","Hiring","Launch"].map(t=><button key={t} data-label={t} aria-pressed={postType===t} onClick={()=>setPostType(t)} className="bs post-type-btn" style={{background:postType===t?C.aLight:"#fff",border:`1px solid ${postType===t?C.aSoft:C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:800,color:postType===t?C.accent:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.1}}>{t}</button>)}
+                      </div>
+                      <div className="composer-tools">
+                        <button type="button" onClick={()=>setCameraOpen(true)} className="bs composer-media-btn" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.accent,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Record</button>
+                        <label className="bs composer-media-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:7,whiteSpace:"nowrap",cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis"}}><Icon name="camera" size={15}/> Upload<input aria-label="Attach photos or videos to post" type="file" accept="image/*,video/*" multiple onChange={addComposerMedia} style={{display:"none"}}/></label>
+                        <GBtn sm className="composer-publish-btn" disabled={!composer.trim()&&composerMedia.length===0} onClick={publish} style={{marginLeft:"auto"}}>Publish</GBtn>
+                      </div>
                     </div>
                   </div>
                 </div>

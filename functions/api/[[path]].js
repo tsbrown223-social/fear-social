@@ -411,7 +411,11 @@ async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 30
   try {
     const existing = await db.prepare("SELECT count FROM api_rate_limits WHERE id = ?").bind(id).first();
     if (existing && Number(existing.count) >= limit) {
-      return json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
+      const retryAfter = Math.max(1, (bucket + 1) * windowSeconds - Math.floor(Date.now() / 1000));
+      return json(
+        { error: "Too many attempts. Wait a few minutes, then try again.", code: "RATE_LIMITED", retryAfter },
+        { status: 429, headers: { "retry-after": String(retryAfter) } }
+      );
     }
     if (existing) {
       await db.prepare("UPDATE api_rate_limits SET count = count + 1 WHERE id = ?").bind(id).run();
@@ -1820,7 +1824,18 @@ async function handleRequest({ request, env, params }) {
     const bodyEmail = cleanText(body.email || "", 120).toLowerCase();
     const existing = await findUserByIdentifier(db, bodyEmail || identifier);
     const email = cleanText(bodyEmail || existing?.email || "", 120).toLowerCase();
-    if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
+    if (!isValidEmail(email)) {
+      if (existing && purpose !== "signup") {
+        return json(
+          {
+            error: "This account does not have a recovery email yet. Contact contact@fear.social so we can restore access.",
+            code: "RECOVERY_EMAIL_MISSING",
+          },
+          { status: 409 }
+        );
+      }
+      return json({ error: "Enter a valid email address.", code: "INVALID_EMAIL" }, { status: 400 });
+    }
     const limited = await enforceRateLimit(db, request, `auth-request-code:${purpose}:${await sha256(email)}`, 5, 600);
     if (limited) return limited;
     let username = normalizeUsername(body.username || email.split("@")[0], "member");
@@ -1955,6 +1970,15 @@ async function handleRequest({ request, env, params }) {
     if (limited) return limited;
     const user = await findUserByIdentifier(db, identifier);
     if (user && !user.password_hash) {
+      if (!isValidEmail(user.email)) {
+        return json(
+          {
+            error: "This account needs a password but does not have a recovery email. Contact contact@fear.social so we can restore access.",
+            code: "PASSWORD_RECOVERY_UNAVAILABLE",
+          },
+          { status: 409 }
+        );
+      }
       return json(
         { error: "This account needs a password. Reset it now to finish setting up access.", code: "PASSWORD_REQUIRED" },
         { status: 409 }
@@ -1977,13 +2001,15 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && path === "/auth/verify") {
-    const email = cleanText(body.email || "", 120).toLowerCase();
+    const identifier = cleanText(body.identifier || "", 120).toLowerCase().replace(/^@/, "");
+    const identifierUser = identifier ? await findUserByIdentifier(db, identifier) : null;
+    const email = cleanText(body.email || identifierUser?.email || "", 120).toLowerCase();
     const password = String(body.password || "");
     if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
     const limited = await enforceRateLimit(db, request, `auth-verify:${await sha256(email)}`, 10, 600);
     if (limited) return limited;
     if (password && password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
-    let user = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
+    let user = identifierUser || await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
     if (!user && body.acceptedTerms !== true) {
       return json({ error: "You must accept the Terms and Conditions to create an account" }, { status: 400 });
     }
