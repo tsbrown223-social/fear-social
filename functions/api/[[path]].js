@@ -431,6 +431,73 @@ async function enforceRateLimit(db, request, key, limit = 12, windowSeconds = 30
   return null;
 }
 
+async function getFailedLoginState(db, request, identifier, limit = 12, windowSeconds = 900) {
+  const bucket = Math.floor(Date.now() / (windowSeconds * 1000));
+  const clientKey = getClientKey(request);
+  const route = `auth-login-failed:${await sha256(identifier)}`;
+  const id = `${route}:${clientKey}:${bucket}`;
+  let count = 0;
+  try {
+    const existing = await db.prepare("SELECT count FROM api_rate_limits WHERE id = ?").bind(id).first();
+    count = Number(existing?.count || 0);
+  } catch (err) {
+    console.warn("failed login limit check failed", err);
+  }
+  return {
+    id,
+    route,
+    clientKey,
+    bucket,
+    count,
+    limit,
+    windowSeconds,
+    retryAfter: Math.max(1, (bucket + 1) * windowSeconds - Math.floor(Date.now() / 1000)),
+  };
+}
+
+function failedLoginResponse(state) {
+  return json(
+    {
+      error: "Password sign-in is temporarily paused after several unsuccessful tries. Use a sign-in code or reset your password now, or try your password again when the pause ends.",
+      code: "LOGIN_TEMPORARILY_PAUSED",
+      retryAfter: state.retryAfter,
+    },
+    { status: 429, headers: { "retry-after": String(state.retryAfter) } }
+  );
+}
+
+async function recordFailedLogin(db, state) {
+  try {
+    await db
+      .prepare(
+        `INSERT INTO api_rate_limits (id, route, client_key, bucket, count, expires_at)
+         VALUES (?, ?, ?, ?, 1, ?)
+         ON CONFLICT(id) DO UPDATE SET count = count + 1, expires_at = excluded.expires_at`
+      )
+      .bind(
+        state.id,
+        state.route,
+        state.clientKey,
+        String(state.bucket),
+        new Date(Date.now() + state.windowSeconds * 1000).toISOString()
+      )
+      .run();
+    const updated = await db.prepare("SELECT count FROM api_rate_limits WHERE id = ?").bind(state.id).first();
+    return { ...state, count: Number(updated?.count || state.count + 1) };
+  } catch (err) {
+    console.warn("failed login counter update failed", err);
+  }
+  return { ...state, count: state.count + 1 };
+}
+
+async function clearFailedLogins(db, state) {
+  try {
+    await db.prepare("DELETE FROM api_rate_limits WHERE id = ?").bind(state.id).run();
+  } catch (err) {
+    console.warn("failed login counter reset failed", err);
+  }
+}
+
 async function recordRegistrationEmail(db, source, email, details = {}) {
   const normalizedEmail = cleanText(email, 120).toLowerCase();
   if (!isValidEmail(normalizedEmail)) return null;
@@ -1831,7 +1898,7 @@ async function handleRequest({ request, env, params }) {
       }
       return json({ error: "Enter a valid email address.", code: "INVALID_EMAIL" }, { status: 400 });
     }
-    const limited = await enforceRateLimit(db, request, `auth-request-code:${purpose}:${await sha256(email)}`, 5, 600);
+    const limited = await enforceRateLimit(db, request, `auth-request-code:${purpose}:${await sha256(email)}`, 8, 900);
     if (limited) return limited;
     let username = normalizeUsername(body.username || email.split("@")[0], "member");
     if (purpose === "signup") {
@@ -1874,7 +1941,7 @@ async function handleRequest({ request, env, params }) {
     const email = cleanText(body.email || body.profile?.email || "", 120).toLowerCase();
     const password = String(body.password || "");
     if (!isValidEmail(email)) return json({ error: "Enter a valid email address." }, { status: 400 });
-    const limited = await enforceRateLimit(db, request, `auth-signup:${await sha256(email)}`, 8, 600);
+    const limited = await enforceRateLimit(db, request, `auth-signup:${await sha256(email)}`, 12, 900);
     if (limited) return limited;
     if (password.length < 8) return json({ error: "Password must be at least 8 characters." }, { status: 400 });
     if (body.acceptedTerms !== true) return json({ error: "You must accept the Terms and Conditions to create an account." }, { status: 400 });
@@ -1955,9 +2022,14 @@ async function handleRequest({ request, env, params }) {
   if (method === "POST" && path === "/auth/login") {
     const identifier = cleanText(body.identifier || "", 120).toLowerCase().replace(/^@/, "");
     const password = String(body.password || "");
-    if (!identifier || !password) return json({ error: "Username or email and password required" }, { status: 400 });
-    const limited = await enforceRateLimit(db, request, `auth-login:${await sha256(identifier)}`, 8, 600);
-    if (limited) return limited;
+    if (!identifier || !password) {
+      return json(
+        { error: "Enter the email or username for your account and your password.", code: "LOGIN_DETAILS_REQUIRED" },
+        { status: 400 }
+      );
+    }
+    const failedLoginState = await getFailedLoginState(db, request, identifier);
+    if (failedLoginState.count >= failedLoginState.limit) return failedLoginResponse(failedLoginState);
     const user = await findUserByIdentifier(db, identifier);
     if (user && !user.password_hash) {
       if (!isValidEmail(user.email)) {
@@ -1975,11 +2047,18 @@ async function handleRequest({ request, env, params }) {
       );
     }
     if (!user || !(await verifyPassword(password, user.password_hash))) {
+      const updatedFailureState = await recordFailedLogin(db, failedLoginState);
+      if (updatedFailureState.count >= updatedFailureState.limit) return failedLoginResponse(updatedFailureState);
       return json(
-        { error: "That email, username, or password did not match. Try again or reset your password.", code: "INVALID_CREDENTIALS" },
+        {
+          error: "We could not match those details. Check for a typo, try a sign-in code, or reset your password.",
+          code: "INVALID_CREDENTIALS",
+          attemptsRemaining: Math.max(0, updatedFailureState.limit - updatedFailureState.count),
+        },
         { status: 401 }
       );
     }
+    await clearFailedLogins(db, failedLoginState);
     if (String(user.password_hash).startsWith("sha256:")) {
       await safeRun(db, "UPDATE users SET password_hash = ? WHERE id = ?", [await hashPassword(password), user.id]);
     }
@@ -1996,7 +2075,7 @@ async function handleRequest({ request, env, params }) {
     const email = cleanText(body.email || identifierUser?.email || "", 120).toLowerCase();
     const password = String(body.password || "");
     if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
-    const limited = await enforceRateLimit(db, request, `auth-verify:${await sha256(email)}`, 10, 600);
+    const limited = await enforceRateLimit(db, request, `auth-verify:${await sha256(email)}`, 12, 900);
     if (limited) return limited;
     if (password && password.length < 8) return json({ error: "Password must be at least 8 characters" }, { status: 400 });
     let user = identifierUser || await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)").bind(email).first();
@@ -2065,7 +2144,7 @@ async function handleRequest({ request, env, params }) {
     const user = await findUserByIdentifier(db, identifier);
     const email = cleanText(body.email || user?.email || "", 120).toLowerCase();
     if (!isValidEmail(email)) return json({ error: "Valid email required" }, { status: 400 });
-    const limited = await enforceRateLimit(db, request, `auth-password:${await sha256(email)}`, 5, 600);
+    const limited = await enforceRateLimit(db, request, `auth-password:${await sha256(email)}`, 8, 900);
     if (limited) return limited;
     const code = String(body.code || "").trim();
     const password = String(body.password || "");

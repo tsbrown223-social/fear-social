@@ -3251,6 +3251,24 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       <div className="auth-divider">or use email</div>
     </>
   ):null;
+  const retryWait=(retryAfter)=>{
+    const seconds=Math.max(1,Number(retryAfter)||0);
+    if(seconds<60)return `${seconds} second${seconds===1?"":"s"}`;
+    const minutes=Math.ceil(seconds/60);
+    return `${minutes} minute${minutes===1?"":"s"}`;
+  };
+  const friendlyAuthError=(err,fallback)=>{
+    if(err?.code==="RATE_LIMITED"){
+      return `You’ve made several requests. Please wait ${retryWait(err.retryAfter)} before requesting another code. You can still return to log in.`;
+    }
+    if(err?.code==="ACCOUNT_NOT_FOUND"){
+      return "We couldn’t find an account with those details. Check for a typo, or create a new account.";
+    }
+    if(err?.code==="INVALID_OR_EXPIRED_CODE"){
+      return "That code is incorrect or has expired. Request a new code and try again.";
+    }
+    return err?.message||fallback;
+  };
   const requestCode=async(resend=false)=>{
     if(busy||(resend&&resendSeconds>0))return;
     if(!acceptedTerms){setAuthMessage({type:"error",text:"Accept the Terms and Conditions to continue."});return;}
@@ -3304,8 +3322,20 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
         setMode("password");
         setPasswordStep(0);
         setAuthMessage({type:"info",text:"This account needs a password. We can set one in under a minute."});
+      }else if(err.code==="LOGIN_TEMPORARILY_PAUSED"||err.code==="RATE_LIMITED"){
+        setLogin(current=>({...current,password:""}));
+        setAuthMessage({
+          type:"info",
+          text:`For your security, password sign-in is paused for about ${retryWait(err.retryAfter)} after several unsuccessful tries. You can use a sign-in code or reset your password right now.`,
+        });
       }else{
-        setAuthMessage({type:"error",text:err.code==="INVALID_CREDENTIALS"?"That email, username, or password did not match. Try again or reset your password.":err.message||"Could not sign in. Check your details and try again."});
+        setLogin(current=>({...current,password:""}));
+        setAuthMessage({
+          type:"error",
+          text:err.code==="INVALID_CREDENTIALS"
+            ?"We couldn’t match those details. Check for a typo, then try again. You can also use a sign-in code or reset your password below."
+            :friendlyAuthError(err,"We couldn’t sign you in. Check your details or use one of the recovery options below."),
+        });
       }
     }finally{
       setBusy(false);
@@ -3329,7 +3359,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setResendSeconds(30);
       setAuthMessage({type:"success",text:`Sign-in code sent to ${response.maskedEmail||"the email on your account"}.`});
     }catch(err){
-      setAuthMessage({type:"error",text:err.message||"Could not send a sign-in code."});
+      setAuthMessage({type:"error",text:friendlyAuthError(err,"We couldn’t send a sign-in code. Check your details and try again.")});
     }finally{
       setBusy(false);
     }
@@ -3349,7 +3379,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setScreen("app");
       notify("Signed in");
     }catch(err){
-      setAuthMessage({type:"error",text:err.message||"That code did not work. Request a new one and try again."});
+      setAuthMessage({type:"error",text:friendlyAuthError(err,"That code did not work. Request a new one and try again.")});
     }finally{
       setBusy(false);
     }
@@ -3372,7 +3402,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setAuthMessage({type:"success",text:`Code sent to ${response.maskedEmail||"the email on your account"}.`});
       notify("Password code sent");
     }catch(err){
-      setAuthMessage({type:"error",text:err.message||"Could not send password code."});
+      setAuthMessage({type:"error",text:friendlyAuthError(err,"We couldn’t send a password reset code. Check your details and try again.")});
     }finally{
       setBusy(false);
     }
@@ -3392,7 +3422,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setScreen("app");
       notify("Password updated. You're signed in.");
     }catch(err){
-      setAuthMessage({type:"error",text:err.message||"Could not set password."});
+      setAuthMessage({type:"error",text:friendlyAuthError(err,"We couldn’t update your password. Check the code and matching password fields, then try again.")});
     }finally{
       setBusy(false);
     }
@@ -3411,7 +3441,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setProfile(p=>({...p,...saved.profile}));
     }catch(err){
       setBusy(false);
-      setAuthMessage({type:"error",text:err.message||"That code did not work. Request a new one and try again."});
+      setAuthMessage({type:"error",text:friendlyAuthError(err,"That code did not work. Request a new one and try again.")});
       return;
     }
     setScreen("app");
