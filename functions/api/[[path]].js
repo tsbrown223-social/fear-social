@@ -317,6 +317,10 @@ const normalizeProfile = (profile = {}) => {
   const handle = `@${username}`;
   const website = cleanText(profile.website || "", 180);
   const email = cleanText(profile.email || "", 120).toLowerCase();
+  const position = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 50;
+  };
   return {
     id: cleanText(profile.id || "", 120),
     name,
@@ -330,6 +334,10 @@ const normalizeProfile = (profile = {}) => {
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
     avatarUrl: cleanMediaUrl(profile.avatarUrl || profile.avatar_url || "", "image", 700000),
     coverUrl: cleanMediaUrl(profile.coverUrl || profile.cover_url || "", "image", 900000),
+    avatarPositionX: position(profile.avatarPositionX ?? profile.avatar_position_x),
+    avatarPositionY: position(profile.avatarPositionY ?? profile.avatar_position_y),
+    coverPositionX: position(profile.coverPositionX ?? profile.cover_position_x),
+    coverPositionY: position(profile.coverPositionY ?? profile.cover_position_y),
     headline: cleanText(profile.headline || "", 140),
     website: website ? (isSafeHttpUrl(/^https?:\/\//i.test(website) ? website : `https://${website}`, { allowHttp: false, max: 180 }) ? (/^https?:\/\//i.test(website) ? website : `https://${website}`) : "") : "",
     lookingFor: cleanText(profile.lookingFor || profile.looking_for || "", 160),
@@ -598,6 +606,10 @@ const publicProfile = (user = {}) => {
     privacy: profile.privacy,
     avatarUrl: profile.avatarUrl,
     coverUrl: profile.coverUrl,
+    avatarPositionX: profile.avatarPositionX,
+    avatarPositionY: profile.avatarPositionY,
+    coverPositionX: profile.coverPositionX,
+    coverPositionY: profile.coverPositionY,
     headline: profile.headline,
     website: profile.website,
     lookingFor: profile.lookingFor,
@@ -981,7 +993,9 @@ const parseMediaList = (value) => {
 async function getPosts(db, userId) {
   const posts = await db
     .prepare(
-      `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url, u.verified_badge AS user_verified_badge,
+      `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
+        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y,
+        u.verified_badge AS user_verified_badge,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'save') AS saved,
@@ -1003,7 +1017,9 @@ async function getPosts(db, userId) {
 
   const comments = await db
     .prepare(
-      `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url, u.verified_badge AS user_verified_badge
+      `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
+        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y,
+        u.verified_badge AS user_verified_badge
        FROM comments c
        JOIN users u ON u.id = c.user_id
        WHERE c.user_id <> 'demo-user' AND u.id <> 'demo-user'
@@ -1023,6 +1039,8 @@ async function getPosts(db, userId) {
     handle: comment.handle,
     av: initials(comment.user_name),
     avatarUrl: comment.user_avatar_url || "",
+    avatarPositionX: Number(comment.user_avatar_position_x ?? 50),
+    avatarPositionY: Number(comment.user_avatar_position_y ?? 50),
     verified: isVerifiedAccount({ name: comment.user_name, handle: comment.handle, verified_badge: comment.user_verified_badge }),
     text: comment.text,
     time: timeAgo(comment.created_at),
@@ -1037,6 +1055,8 @@ async function getPosts(db, userId) {
     handle: post.handle,
     av: initials(post.user_name),
     avatarUrl: post.user_avatar_url || "",
+    avatarPositionX: Number(post.user_avatar_position_x ?? 50),
+    avatarPositionY: Number(post.user_avatar_position_y ?? 50),
     verified: isVerifiedAccount({ name: post.user_name, handle: post.handle, verified_badge: post.user_verified_badge }),
     tag: post.tag,
     stage: post.stage,
@@ -1473,10 +1493,12 @@ async function getConnectionDirectory(db) {
     .prepare(
       `SELECT c.user_id, c.target_user_id,
         follower.id AS follower_id, follower.name AS follower_name, follower.handle AS follower_handle,
-        follower.avatar_url AS follower_avatar_url, follower.industry AS follower_industry, follower.location AS follower_location,
+        follower.avatar_url AS follower_avatar_url, follower.avatar_position_x AS follower_avatar_position_x, follower.avatar_position_y AS follower_avatar_position_y,
+        follower.industry AS follower_industry, follower.location AS follower_location,
         follower.bio AS follower_bio, follower.verified_badge AS follower_verified_badge,
         target.id AS target_id, target.name AS target_name, target.handle AS target_handle,
-        target.avatar_url AS target_avatar_url, target.industry AS target_industry, target.location AS target_location,
+        target.avatar_url AS target_avatar_url, target.avatar_position_x AS target_avatar_position_x, target.avatar_position_y AS target_avatar_position_y,
+        target.industry AS target_industry, target.location AS target_location,
         target.bio AS target_bio, target.verified_badge AS target_verified_badge
        FROM user_connections c
        JOIN users follower ON follower.id = c.user_id
@@ -1497,6 +1519,8 @@ async function getConnectionDirectory(db) {
     handle: row[`${prefix}_handle`] || "",
     av: initials(row[`${prefix}_name`]),
     avatarUrl: row[`${prefix}_avatar_url`] || "",
+    avatarPositionX: Number(row[`${prefix}_avatar_position_x`] ?? 50),
+    avatarPositionY: Number(row[`${prefix}_avatar_position_y`] ?? 50),
     industry: row[`${prefix}_industry`] || "Exploring",
     loc: row[`${prefix}_location`] || "",
     bio: row[`${prefix}_bio`] || "",
@@ -1635,7 +1659,8 @@ async function getBootstrap(db, user) {
     getPosts(db, userId),
     db
       .prepare(
-        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url, u.verified_badge, u.e2ee_public_key,
+        `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url,
+          u.avatar_position_x, u.avatar_position_y, u.cover_position_x, u.cover_position_y, u.verified_badge, u.e2ee_public_key,
           u.headline, u.website, u.looking_for, u.goal,
           COALESCE(u.privacy, 'public') AS privacy,
           COALESCE((SELECT ar.status FROM profile_access_requests ar WHERE ar.requester_user_id = ? AND ar.target_user_id = u.id LIMIT 1), '') AS access_status,
@@ -1696,7 +1721,11 @@ async function getBootstrap(db, user) {
         locked,
         av: initials(person.name),
         avatarUrl: person.avatar_url || "",
+        avatarPositionX: Number(person.avatar_position_x ?? 50),
+        avatarPositionY: Number(person.avatar_position_y ?? 50),
         coverUrl: locked ? "" : person.cover_url || "",
+        coverPositionX: Number(person.cover_position_x ?? 50),
+        coverPositionY: Number(person.cover_position_y ?? 50),
         headline: locked ? "Private profile" : person.headline || "",
         website: locked ? "" : person.website || "",
         lookingFor: locked ? "" : person.looking_for || "",
@@ -2522,10 +2551,10 @@ async function handleRequest({ request, env, params }) {
 
     await db
       .prepare(
-        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
+        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, avatar_position_x = ?, avatar_position_y = ?, cover_position_x = ?, cover_position_y = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`
       )
-      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
+      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.avatarPositionX, profile.avatarPositionY, profile.coverPositionX, profile.coverPositionY, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
       .run();
     return json({ token, profile: await profileWithFollowerCount(db, { ...user, ...profile }) });
   }
