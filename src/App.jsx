@@ -871,7 +871,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .message-list{padding:8px!important;}
 .dm-thread-button{border-radius:7px!important;padding:11px!important;}
 .dm-thread-button[data-active="true"]{background:#E2F8EA!important;border-color:#BCEFCC!important;}
-.theme-dark .dm-thread-button[data-active="true"] *{color:#0B3A1D!important;}
+.theme-dark .dm-thread-button[data-active="true"] .dm-thread-name{color:#fff!important;}
+.theme-dark .dm-thread-button[data-active="true"] .dm-thread-preview{color:rgba(255,255,255,.72)!important;}
+.theme-dark .profile-banner-actions label,.theme-dark .profile-banner-actions button{background:rgba(7,9,8,.88)!important;color:#fff!important;border-color:rgba(255,255,255,.24)!important;}
+.theme-light .dm-e2ee-note{background:#E7F7EC!important;border-color:#A9DFB9!important;color:#0B5C2A!important;}
+.theme-dark .dm-e2ee-note{background:rgba(22,199,78,.1)!important;border-color:rgba(22,199,78,.32)!important;color:#CFFFE0!important;}
 .message-panel{padding:18px!important;min-height:560px;}
 .message-panel-header{border-color:var(--app-line)!important;}
 .message-feed{scrollbar-color:rgba(255,255,255,.18) transparent;}
@@ -1060,25 +1064,31 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-intro-copy{min-height:100svh!important;}
   .fs2-intro-line{width:auto!important;max-width:100%!important;}
   .app-view{width:100%!important;min-height:100dvh!important;overflow-x:hidden!important;--app-bg:rgba(6,8,7,.91);}
+  .app-view *,.app-view *::before,.app-view *::after{box-sizing:border-box;min-width:0;}
+  .app-view button,.app-view .bs,.app-view label.bs{max-width:100%;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;text-align:center;}
+  .app-topbar button,.mobile-section-tabs button,.mobile-bottom-nav button,.post-actions button{white-space:nowrap!important;overflow-wrap:normal!important;}
   .global-flow-wave[data-screen="app"]{opacity:.19!important;}
   .app-topbar{width:100%!important;height:62px!important;min-height:62px!important;padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;overflow:visible!important;background:rgba(7,9,8,.84)!important;}
   .app-topbar-logo{min-width:0!important;flex:1 1 auto!important;white-space:nowrap!important;}
   .app-topbar>button{flex:0 0 auto!important;}
   .app-shell{width:100%!important;max-width:100%!important;padding:12px max(10px,env(safe-area-inset-right)) calc(86px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;}
   .app-content-stage{animation-duration:.34s;}
-  .app-view-intro{min-height:168px!important;padding:28px 2px 22px!important;gap:8px!important;margin-bottom:14px!important;}
+  .app-view-intro{grid-template-columns:minmax(0,1fr)!important;min-height:0!important;padding:28px 2px 22px!important;gap:8px!important;margin-bottom:14px!important;}
   .app-view-intro-index{top:13px!important;left:2px!important;width:34px!important;}
   .app-view-intro span{margin-bottom:9px!important;font-size:9px!important;}
-  .app-view-intro h1{font-size:clamp(32px,10vw,39px)!important;line-height:.98!important;overflow-wrap:anywhere!important;text-wrap:balance;}
+  .app-view-intro h1{font-size:32px!important;line-height:1.02!important;overflow-wrap:anywhere!important;text-wrap:balance;}
   .app-view-intro p{font-size:13px!important;line-height:1.55!important;padding:0!important;}
   .app-view-intro-signal{left:2px;right:2px;}
   .mobile-app-search,.mobile-section-tabs,.feed-grid,.directory-wrap,.messages-grid,.profile-hero,.settings-grid{min-width:0!important;max-width:100%!important;}
   .mobile-section-tabs{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain;}
-  .mobile-section-tabs button{scroll-snap-align:start;border-radius:6px!important;}
+  .mobile-section-tabs button{width:auto!important;flex:0 0 auto!important;scroll-snap-align:start;border-radius:6px!important;}
   .mobile-app-search input{border-radius:6px!important;background:rgba(15,18,16,.9)!important;backdrop-filter:blur(16px);}
   .theme-light .mobile-app-search input{background:rgba(255,255,255,.92)!important;}
   .mobile-profile-summary,.fs-app-composer,.post-card,.message-list,.message-panel,.profile-hero,.directory-grid>.ch,.settings-grid>div{border-radius:8px!important;}
   .feed-mode-switch button span:first-child{font-size:15px!important;}
+  .feed-mode-switch{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .feed-mode-switch button{width:100%!important;min-width:0!important;}
+  .feed-mode-switch button span:last-child{white-space:normal!important;overflow-wrap:anywhere!important;}
   .fs-app-composer{box-shadow:0 20px 60px rgba(0,0,0,.16)!important;}
   .composer-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
   .composer-actions .post-type-btn,.composer-actions .composer-media-btn{grid-column:auto!important;min-width:0!important;min-height:44px!important;padding:8px 6px!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere!important;}
@@ -1087,6 +1097,12 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .post-actions>button,.post-actions>span{min-width:0!important;min-height:42px!important;justify-content:center!important;margin:0!important;padding:7px 4px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
   .post-card{padding:0!important;margin-bottom:10px!important;}
   .post-card>div:first-child{padding:16px!important;}
+  .post-card>div:first-child>.profile-link{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:start!important;gap:10px!important;}
+  .post-card>div:first-child>.profile-link>.avatar-shell{grid-column:1!important;}
+  .post-card>div:first-child>.profile-link>div:nth-child(2){grid-column:2!important;width:100%!important;min-width:0!important;}
+  .post-card>div:first-child>.profile-link>div:last-child:not(:nth-child(2)){grid-column:1/-1!important;width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;margin-left:0!important;}
+  .post-card>div:first-child>.profile-link>div:last-child:not(:nth-child(2)) button{width:100%!important;min-width:0!important;padding:7px 5px!important;font-size:11px!important;}
+  .post-card .tag-chip,.profile-directory-card .tag-chip{max-width:100%!important;height:auto!important;white-space:normal!important;line-height:1.25!important;text-overflow:clip!important;}
   .post-media-grid{grid-template-columns:1fr!important;}
   .profile-directory-card{padding:16px!important;}
   .profile-directory-card-header{margin-bottom:10px!important;}
@@ -1094,10 +1110,24 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-directory-card-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:stretch!important;}
   .profile-directory-card-actions .profile-card-followers{grid-column:1/-1!important;width:100%!important;min-width:0!important;}
   .profile-directory-card-actions button{width:100%!important;min-width:0!important;min-height:42px!important;padding:8px 6px!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+  .directory-title{font-size:30px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
+  .directory-grid,.directory-grid>*{width:100%!important;max-width:100%!important;min-width:0!important;}
+  .view-local-heading{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;gap:10px!important;}
+  .view-local-heading>div{min-width:0!important;}
+  .view-local-heading>button{max-width:132px!important;min-height:42px!important;padding:8px 10px!important;font-size:11px!important;}
+  .groups-create-grid,.opportunity-form-grid{grid-template-columns:minmax(0,1fr)!important;}
+  .opportunity-form-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;}
+  .opportunity-form-actions button{width:100%!important;}
+  .market-hero>div{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:18px!important;}
+  .market-hero>div>div{width:100%!important;max-width:100%!important;min-width:0!important;}
+  .market-hero [style*="min-width: 220px"]{width:100%!important;min-width:0!important;}
+  .filter-row{display:flex!important;flex-wrap:nowrap!important;gap:7px!important;margin-left:0!important;margin-right:0!important;padding:2px 0 10px!important;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .filter-row button{flex:0 0 auto!important;max-width:220px!important;min-height:42px!important;padding:9px 12px!important;white-space:nowrap!important;}
   .messages-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;min-height:0!important;}
-  .message-list{display:flex!important;flex-direction:row!important;gap:8px!important;max-height:none!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;margin:0!important;padding:0 0 2px!important;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .message-list{display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:8px!important;min-height:0!important;max-height:none!important;height:auto!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;margin:0!important;padding:0 0 2px!important;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .message-list::-webkit-scrollbar{display:none;}
-  .dm-thread-button{flex:0 0 min(78vw,264px)!important;min-width:0!important;scroll-snap-align:start;}
+  .dm-thread-button{flex:0 0 min(78vw,264px)!important;width:auto!important;height:auto!important;min-width:0!important;min-height:72px!important;align-self:stretch!important;scroll-snap-align:start;}
   .message-panel{width:100%!important;min-height:0!important;max-height:none!important;padding:13px!important;overflow:visible!important;background:rgba(15,18,16,.94)!important;}
   .theme-light .message-panel{background:rgba(255,255,255,.94)!important;}
   .message-panel-header{align-items:flex-start!important;}
@@ -1105,6 +1135,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .message-panel-actions button{min-width:0!important;min-height:40px!important;padding:7px 6px!important;font-size:11px!important;white-space:normal!important;}
   .message-feed{min-height:240px!important;max-height:46svh!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
   .message-row{max-width:90%!important;overflow-wrap:anywhere!important;}
+  .message-bubble{min-width:0!important;max-width:100%!important;width:auto!important;word-break:break-word!important;overflow-wrap:anywhere!important;}
+  .message-bubble textarea{width:100%!important;min-width:0!important;max-width:100%!important;font-size:16px!important;}
+  .message-actions{display:flex!important;max-width:100%!important;flex-wrap:wrap!important;gap:4px!important;}
+  .message-actions button{min-height:34px!important;padding:6px 8px!important;font-size:10px!important;}
   .message-compose{position:static!important;bottom:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) 76px!important;gap:8px!important;padding:10px 0 0!important;background:transparent!important;}
   .message-compose input{width:100%!important;min-width:0!important;font-size:16px!important;}
   .message-compose button{width:76px!important;min-width:76px!important;padding:10px 7px!important;justify-content:center!important;}
@@ -1115,12 +1149,29 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-action-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;justify-content:stretch!important;}
   .profile-action-row button{width:100%!important;min-width:0!important;justify-content:center!important;padding:10px 6px!important;}
   .profile-hero-copy{padding-top:31px!important;}
-  .profile-hero-copy h1{font-size:clamp(25px,8vw,30px)!important;}
+  .profile-hero-copy h1{font-size:27px!important;line-height:1.08!important;overflow-wrap:anywhere!important;}
+  .profile-hero-copy h1 span{max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
   .profile-detail-chip{white-space:normal!important;overflow-wrap:anywhere!important;}
   .profile-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
   .profile-stat-button{min-width:0!important;padding:15px!important;}
+  .profile-stat-button div{max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
   .modal-backdrop,.camera-modal{align-items:flex-end!important;justify-content:center!important;padding:0!important;height:100dvh!important;overflow:hidden!important;}
+  .edit-modal{align-items:flex-end!important;padding:0!important;height:100dvh!important;overflow:hidden!important;}
   .modal-sheet,.edit-sheet,.camera-sheet{width:100%!important;max-width:none!important;max-height:calc(100dvh - env(safe-area-inset-top))!important;border-radius:20px 20px 0 0!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .edit-sheet{padding:20px 16px calc(24px + env(safe-area-inset-bottom))!important;}
+  .profile-cover-editor{margin-bottom:112px!important;}
+  .profile-banner-actions{left:10px!important;right:10px!important;top:10px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;justify-content:stretch!important;}
+  .profile-banner-actions label,.profile-banner-actions button{width:100%!important;justify-content:center!important;padding:8px 7px!important;}
+  .profile-avatar-actions{left:0!important;right:0!important;bottom:-92px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;}
+  .profile-avatar-actions label,.profile-avatar-actions button{width:100%!important;justify-content:center!important;padding:8px 7px!important;}
+  .profile-edit-two-column{grid-template-columns:minmax(0,1fr)!important;gap:0!important;}
+  .edit-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .edit-actions button{width:100%!important;}
+  .notification-row{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:center!important;}
+  .notification-row.activity-unread>button:last-child{grid-column:1/-1!important;width:100%!important;}
+  .settings-grid>div{width:100%!important;max-width:100%!important;overflow:hidden!important;}
+  .settings-grid button[role="switch"]{grid-template-columns:40px minmax(0,1fr) 44px!important;}
+  .settings-grid button:not([role="switch"]){max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;}
   .modal-sheet{padding:20px 16px calc(20px + env(safe-area-inset-bottom))!important;}
   .camera-sheet{padding-bottom:env(safe-area-inset-bottom)!important;}
   .camera-sheet video{max-height:48dvh!important;}
@@ -1155,6 +1206,16 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-shell{padding-left:8px!important;padding-right:8px!important;}
   .profile-action-row{grid-template-columns:1fr!important;}
   .message-panel-actions{grid-template-columns:1fr!important;}
+  .app-view-intro h1{font-size:28px!important;}
+  .directory-title{font-size:27px!important;}
+  .composer-actions{grid-template-columns:1fr!important;}
+  .composer-actions .post-type-btn,.composer-actions .composer-media-btn,.composer-publish-btn{grid-column:1!important;}
+  .post-card>div:first-child>.profile-link>div:last-child:not(:nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .message-compose{grid-template-columns:minmax(0,1fr) 68px!important;}
+  .message-compose button{width:68px!important;min-width:68px!important;}
+  .profile-hero-row{grid-template-columns:66px minmax(0,1fr)!important;}
+  .profile-hero-row>div:first-child,.profile-hero-row>div:first-child>div:first-child{width:66px!important;height:66px!important;}
+  .profile-hero-copy h1{font-size:24px!important;}
   .fs2-intro h1{font-size:39px!important;}
 }
 .cookie-notice{
@@ -3400,6 +3461,9 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
 
 function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel}){
   const [view,setView]=useLocalState("fear-view","feed");
+  useEffect(()=>{
+    window.scrollTo({top:0,left:0,behavior:"auto"});
+  },[view]);
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
   const [events,setEvents]=useLocalState("fear-events",EVENTS);
@@ -4343,13 +4407,13 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <div className="edit-modal" role="dialog" aria-modal="true" aria-label="Edit your profile" style={{position:"fixed",inset:0,background:"rgba(0,0,0,.58)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setEditProfile(false)} onKeyDown={e=>e.key==="Escape"&&setEditProfile(false)}>
           <div className="edit-sheet" style={{background:"#fff",borderRadius:22,padding:28,width:"min(560px,100%)",boxShadow:"0 30px 100px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
             <SectionTitle eyebrow="Profile" title="Edit your profile"/>
-            <div style={{height:132,borderRadius:20,background:safeImageUrl(profileDraft.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profileDraft.coverUrl)}")`:GR,border:`1px solid ${C.border}`,marginBottom:56,position:"relative",overflow:"visible",boxShadow:"inset 0 -60px 80px rgba(0,0,0,.18)"}}>
+            <div className="profile-cover-editor" style={{height:132,borderRadius:20,background:safeImageUrl(profileDraft.coverUrl)?`center / cover no-repeat url("${safeImageUrl(profileDraft.coverUrl)}")`:GR,border:`1px solid ${C.border}`,marginBottom:56,position:"relative",overflow:"visible",boxShadow:"inset 0 -60px 80px rgba(0,0,0,.18)"}}>
               <div style={{position:"absolute",left:16,bottom:-34}}><Av i={initials} src={profileDraft.avatarUrl} size={78} grad style={{border:"4px solid #fff"}}/></div>
-              <div style={{position:"absolute",right:12,top:12,display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+              <div className="profile-banner-actions" style={{position:"absolute",right:12,top:12,display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
                 <label className="bs" style={{background:"rgba(255,255,255,0.94)",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> Change banner<input aria-label="Upload profile banner" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"coverUrl")} style={{display:"none"}}/></label>
                 {profileDraft.coverUrl&&<button type="button" className="bs" onClick={()=>setProfileDraft(p=>({...p,coverUrl:""}))} style={{background:"rgba(13,15,20,.72)",color:"#fff",border:"1px solid rgba(255,255,255,.22)",borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>Remove</button>}
               </div>
-              <div style={{position:"absolute",left:100,bottom:-34,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <div className="profile-avatar-actions" style={{position:"absolute",left:100,bottom:-34,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                 <label className="bs" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer",boxShadow:"0 10px 28px rgba(15,23,42,.12)"}}><Icon name="camera" size={15}/> Change photo<input aria-label="Upload profile picture" type="file" accept="image/*" onChange={e=>uploadProfileImage(e,"avatarUrl")} style={{display:"none"}}/></label>
                 {profileDraft.avatarUrl&&<button type="button" className="bs" onClick={()=>setProfileDraft(p=>({...p,avatarUrl:""}))} style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900}}>Remove</button>}
               </div>
@@ -4357,10 +4421,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>name<input aria-label="Name" autoComplete="name" value={profileDraft.name||""} onChange={e=>setProfileDraft(p=>({...p,name:e.target.value}))} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>username<input aria-label="Username" autoComplete="username" value={cleanUsername(profileDraft.username||profileDraft.handle||"")} onChange={e=>setProfileDraft(p=>{const username=cleanUsername(e.target.value);return {...p,username,handle:`@${username}`};})} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/><span style={{display:"block",fontSize:12,color:C.dim,textTransform:"none",fontWeight:600,marginTop:6}}>Your profile URL name is @{cleanUsername(profileDraft.username||profileDraft.handle||"username")}</span></label>
             <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>headline<input aria-label="Headline" value={profileDraft.headline||""} onChange={e=>setProfileDraft(p=>({...p,headline:e.target.value}))} placeholder="Student, designer, first-time operator, career switcher..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div className="profile-edit-two-column" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
               {["location","industry"].map(k=><label key={k} style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>{k}<input aria-label={k==="industry"?"Industry":"Location"} autoComplete={k==="location"?"address-level2":undefined} value={profileDraft[k]||""} onChange={e=>setProfileDraft(p=>({...p,[k]:e.target.value}))} placeholder={k==="industry"?"Exploring, Brand Management...":"City, State"} className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>)}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div className="profile-edit-two-column" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
               <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>looking for<input aria-label="Looking for" value={profileDraft.lookingFor||""} onChange={e=>setProfileDraft(p=>({...p,lookingFor:e.target.value}))} placeholder="Collaborators, jobs, clients, guidance..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
               <label style={{display:"block",fontSize:12,fontWeight:900,color:C.muted,textTransform:"uppercase",marginBottom:14}}>first step<input aria-label="First step" value={profileDraft.goal||""} onChange={e=>setProfileDraft(p=>({...p,goal:e.target.value}))} placeholder="Validate an idea, meet operators..." className="if" style={{display:"block",width:"100%",marginTop:7,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.text}}/></label>
             </div>
@@ -4894,7 +4958,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
 
 function NotificationsView({notifications,markRead,openProfile}){
   const unread=notifications.filter(n=>!n.read).length;
-  return <div className="directory-wrap" style={{maxWidth:760}}><div className="view-local-heading" style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={n.read?"":"activity-unread"} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
+  return <div className="directory-wrap" style={{maxWidth:760}}><div className="view-local-heading" style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:14,marginBottom:22}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Activity</div><h1 className="directory-title" style={{fontFamily:"Georgia,serif",fontSize:38,letterSpacing:0,lineHeight:1.05,color:C.text}}>Notifications</h1></div>{unread>0&&<button onClick={()=>markRead()} className="bs" style={{background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"9px 13px",fontSize:12,fontWeight:900,color:C.accent}}>Mark all read</button>}</div><div role="status" aria-live="polite" style={{position:"absolute",left:-9999}}>{unread} unread notifications</div>{notifications.length===0?<EmptyState title="No notifications yet" text="New follows, comments, and messages will appear here."/>:<div style={{display:"grid",gap:10}}>{notifications.map(n=><div key={n.id} className={`notification-row ${n.read?"":"activity-unread"}`} style={{background:C.card,border:`1px solid ${n.read?C.border:C.aSoft}`,borderRadius:18,padding:16,display:"flex",gap:13,alignItems:"center",minWidth:0}}><button onClick={()=>n.actor&&openProfile(n.actor,"notifications")} aria-label={n.actor?`Open ${n.actor.name}`:"Notification"} style={{background:"none",border:"none",padding:0}}><Av i={n.actor?.av||"FS"} src={n.actor?.avatarUrl} size={44} grad={!n.actor}/></button><div style={{flex:1,minWidth:0}}><div style={{fontWeight:n.read?700:900,color:C.text,lineHeight:1.35,overflowWrap:"anywhere"}}>{n.body}</div><div style={{fontSize:12,color:C.dim,marginTop:4,textTransform:"capitalize"}}>{n.type} · {n.time} ago</div></div>{!n.read&&<button onClick={()=>markRead(n.id)} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"8px 10px",fontSize:12,fontWeight:900,color:C.text,flexShrink:0}}>Read</button>}</div>)}</div>}</div>;
 }
 function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,deleteMessage,unsendMessage,activeConversationId,onBlockUser,onReport,profileId,syncMessageText}){
   const messageInitials=name=>String(name||"Conversation").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"DM";
