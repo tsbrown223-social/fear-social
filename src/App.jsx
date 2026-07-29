@@ -5610,11 +5610,11 @@ export default function App(){
     }
   },[setScreenState,setRouteHash]);
   const signOut=useCallback(()=>{
+    void api("/logout",{method:"POST"}).catch(()=>{});
     clearSessionToken();
-    setScreenState("landing");
-    if(window.location.hash==="#app") window.history.replaceState(null,"#",window.location.pathname);
+    setScreen("landing");
     notify("Signed out");
-  },[notify,setScreenState]);
+  },[notify,setScreen]);
   const screen=screenState;
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});

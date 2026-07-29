@@ -498,7 +498,12 @@ function emailDeliveryError(notification) {
 function emailContent(subject, payload = {}) {
   const verificationCode = String(payload.verificationCode || "").replace(/\D/g, "").slice(0, 6);
   if (verificationCode.length === 6) {
-    const purpose = payload.purpose === "password" ? "reset your password" : "finish creating your account";
+    const purpose =
+      payload.purpose === "password"
+        ? "reset your password"
+        : payload.purpose === "login"
+          ? "sign in to your account"
+          : "finish creating your account";
     return {
       html: `<!doctype html><html><body style="margin:0;background:#080A09;color:#101311;font-family:Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden">Use code ${escapeHtml(verificationCode)} to ${escapeHtml(purpose)} on fear.social.</div><div style="padding:32px 14px"><div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #DCE4DE;border-radius:20px;overflow:hidden"><div style="padding:24px 28px;background:#0B0E0C;color:#FFFFFF;font-family:Georgia,serif;font-size:25px;font-weight:700">fear<span style="color:#16C74E">.</span>social</div><div style="padding:34px 28px"><p style="margin:0 0 10px;color:#138A3B;font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase">Email verification</p><h1 style="margin:0 0 14px;font-family:Georgia,serif;font-size:34px;line-height:1.08;color:#101311">Your first step is almost complete.</h1><p style="margin:0 0 24px;color:#5D6861;font-size:16px;line-height:1.65">Enter this code on fear.social to ${escapeHtml(purpose)}.</p><div style="margin:0 0 24px;padding:20px;border-radius:14px;background:#EAFBF0;border:1px solid #AFE8C1;color:#0D7D33;text-align:center;font-size:36px;font-weight:900;letter-spacing:8px">${escapeHtml(verificationCode)}</div><p style="margin:0;color:#69736C;font-size:14px;line-height:1.6">This code expires in 30 minutes. If you did not request it, you can safely ignore this email.</p></div><div style="padding:18px 28px;border-top:1px solid #E7ECE8;color:#778079;font-size:12px;line-height:1.55">Need help? Reply to this email or contact <a href="mailto:${CONTACT_EMAIL}" style="color:#138A3B">${CONTACT_EMAIL}</a>.</div></div></div></body></html>`,
       text: `${subject}\n\nYour fear.social verification code is ${verificationCode}.\n\nUse it to ${purpose}. This code expires in 30 minutes.\n\nIf you did not request this, ignore this email. Need help? Contact ${CONTACT_EMAIL}.`,
@@ -657,7 +662,7 @@ async function createEmailVerification(db, env, purpose, email, details = {}) {
 
 async function getOrCreateUser(db, env, request, body = {}) {
   const token = getAuthToken(request, body);
-  if (!token && !body.profile) {
+  if (!token) {
     return { error: "Authentication required", status: 401 };
   }
   const existing = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND token = ?").bind(token).first();
@@ -677,62 +682,7 @@ async function getOrCreateUser(db, env, request, body = {}) {
     await safeRun(db, "UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [session.id]);
     return { user: session, token, created: false };
   }
-
-  if (!body.profile) {
-    return { error: "Authentication required", status: 401 };
-  }
-
-  const profile = normalizeProfile(body.profile);
-  if (profile.email) {
-    const existingEmailUser = await db
-      .prepare("SELECT * FROM users WHERE id <> 'demo-user' AND lower(email) = lower(?)")
-      .bind(profile.email)
-      .first();
-    if (existingEmailUser) return { user: existingEmailUser, token: existingEmailUser.token, created: false };
-  }
-  const handleOwner = await db
-    .prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)")
-    .bind(profile.handle)
-    .first();
-  if (handleOwner) return { error: "Username is already taken", token, created: false };
-
-  const id = createId("user");
-  const sessionToken = token || crypto.randomUUID();
-  await db
-    .prepare(
-      `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(id, sessionToken, profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal)
-      .run();
-  await followDefaultAccounts(db, id);
-  await createSession(db, id, sessionToken, request);
-
-  if (profile.email) {
-    await recordRegistrationEmail(db, "account_created", profile.email, {
-      userId: id,
-      name: profile.name,
-      handle: profile.handle,
-      username: profile.username,
-      metadata: {
-        location: profile.location,
-        industry: profile.industry,
-        stage: profile.stage,
-      },
-    });
-    await sendOwnerNotification(db, env, "account_created", "New fear.social account created", {
-      event: "Account creation",
-      ...profile,
-      summary: formatProfileSummary(profile),
-    });
-    await createEmailVerification(db, env, "account_created", profile.email, profile);
-  }
-
-  return {
-    user: { id, token, ...profile },
-    token: sessionToken,
-    created: true,
-  };
+  return { error: "Authentication required", status: 401 };
 }
 
 async function createSession(db, userId, token, request) {
@@ -1233,7 +1183,12 @@ async function profileWithFollowerCount(db, user) {
     .prepare("SELECT COUNT(*) AS followers FROM user_connections WHERE target_user_id = ?")
     .bind(user.id)
     .first();
-  return { ...publicProfile(user), followers: Number(row?.followers || 0) };
+  return {
+    ...publicProfile(user),
+    email: cleanText(user.email || "", 120).toLowerCase(),
+    emailVerified: Boolean(user.email_verified_at),
+    followers: Number(row?.followers || 0),
+  };
 }
 
 const isAdminUser = (user = {}) =>
@@ -2410,6 +2365,20 @@ async function handleRequest({ request, env, params }) {
     );
   }
 
+  if (method === "POST" && path === "/logout") {
+    const currentToken = getAuthToken(request, body);
+    const tokenHash = currentToken ? await sha256(currentToken) : "";
+    if (tokenHash) {
+      await safeRun(
+        db,
+        "UPDATE user_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL",
+        [user.id, tokenHash]
+      );
+    }
+    await safeRun(db, "UPDATE users SET token = '' WHERE id = ? AND token = ?", [user.id, currentToken]);
+    return json({ ok: true }, { headers: { "set-cookie": sessionCookie("", 0) } });
+  }
+
   if (method === "DELETE" && path === "/account") {
     const limited = await enforceRateLimit(db, request, "account-delete", 3, 3600);
     if (limited) return limited;
@@ -2461,19 +2430,14 @@ async function handleRequest({ request, env, params }) {
   if (method === "PUT" && path === "/profile") {
     const limited = await enforceRateLimit(db, request, "profile-update", 20, 600);
     if (limited) return limited;
-    const profile = normalizeProfile(body.profile);
-    const shouldNotify = profile.email && profile.email !== user.email;
-    const duplicate = profile.email
-      ? await db.prepare("SELECT * FROM users WHERE id <> ? AND id <> 'demo-user' AND lower(email) = lower(?)").bind(user.id, profile.email).first()
-      : null;
+    const profile = normalizeProfile({ ...(body.profile || {}), email: user.email || "" });
     const handleOwner = await db
       .prepare("SELECT id FROM users WHERE id <> ? AND id <> 'demo-user' AND lower(handle) = lower(?)")
       .bind(user.id, profile.handle)
       .first();
-    if (handleOwner && (!duplicate || handleOwner.id !== duplicate.id)) {
+    if (handleOwner) {
       return json({ error: "Username is already taken" }, { status: 409 });
     }
-    if (duplicate) return json({ error: "That email already belongs to another account" }, { status: 409 });
     const profileSafety = await rejectObjectionableContent(db, user.id, "profile", [profile.name, profile.headline, profile.bio, profile.lookingFor, profile.goal].join("\n"));
     if (profileSafety) return profileSafety;
 
@@ -2484,26 +2448,6 @@ async function handleRequest({ request, env, params }) {
       )
       .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
       .run();
-    if (shouldNotify) {
-      await recordRegistrationEmail(db, "account_email_added", profile.email, {
-        userId: user.id,
-        name: profile.name,
-        handle: profile.handle,
-        username: profile.username,
-        metadata: {
-          location: profile.location,
-          industry: profile.industry,
-          stage: profile.stage,
-        },
-      });
-      await sendOwnerNotification(db, env, "account_email_added", "New fear.social account email", {
-        event: "Account email added",
-        ...profile,
-        userId: user.id,
-        summary: formatProfileSummary(profile),
-      });
-      await createEmailVerification(db, env, "account_email_added", profile.email, profile);
-    }
     return json({ token, profile: await profileWithFollowerCount(db, { ...user, ...profile }) });
   }
 
