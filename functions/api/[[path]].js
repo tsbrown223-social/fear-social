@@ -1823,6 +1823,15 @@ async function handleRequest({ request, env, params }) {
     const identifier = cleanText(body.identifier || body.email || "", 120).toLowerCase().replace(/^@/, "");
     const bodyEmail = cleanText(body.email || "", 120).toLowerCase();
     const existing = await findUserByIdentifier(db, bodyEmail || identifier);
+    if (purpose !== "signup" && !existing) {
+      return json(
+        {
+          error: "We could not find an account with that email or username. Check it, or create a new account.",
+          code: "ACCOUNT_NOT_FOUND",
+        },
+        { status: 404 }
+      );
+    }
     const email = cleanText(bodyEmail || existing?.email || "", 120).toLowerCase();
     if (!isValidEmail(email)) {
       if (existing && purpose !== "signup") {
@@ -1847,11 +1856,6 @@ async function handleRequest({ request, env, params }) {
         );
       }
       username = await findAvailableUsername(db, body.username || email.split("@")[0], "member");
-    } else if (!existing) {
-      return json(
-        { error: "We could not find an account with that email or username. Check it, or create a new account.", code: "ACCOUNT_NOT_FOUND" },
-        { status: 404 }
-      );
     } else {
       username = normalizeUsername(existing.handle, email.split("@")[0]);
     }
