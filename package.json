@@ -18,9 +18,9 @@
     "react-dom": "^18.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.2",
-    "sharp": "^0.34.5",
-    "vite": "^8.0.14",
-    "wrangler": "^4.95.0"
+    "@vitejs/plugin-react": "^6.0.4",
+    "sharp": "^0.35.3",
+    "vite": "^8.1.5",
+    "wrangler": "^4.114.0"
   }
 }
