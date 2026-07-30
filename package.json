@@ -6,6 +6,7 @@
     "dev": "wrangler pages dev --config wrangler.local.toml -- vite --port 3000",
     "dev:vite": "vite",
     "build": "vite build",
+    "security:check": "node scripts/security-regression-check.mjs",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=fear-social --commit-dirty=true",
     "db:migrate": "wrangler d1 migrations apply fear-social-db --remote --config wrangler.local.toml",

@@ -233,8 +233,8 @@ async function hashPassword(password) {
     );
     return `pbkdf2-sha256:210000:${salt}:${toHex(bits)}`;
   } catch (err) {
-    console.warn("pbkdf2 password hashing failed, falling back to sha256", err);
-    return `sha256:${salt}:${await sha256(`${salt}:${password}`)}`;
+    console.error("pbkdf2 password hashing failed", err);
+    throw new Error("SECURE_PASSWORD_HASHING_UNAVAILABLE");
   }
 }
 
@@ -321,6 +321,10 @@ const normalizeProfile = (profile = {}) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 50;
   };
+  const scale = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(1, Math.min(3, parsed)) : 1;
+  };
   return {
     id: cleanText(profile.id || "", 120),
     name,
@@ -336,6 +340,7 @@ const normalizeProfile = (profile = {}) => {
     coverUrl: cleanMediaUrl(profile.coverUrl || profile.cover_url || "", "image", 900000),
     avatarPositionX: position(profile.avatarPositionX ?? profile.avatar_position_x),
     avatarPositionY: position(profile.avatarPositionY ?? profile.avatar_position_y),
+    avatarScale: scale(profile.avatarScale ?? profile.avatar_scale),
     coverPositionX: position(profile.coverPositionX ?? profile.cover_position_x),
     coverPositionY: position(profile.coverPositionY ?? profile.cover_position_y),
     headline: cleanText(profile.headline || "", 140),
@@ -608,6 +613,7 @@ const publicProfile = (user = {}) => {
     coverUrl: profile.coverUrl,
     avatarPositionX: profile.avatarPositionX,
     avatarPositionY: profile.avatarPositionY,
+    avatarScale: profile.avatarScale,
     coverPositionX: profile.coverPositionX,
     coverPositionY: profile.coverPositionY,
     headline: profile.headline,
@@ -744,19 +750,18 @@ async function getOrCreateUser(db, env, request, body = {}) {
   if (!token) {
     return { error: "Authentication required", status: 401 };
   }
-  const existing = await db.prepare("SELECT * FROM users WHERE id <> 'demo-user' AND token = ?").bind(token).first();
-  if (existing) return { user: existing, token, created: false };
-  const session = token
-    ? await db
-        .prepare(
-          `SELECT u.*
-           FROM user_sessions s
-           JOIN users u ON u.id = s.user_id
-           WHERE s.token_hash = ? AND s.revoked_at IS NULL AND datetime(s.expires_at) > datetime('now')`
-        )
-        .bind(await sha256(token))
-        .first()
-    : null;
+  const session = await db
+    .prepare(
+      `SELECT u.*
+       FROM user_sessions s
+       JOIN users u ON u.id = s.user_id
+       WHERE s.token_hash = ?
+         AND s.revoked_at IS NULL
+         AND datetime(s.expires_at) > datetime('now')
+       LIMIT 1`
+    )
+    .bind(await sha256(token))
+    .first();
   if (session) {
     await safeRun(db, "UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [session.id]);
     return { user: session, token, created: false };
@@ -766,20 +771,21 @@ async function getOrCreateUser(db, env, request, body = {}) {
 
 async function createSession(db, userId, token, request) {
   const sessionToken = token || crypto.randomUUID();
-  await safeRun(
-    db,
-    `INSERT INTO user_sessions (id, user_id, token_hash, user_agent, ip_hash, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
+  await db
+    .prepare(
+      `INSERT INTO user_sessions (id, user_id, token_hash, user_agent, ip_hash, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
       createId("session"),
       userId,
       await sha256(sessionToken),
       String(request.headers.get("user-agent") || "").slice(0, 300),
       await sha256(getClientKey(request)),
-      addDays(SESSION_TTL_DAYS),
-    ]
-  );
-  await safeRun(db, "UPDATE users SET token = ?, last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [sessionToken, userId]);
+      addDays(SESSION_TTL_DAYS)
+    )
+    .run();
+  await safeRun(db, "UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?", [userId]);
   return sessionToken;
 }
 
@@ -890,7 +896,6 @@ async function createOrLinkOAuthUser(db, request, profile) {
     const handleOwner = await db.prepare("SELECT id FROM users WHERE id <> 'demo-user' AND lower(handle) = lower(?)").bind(handle).first();
     const finalHandle = handleOwner ? `@${username}_${randomHex(3)}` : handle;
     const id = createId("user");
-    const sessionToken = crypto.randomUUID();
     await db
       .prepare(
         `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, email_verified_at, terms_accepted_at, terms_version, oauth_provider, oauth_subject, avatar_url)
@@ -898,7 +903,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
       )
       .bind(
         id,
-        sessionToken,
+        `retired:${id}`,
         String(profile.name || email.split("@")[0]).slice(0, 80),
         finalHandle,
         email,
@@ -916,7 +921,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
       username: finalHandle.replace(/^@/, ""),
     });
     await followDefaultAccounts(db, id);
-    user = { id, token: sessionToken, name: profile.name || email.split("@")[0], handle: finalHandle, email };
+    user = { id, name: profile.name || email.split("@")[0], handle: finalHandle, email };
   }
   await db
     .prepare(
@@ -994,7 +999,7 @@ async function getPosts(db, userId) {
   const posts = await db
     .prepare(
       `SELECT p.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
-        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y,
+        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y, u.avatar_scale AS user_avatar_scale,
         u.verified_badge AS user_verified_badge,
         (SELECT COUNT(*) FROM post_reactions pr WHERE pr.post_id = p.id AND pr.kind = 'like') AS likes,
         EXISTS(SELECT 1 FROM post_reactions pr WHERE pr.post_id = p.id AND pr.user_id = ? AND pr.kind = 'like') AS liked,
@@ -1018,7 +1023,7 @@ async function getPosts(db, userId) {
   const comments = await db
     .prepare(
       `SELECT c.*, u.id AS user_id, u.name AS user_name, u.handle, u.avatar_url AS user_avatar_url,
-        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y,
+        u.avatar_position_x AS user_avatar_position_x, u.avatar_position_y AS user_avatar_position_y, u.avatar_scale AS user_avatar_scale,
         u.verified_badge AS user_verified_badge
        FROM comments c
        JOIN users u ON u.id = c.user_id
@@ -1041,6 +1046,7 @@ async function getPosts(db, userId) {
     avatarUrl: comment.user_avatar_url || "",
     avatarPositionX: Number(comment.user_avatar_position_x ?? 50),
     avatarPositionY: Number(comment.user_avatar_position_y ?? 50),
+    avatarScale: Number(comment.user_avatar_scale ?? 1),
     verified: isVerifiedAccount({ name: comment.user_name, handle: comment.handle, verified_badge: comment.user_verified_badge }),
     text: comment.text,
     time: timeAgo(comment.created_at),
@@ -1057,6 +1063,7 @@ async function getPosts(db, userId) {
     avatarUrl: post.user_avatar_url || "",
     avatarPositionX: Number(post.user_avatar_position_x ?? 50),
     avatarPositionY: Number(post.user_avatar_position_y ?? 50),
+    avatarScale: Number(post.user_avatar_scale ?? 1),
     verified: isVerifiedAccount({ name: post.user_name, handle: post.handle, verified_badge: post.user_verified_badge }),
     tag: post.tag,
     stage: post.stage,
@@ -1219,7 +1226,7 @@ async function ensureOfficialDailyReelPost(db) {
       `INSERT OR IGNORE INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, role, headline, website, looking_for, goal, verified_badge, email_verified_at)
        VALUES (?, ?, 'fear.social', '@fear.social', 'official@fear.social', 'Remote', 'Community', 'Building', 'Official fear.social account for daily prompts, product updates, and first-step momentum.', 'public', ?, 'admin', 'Official fear.social Daily Drops and platform notes.', 'https://fear.social', 'People ready to take their first business or career step.', 'Turn fear into momentum.', 1, CURRENT_TIMESTAMP)`
     )
-    .bind(OFFICIAL_USER_ID, `official-${OFFICIAL_USER_ID}`, OFFICIAL_AVATAR_URL)
+    .bind(OFFICIAL_USER_ID, `retired:${OFFICIAL_USER_ID}`, OFFICIAL_AVATAR_URL)
     .run();
   await db
     .prepare(
@@ -1493,11 +1500,11 @@ async function getConnectionDirectory(db) {
     .prepare(
       `SELECT c.user_id, c.target_user_id,
         follower.id AS follower_id, follower.name AS follower_name, follower.handle AS follower_handle,
-        follower.avatar_url AS follower_avatar_url, follower.avatar_position_x AS follower_avatar_position_x, follower.avatar_position_y AS follower_avatar_position_y,
+        follower.avatar_url AS follower_avatar_url, follower.avatar_position_x AS follower_avatar_position_x, follower.avatar_position_y AS follower_avatar_position_y, follower.avatar_scale AS follower_avatar_scale,
         follower.industry AS follower_industry, follower.location AS follower_location,
         follower.bio AS follower_bio, follower.verified_badge AS follower_verified_badge,
         target.id AS target_id, target.name AS target_name, target.handle AS target_handle,
-        target.avatar_url AS target_avatar_url, target.avatar_position_x AS target_avatar_position_x, target.avatar_position_y AS target_avatar_position_y,
+        target.avatar_url AS target_avatar_url, target.avatar_position_x AS target_avatar_position_x, target.avatar_position_y AS target_avatar_position_y, target.avatar_scale AS target_avatar_scale,
         target.industry AS target_industry, target.location AS target_location,
         target.bio AS target_bio, target.verified_badge AS target_verified_badge
        FROM user_connections c
@@ -1521,6 +1528,7 @@ async function getConnectionDirectory(db) {
     avatarUrl: row[`${prefix}_avatar_url`] || "",
     avatarPositionX: Number(row[`${prefix}_avatar_position_x`] ?? 50),
     avatarPositionY: Number(row[`${prefix}_avatar_position_y`] ?? 50),
+    avatarScale: Number(row[`${prefix}_avatar_scale`] ?? 1),
     industry: row[`${prefix}_industry`] || "Exploring",
     loc: row[`${prefix}_location`] || "",
     bio: row[`${prefix}_bio`] || "",
@@ -1585,7 +1593,9 @@ async function getMessageThreads(db, user) {
     db
       .prepare(
         `SELECT c.*, other.id AS other_id, other.name AS other_name, other.handle AS other_handle, other.e2ee_public_key AS other_e2ee_public_key,
-          other.avatar_url AS other_avatar_url, other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
+          other.avatar_url AS other_avatar_url, other.avatar_position_x AS other_avatar_position_x,
+          other.avatar_position_y AS other_avatar_position_y, other.avatar_scale AS other_avatar_scale,
+          other.verified_badge AS other_verified_badge, other.last_seen_at AS other_last_seen_at
          FROM conversations c
          LEFT JOIN users other ON other.id = CASE
            WHEN c.user_a_id = ? THEN c.user_b_id
@@ -1644,6 +1654,9 @@ async function getMessageThreads(db, user) {
       handle: conversation.other_handle || "",
       av: initials(conversation.other_name || conversation.name || conversation.av),
       avatarUrl: conversation.other_avatar_url || "",
+      avatarPositionX: Number(conversation.other_avatar_position_x ?? 50),
+      avatarPositionY: Number(conversation.other_avatar_position_y ?? 50),
+      avatarScale: Number(conversation.other_avatar_scale ?? 1),
       e2eePublicKey: parseStoredE2EEPublicKey(conversation.other_e2ee_public_key),
       verified: isVerifiedAccount({ name: conversation.other_name || conversation.name, handle: conversation.other_handle, verified_badge: conversation.other_verified_badge }),
       online: Boolean(conversation.online),
@@ -1660,7 +1673,7 @@ async function getBootstrap(db, user) {
     db
       .prepare(
         `SELECT u.id, u.name, u.handle, u.stage, u.industry, u.location AS loc, u.bio, u.avatar_url, u.cover_url,
-          u.avatar_position_x, u.avatar_position_y, u.cover_position_x, u.cover_position_y, u.verified_badge, u.e2ee_public_key,
+          u.avatar_position_x, u.avatar_position_y, u.avatar_scale, u.cover_position_x, u.cover_position_y, u.verified_badge, u.e2ee_public_key,
           u.headline, u.website, u.looking_for, u.goal,
           COALESCE(u.privacy, 'public') AS privacy,
           COALESCE((SELECT ar.status FROM profile_access_requests ar WHERE ar.requester_user_id = ? AND ar.target_user_id = u.id LIMIT 1), '') AS access_status,
@@ -1723,6 +1736,7 @@ async function getBootstrap(db, user) {
         avatarUrl: person.avatar_url || "",
         avatarPositionX: Number(person.avatar_position_x ?? 50),
         avatarPositionY: Number(person.avatar_position_y ?? 50),
+        avatarScale: Number(person.avatar_scale ?? 1),
         coverUrl: locked ? "" : person.cover_url || "",
         coverPositionX: Number(person.cover_position_x ?? 50),
         coverPositionY: Number(person.cover_position_y ?? 50),
@@ -1997,7 +2011,7 @@ async function handleRequest({ request, env, params }) {
           `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, terms_accepted_at, terms_version)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`
         )
-        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
+        .bind(id, `retired:${id}`, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
         .run();
     } catch (err) {
       console.warn("signup insert failed", err);
@@ -2008,6 +2022,8 @@ async function handleRequest({ request, env, params }) {
       await createSession(db, id, sessionToken, request);
     } catch (err) {
       console.warn("session record failed during signup", err);
+      await safeRun(db, "DELETE FROM users WHERE id = ?", [id]);
+      return json({ error: "Your account could not be secured right now. Please try again." }, { status: 503 });
     }
     await followDefaultAccounts(db, id);
     await recordRegistrationEmail(db, "account_created", email, {
@@ -2032,7 +2048,7 @@ async function handleRequest({ request, env, params }) {
     } catch (err) {
       console.warn("signup email notifications failed", err);
     }
-    const user = { id, token: sessionToken, ...profile, password_hash: passwordHash, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION };
+    const user = { id, ...profile, password_hash: passwordHash, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION };
 
     return json(
       {
@@ -2129,13 +2145,12 @@ async function handleRequest({ request, env, params }) {
     });
     if (!user) {
       const id = createId("user");
-      const sessionToken = crypto.randomUUID();
       await db
         .prepare(
           `INSERT INTO users (id, token, name, handle, email, location, industry, stage, bio, privacy, avatar_url, cover_url, headline, website, looking_for, goal, password_hash, email_verified_at, terms_accepted_at, terms_version)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)`
         )
-        .bind(id, sessionToken, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
+        .bind(id, `retired:${id}`, profile.name, profile.handle, email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.headline, profile.website, profile.lookingFor, profile.goal, passwordHash, TERMS_VERSION)
         .run();
       await recordRegistrationEmail(db, "verified_account_created", email, {
         userId: id,
@@ -2150,7 +2165,7 @@ async function handleRequest({ request, env, params }) {
         nextStep: "Your account is ready. You can now log in with your email and password.",
       });
       await followDefaultAccounts(db, id);
-      user = { id, token: sessionToken, ...profile, password_hash: passwordHash, email_verified_at: new Date().toISOString() };
+      user = { id, ...profile, password_hash: passwordHash, email_verified_at: new Date().toISOString() };
     } else {
       if (passwordHash) {
         await safeRun(db, "UPDATE users SET password_hash = ?, email_verified_at = COALESCE(email_verified_at, CURRENT_TIMESTAMP) WHERE id = ?", [passwordHash, user.id]);
@@ -2483,7 +2498,6 @@ async function handleRequest({ request, env, params }) {
         [user.id, tokenHash]
       );
     }
-    await safeRun(db, "UPDATE users SET token = '' WHERE id = ? AND token = ?", [user.id, currentToken]);
     return json({ ok: true }, { headers: { "set-cookie": sessionCookie("", 0) } });
   }
 
@@ -2531,8 +2545,14 @@ async function handleRequest({ request, env, params }) {
   }
 
   if (method === "POST" && path === "/notifications/read") {
-    await db.prepare("UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL").bind(user.id).run();
-    return json({ ok: true });
+    const notificationId = cleanText(body.id || "", 120);
+    if (notificationId) {
+      await db.prepare("UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND read_at IS NULL").bind(notificationId, user.id).run();
+    } else {
+      await db.prepare("UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL").bind(user.id).run();
+    }
+    const notifications = await getNotifications(db, user.id);
+    return json({ ok: true, notifications, unreadNotifications: notifications.filter((notification) => !notification.read).length });
   }
 
   if (method === "PUT" && path === "/profile") {
@@ -2551,10 +2571,10 @@ async function handleRequest({ request, env, params }) {
 
     await db
       .prepare(
-        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, avatar_position_x = ?, avatar_position_y = ?, cover_position_x = ?, cover_position_y = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
+        `UPDATE users SET name = ?, handle = ?, email = ?, location = ?, industry = ?, stage = ?, bio = ?, privacy = ?, avatar_url = ?, cover_url = ?, avatar_position_x = ?, avatar_position_y = ?, avatar_scale = ?, cover_position_x = ?, cover_position_y = ?, headline = ?, website = ?, looking_for = ?, goal = ?, updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`
       )
-      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.avatarPositionX, profile.avatarPositionY, profile.coverPositionX, profile.coverPositionY, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
+      .bind(profile.name, profile.handle, profile.email, profile.location, profile.industry, profile.stage, profile.bio, profile.privacy, profile.avatarUrl, profile.coverUrl, profile.avatarPositionX, profile.avatarPositionY, profile.avatarScale, profile.coverPositionX, profile.coverPositionY, profile.headline, profile.website, profile.lookingFor, profile.goal, user.id)
       .run();
     return json({ token, profile: await profileWithFollowerCount(db, { ...user, ...profile }) });
   }
@@ -2987,16 +3007,6 @@ async function handleRequest({ request, env, params }) {
     return json({ ok: true, media: { id, kind, url, alt } }, { status: 201 });
   }
 
-  if (method === "POST" && path === "/notifications/read") {
-    const id = String(body.id || "").trim();
-    if (id) {
-      await safeRun(db, "UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?", [id, user.id]);
-    } else {
-      await safeRun(db, "UPDATE user_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL", [user.id]);
-    }
-    return json(await getBootstrap(db, user));
-  }
-
   if (method === "POST" && segments[0] === "events" && segments[2] === "rsvp") {
     const limited = await enforceRateLimit(db, request, "events-rsvp", 60, 600);
     if (limited) return limited;
@@ -3192,6 +3202,12 @@ export const onRequest = async (context) => {
       return new Response(error.body, { status: error.status, statusText: error.statusText, headers });
     }
     console.error("Unhandled API error", { requestId, message: error?.message, stack: error?.stack });
+    if (error?.message === "SECURE_PASSWORD_HASHING_UNAVAILABLE") {
+      return json(
+        { error: "Secure password processing is temporarily unavailable. Please try again.", code: "PASSWORD_SECURITY_UNAVAILABLE", requestId },
+        { status: 503, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } }
+      );
+    }
     return json({ error: "Server error", code: "INTERNAL_ERROR", requestId }, { status: 500, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } });
   }
 };

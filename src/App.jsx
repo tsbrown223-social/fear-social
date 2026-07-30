@@ -1408,7 +1408,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .profile-image-editor-image{position:absolute;inset:0;background-repeat:no-repeat;background-size:cover;}
 .profile-image-editor-guide{position:absolute;inset:50% auto auto 50%;width:18px;height:18px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 12px rgba(0,0,0,.3);pointer-events:none;}
 .profile-image-editor-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(8,10,9,.78);color:#fff;font-size:11px;font-weight:850;white-space:nowrap;pointer-events:none;}
-.profile-image-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:14px;}
+.profile-image-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:14px;}
 .profile-image-controls label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;color:var(--app-muted,#6B7280);font-size:11px;font-weight:800;}
 .profile-image-controls input{width:100%;accent-color:#16C74E;}
 .profile-media-actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px;}
@@ -1524,15 +1524,21 @@ const clampProfilePosition=value=>{
   const parsed=Number(value);
   return Number.isFinite(parsed)?Math.max(0,Math.min(100,parsed)):50;
 };
+const clampProfileScale=value=>{
+  const parsed=Number(value);
+  return Number.isFinite(parsed)?Math.max(1,Math.min(3,parsed)):1;
+};
 const profileImagePosition=(x,y)=>`${clampProfilePosition(x)}% ${clampProfilePosition(y)}%`;
-const Av=({i,size=40,src="",grad=false,online=false,positionX=50,positionY=50,style={}})=>{
+const Av=({i,size=40,src="",grad=false,online=false,positionX=50,positionY=50,scale=1,style={}})=>{
   const image=safeImageUrl(src);
-  const computedBackground=image?`${profileImagePosition(positionX,positionY)} / cover no-repeat url("${image}")`:(style.background||style.backgroundColor||(grad?GR:C.aLight));
+  const computedBackground=style.background||style.backgroundColor||(grad?GR:C.aLight);
   const computedBorder=style.border||(image?"1.5px solid rgba(255,255,255,0.35)":grad?"none":`1.5px solid ${C.aSoft}`);
   const computedColor=style.color||(grad?"#fff":C.accent);
   return (
   <div className="avatar-shell" style={{position:"relative",flexShrink:0}}>
-    <div style={{width:size,height:size,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,overflow:"hidden",...style,background:computedBackground,border:computedBorder,color:computedColor}}>{image?"":i}</div>
+    <div style={{width:size,height:size,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:size*0.3,overflow:"hidden",position:"relative",...style,background:computedBackground,border:computedBorder,color:computedColor}}>
+      {image?<img src={image} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:profileImagePosition(positionX,positionY),transform:`scale(${clampProfileScale(scale)})`,transformOrigin:profileImagePosition(positionX,positionY),pointerEvents:"none"}}/>:i}
+    </div>
     {online&&<div style={{position:"absolute",bottom:1,right:1,width:size*0.27,height:size*0.27,borderRadius:"50%",background:C.accent,border:"2px solid #fff"}}/>}
   </div>
   );
@@ -4046,6 +4052,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     avatarUrl:person.avatarUrl||person.avatar_url||"",
     avatarPositionX:person.avatarPositionX??person.avatar_position_x??50,
     avatarPositionY:person.avatarPositionY??person.avatar_position_y??50,
+    avatarScale:person.avatarScale??person.avatar_scale??1,
     coverUrl:person.coverUrl||person.cover_url||"",
     coverPositionX:person.coverPositionX??person.cover_position_x??50,
     coverPositionY:person.coverPositionY??person.cover_position_y??50,
@@ -4113,7 +4120,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     }
     setPostRulesOpen(false);
     const optimistic={
-      id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",avatarPositionX:profile.avatarPositionX,avatarPositionY:profile.avatarPositionY,verified:isVerifiedIdentity(profile),
+      id:Date.now(),userId:profile.id||"",user:profile.name||"Your Name",handle:profile.handle||"@yourhandle",av:initials,avatarUrl:profile.avatarUrl||"",avatarPositionX:profile.avatarPositionX,avatarPositionY:profile.avatarPositionY,avatarScale:profile.avatarScale,verified:isVerifiedIdentity(profile),
       tag:profile.industry||"Exploring",
       time:"Just now",type:postType,content:composer.trim(),media,likes:0,comments:[],saved:false,liked:false,followingAuthor:false,isNew:true
     };
@@ -4218,6 +4225,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(!id)setUnreadNotifications(0);
     try{await callBackend("/notifications/read",{method:"POST",body:JSON.stringify({id})});}catch{}
   };
+  useEffect(()=>{
+    if(view==="notifications"&&unreadNotifications>0)void markNotificationsRead();
+  },[view,unreadNotifications]);
   const requestMentor=async id=>{
     setMentors(ms=>ms.map(m=>(m.id||m.name)===id?{...m,requested:!m.requested,sessions:m.requested?m.sessions:m.sessions+1}:m));
     try{await callBackend(`/mentors/${id}/request`,{method:"POST"});}catch{}
@@ -4294,7 +4304,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(!text)return;
     const issue=moderationIssue(text);
     if(issue)return notify(`This comment was blocked by the safety filter for ${issue}. Edit it before posting.`,"error");
-    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{id:`local-comment-${Date.now()}`,userId:profile.id||"",user:profile.name||"You",handle:profile.handle||"@you",av:initials,avatarUrl:profile.avatarUrl||"",avatarPositionX:profile.avatarPositionX,avatarPositionY:profile.avatarPositionY,verified:isVerifiedIdentity(profile),text,time:"Just now"}]}:p));
+    setPosts(ps=>ps.map(p=>p.id===id?{...p,comments:[...p.comments,{id:`local-comment-${Date.now()}`,userId:profile.id||"",user:profile.name||"You",handle:profile.handle||"@you",av:initials,avatarUrl:profile.avatarUrl||"",avatarPositionX:profile.avatarPositionX,avatarPositionY:profile.avatarPositionY,avatarScale:profile.avatarScale,verified:isVerifiedIdentity(profile),text,time:"Just now"}]}:p));
     setCommentInputs(ci=>({...ci,[id]:""}));
     try{
       await callBackend(`/posts/${id}/comments`,{method:"POST",body:JSON.stringify({text})});
@@ -4490,11 +4500,11 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         const isMine=(oldProfile.id&&post.userId===oldProfile.id)||(oldProfile.handle&&post.handle===oldProfile.handle)||(post.handle===next.handle);
         const updatedComments=(post.comments||[]).map(comment=>{
           const commentIsMine=(oldProfile.handle&&comment.handle===oldProfile.handle)||(comment.handle===next.handle);
-          return commentIsMine?{...comment,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,verified:isVerifiedIdentity(next)}:comment;
+          return commentIsMine?{...comment,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,avatarScale:next.avatarScale,verified:isVerifiedIdentity(next)}:comment;
         });
-        return isMine?{...post,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,verified:isVerifiedIdentity(next),comments:updatedComments}:{...post,comments:updatedComments};
+        return isMine?{...post,user:next.name,handle:next.handle,av:(next.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase(),avatarUrl:next.avatarUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,avatarScale:next.avatarScale,verified:isVerifiedIdentity(next),comments:updatedComments}:{...post,comments:updatedComments};
       }));
-      setPeople(ps=>ps.map(person=>person.id===next.id||person.handle===oldProfile.handle?{...person,name:next.name,handle:next.handle,avatarUrl:next.avatarUrl||"",coverUrl:next.coverUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,coverPositionX:next.coverPositionX,coverPositionY:next.coverPositionY,industry:next.industry,loc:next.location,location:next.location,bio:next.bio,headline:next.headline,lookingFor:next.lookingFor,goal:next.goal}:person));
+      setPeople(ps=>ps.map(person=>person.id===next.id||person.handle===oldProfile.handle?{...person,name:next.name,handle:next.handle,avatarUrl:next.avatarUrl||"",coverUrl:next.coverUrl||"",avatarPositionX:next.avatarPositionX,avatarPositionY:next.avatarPositionY,avatarScale:next.avatarScale,coverPositionX:next.coverPositionX,coverPositionY:next.coverPositionY,industry:next.industry,loc:next.location,location:next.location,bio:next.bio,headline:next.headline,lookingFor:next.lookingFor,goal:next.goal}:person));
     };
     applyProfileLocally(nextDraft);
     setView("profile");
@@ -4520,7 +4530,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     try{
       const dataUrl=await readImageFile(file,key==="coverUrl"?1400:720,key==="coverUrl"?860000:620000);
       const positionPrefix=key==="coverUrl"?"cover":"avatar";
-      setProfileDraft(p=>({...p,[key]:dataUrl,[`${positionPrefix}PositionX`]:50,[`${positionPrefix}PositionY`]:50}));
+      setProfileDraft(p=>({...p,[key]:dataUrl,[`${positionPrefix}PositionX`]:50,[`${positionPrefix}PositionY`]:50,...(key==="avatarUrl"?{avatarScale:1}:{})}));
       notify(key==="coverUrl"?"Cover photo ready":"Profile picture ready");
     }catch(err){
       notify(err.message||"Could not use that image","error");
@@ -4550,7 +4560,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <input type="search" aria-label="Search people, posts, tags, groups, and deals" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
         <button onClick={inviteFriend} className="bs app-invite-button" aria-label="Invite a friend" title="Invite a friend" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",color:C.muted}}><Icon name="send" size={18} color="currentColor"/></button>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
-        <button onClick={()=>setView("profile")} style={{background:"none",border:"none",padding:0}} aria-label="Open your profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={38} grad online/></button>
+        <button onClick={()=>setView("profile")} style={{background:"none",border:"none",padding:0}} aria-label="Open your profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={38} grad online/></button>
         <span className={`app-connection-state ${connectionState}`} aria-live="polite"><i/>{connectionState==="online"?"Online":connectionState==="offline"?"Offline":"Connecting"}</span>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
@@ -4572,7 +4582,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:interfaceSettings.rightRail===false?"270px minmax(0,1fr)":"270px minmax(0,1fr) 310px",gap:interfaceSettings.density==="compact"?14:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22}}>
-                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={54} grad online/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={15}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.location||"Location not set"}</div></div></div>
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18}}><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={54} grad online/><div style={{minWidth:0}}><div style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={15}/></div><div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.location||"Location not set"}</div></div></div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>{statCards.map(([k,v])=><button key={k} className="uh bs" onClick={()=>{setProfileMetric(k);setView("profile");}} aria-label={`Open your ${k}`} style={{background:C.bg,border:"none",borderRadius:12,padding:12,textAlign:"center",minHeight:58}}><div style={{fontWeight:900,fontSize:18,color:C.text}}>{v}</div><div style={{fontSize:11,color:C.muted}}>{k}</div></button>)}</div>
               </div>
               <div style={{background:GR,borderRadius:18,padding:20,color:"#fff"}}>
@@ -4590,7 +4600,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             <main className="feed-main">
               <div className="mobile-profile-summary" style={{display:"none",background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:16,marginBottom:14}}>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                  <Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={46} grad online/>
+                  <Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={46} grad online/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:900,color:C.text}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={15}/></div>
                     <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{profile.handle||"@yourhandle"} · {profile.industry||"Exploring"}</div>
@@ -4603,7 +4613,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
               </div>
               <div className="composer-card fs-app-composer" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:18}}>
                 <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-                  <Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={44} grad/>
+                  <Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={44} grad/>
                   <div style={{flex:1}}>
                     <textarea ref={composerRef} aria-label="Create a post" value={composer} onChange={e=>setComposer(e.target.value)} placeholder="Share a win, ask for feedback, or post what you're building..." className="if" style={{width:"100%",minHeight:104,resize:"vertical",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:14,fontSize:14,color:C.text,lineHeight:1.6}}/>
                     <MediaPreviewGrid media={composerMedia} onRemove={removeComposerMedia}/>
@@ -4629,7 +4639,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                 <article key={p.id} className="ch post-card" style={{background:C.card,border:`1px solid ${p.isNew?C.aSoft:C.border}`,borderRadius:20,marginBottom:14,overflow:"hidden"}}>
                   <div style={{padding:20}}>
                     <div className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"flex",gap:12,alignItems:"start",marginBottom:12}}>
-                      <Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
+                      <Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={45} grad={p.av===initials} online={Boolean(p.avatarUrl)||["MK","SR",initials].includes(p.av)}/>
                       <div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text,minWidth:0}}><NameWithVerified name={p.user} person={p} size={15}/></b><Tag label={p.type||"Update"} style={{background:C.aLight,color:C.accent}}/><IT label={p.tag}/></div><div style={{fontSize:12,color:C.dim,marginTop:2}}>{p.handle} · {p.time} ago{p.edited?" · edited":""}</div></div>
                       <div style={{display:"flex",gap:6,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
                         {isOwner&&<><button onClick={e=>{e.stopPropagation();beginEditPost(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.text}}>Edit</button><button onClick={e=>{e.stopPropagation();deletePost(p.id);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"6px 9px",fontSize:11,fontWeight:900,color:C.coral}}>Delete</button></>}
@@ -4656,7 +4666,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                     <button className="bs" onClick={()=>setOpenComments(o=>({...o,[p.id]:!o[p.id]}))} aria-label={`Comment on post by ${p.user}`} style={{background:"none",border:"none",fontWeight:800,color:openComments[p.id]?C.accent:C.muted,display:"flex",alignItems:"center",gap:6}}><Icon name="comment" size={17} color="currentColor"/> Comment {fmt((p.comments||[]).length)}</button>
                     <button className="bs" onClick={()=>{togglePostAction(p.id,"save");notify(p.saved?"Removed from saved":"Saved post");}} style={{background:"none",border:"none",fontWeight:800,color:p.saved?C.accent:C.muted,marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}><Icon name="bookmark" size={17} color="currentColor" filled={p.saved}/> {p.saved?"Saved":"Save"}</button>
                   </div>
-                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={c.id||i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} positionX={c.avatarPositionX} positionY={c.avatarPositionY} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",justifyContent:"space-between"}}><b style={{fontSize:12}}><NameWithVerified name={c.user} person={c} size={13}/></b><button onClick={e=>{e.stopPropagation();reportContent("comment",c.id||`${p.id}-${i}`,"comment");}} className="bs" style={{background:"transparent",border:"none",fontSize:11,fontWeight:900,color:C.muted}}>Report</button></div><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input aria-label={`Write a comment on ${p.user}'s post`} value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
+                  {openComments[p.id]&&<div style={{background:C.bg,borderTop:`1px solid ${C.border}`,padding:16}}>{p.comments.map((c,i)=><div key={c.id||i} className="profile-link" role="button" tabIndex={0} onClick={()=>openProfile(c,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(c,"feed"))} style={{display:"flex",gap:10,marginBottom:10}}><Av i={c.av} src={c.avatarUrl} positionX={c.avatarPositionX} positionY={c.avatarPositionY} scale={c.avatarScale} size={30}/><div style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:12,padding:"8px 12px",flex:1,minWidth:0}}><div style={{display:"flex",gap:8,alignItems:"center",justifyContent:"space-between"}}><b style={{fontSize:12}}><NameWithVerified name={c.user} person={c} size={13}/></b><button onClick={e=>{e.stopPropagation();reportContent("comment",c.id||`${p.id}-${i}`,"comment");}} className="bs" style={{background:"transparent",border:"none",fontSize:11,fontWeight:900,color:C.muted}}>Report</button></div><p style={{fontSize:13,color:C.tSoft,lineHeight:1.5,overflowWrap:"anywhere"}}>{c.text}</p></div></div>)}<div className="comment-row" style={{display:"flex",gap:8}}><input aria-label={`Write a comment on ${p.user}'s post`} value={commentInputs[p.id]||""} onChange={e=>setCommentInputs(ci=>({...ci,[p.id]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addComment(p.id)} placeholder="Write a comment..." className="if" style={{flex:1,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 12px",minWidth:0}}/><GBtn sm onClick={()=>addComment(p.id)}>Send</GBtn></div></div>}
                 </article>
               );})}
             </main>
@@ -4666,7 +4676,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
@@ -4888,7 +4898,7 @@ function SuggestedPeopleCard({people,blockedIds,openProfile,reportContent,blockU
       {visible.length===0&&<MiniEmpty text="Real users will appear here after they create accounts."/>}
       {visible.map(p=>(
         <div key={p.id} className="uh profile-link suggested-person-row" role="button" tabIndex={0} onClick={()=>openProfile(p,"feed")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"feed"))} style={{display:"grid",gridTemplateColumns:"36px minmax(0,1fr)",gap:10,alignItems:"start",padding:"12px 4px"}}>
-          <Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} size={36} online={p.online}/>
+          <Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={36} online={p.online}/>
           <div className="suggested-person-main" style={{minWidth:0,display:"grid",gap:8}}>
             <div className="suggested-person-top" style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,alignItems:"center"}}>
               <div style={{minWidth:0}}>
@@ -5168,7 +5178,7 @@ function SettingsView({profile,setView,setEditProfile,updateProfilePrivacy,acces
             <span style={{background:pending.length?C.aLight:C.bg,color:pending.length?C.accent:C.muted,border:`1px solid ${pending.length?C.aSoft:C.border}`,borderRadius:999,padding:"5px 9px",fontSize:11,fontWeight:900}}>{pending.length} pending</span>
           </div>
           {incoming.length===0?<MiniEmpty text="Private profile access requests will appear here."/>:<div style={{display:"grid",gap:10}}>{incoming.slice(0,6).map(request=><div key={request.id} style={{display:"flex",gap:10,alignItems:"center",background:C.bg,border:`1px solid ${C.border}`,borderRadius:14,padding:12}}>
-            <button onClick={()=>openProfile(request.requester)} aria-label={`Open ${request.requester.name}`} style={{background:"none",border:"none",padding:0}}><Av i={request.requester.av} src={request.requester.avatarUrl} positionX={request.requester.avatarPositionX} positionY={request.requester.avatarPositionY} size={40}/></button>
+            <button onClick={()=>openProfile(request.requester)} aria-label={`Open ${request.requester.name}`} style={{background:"none",border:"none",padding:0}}><Av i={request.requester.av} src={request.requester.avatarUrl} positionX={request.requester.avatarPositionX} positionY={request.requester.avatarPositionY} scale={request.requester.avatarScale} size={40}/></button>
             <div style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:13,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{request.requester.name}</b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{request.requester.handle} · {request.status}</span></div>
             {request.status==="pending"?<div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}><GBtn sm onClick={()=>reviewAccessRequest(request.id,"approve")}>Approve</GBtn><button onClick={()=>reviewAccessRequest(request.id,"deny")} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:900,color:C.coral}}>Deny</button></div>:<span style={{fontSize:11,fontWeight:900,color:C.muted,textTransform:"capitalize"}}>{request.status}</span>}
           </div>)}</div>}
@@ -5287,7 +5297,7 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
         <div className="message-list" role="tablist" aria-label="Message conversations" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:12}}>
           {safeMessages.map(m=>(
             <button key={m.id} role="tab" aria-selected={active===m.id} data-active={active===m.id?"true":"false"} onClick={()=>setActive(m.id)} className="uh dm-thread-button" style={{width:"100%",display:"flex",gap:12,alignItems:"center",padding:12,border:"1px solid transparent",background:active===m.id?C.aLight:"transparent",borderRadius:12,textAlign:"left"}}>
-              <Av i={m.av} src={m.avatarUrl} size={40} online={m.online}/>
+              <Av i={m.av} src={m.avatarUrl} positionX={m.avatarPositionX} positionY={m.avatarPositionY} scale={m.avatarScale} size={40} online={m.online}/>
               <div className="dm-thread-copy" style={{minWidth:0}}>
                 <div className="dm-thread-name" style={{fontWeight:900,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={m.name} person={m} size={14}/></div>
                 <div className="dm-thread-preview" style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{messageText(m.thread[m.thread.length-1],m.id,(m.thread.length||1)-1)||"Start the conversation"}</div>
@@ -5298,7 +5308,7 @@ function MessagesView({messages,setMessages,sendMessage,deleteChat,editMessage,d
         {thread&&(
           <div className="message-panel" role="tabpanel" aria-label={`Conversation with ${thread.name}`} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:20,display:"flex",flexDirection:"column"}}>
             <div className="message-panel-header" style={{display:"flex",gap:12,alignItems:"center",paddingBottom:14,borderBottom:`1px solid ${C.border}`,flexWrap:"wrap"}}>
-              <Av i={thread.av} src={thread.avatarUrl} size={44} online={thread.online}/>
+              <Av i={thread.av} src={thread.avatarUrl} positionX={thread.avatarPositionX} positionY={thread.avatarPositionY} scale={thread.avatarScale} size={44} online={thread.online}/>
               <div style={{flex:1,minWidth:0}}>
                 <b><NameWithVerified name={thread.name} person={thread} size={15}/></b>
                 <div style={{fontSize:12,color:C.dim,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{thread.online?"Online now":thread.handle||"Direct message"}</div>
@@ -5367,7 +5377,7 @@ function ProfileMetricSection({active,posts=[],people=[],emptyName="this profile
   const subject=emptyName==="You"?"You have":`${emptyName} has`;
   if(active==="Posts")return <ProfilePostsSection posts={posts} emptyTitle="No posts yet" emptyText={`${subject} not published any posts yet.`}/>;
   if(active==="Saved")return <ProfilePostsSection posts={posts} emptyTitle="No saved posts yet" emptyText="Saved posts will appear here after you save them from the feed."/>;
-  return <section style={{marginTop:18}}><SectionHead eyebrow="Network" title={active} count={`${fmt(people.length)} people`}/>{people.length===0?<EmptyState title={`No ${active.toLowerCase()} yet`} text={emptyName==="You"?"You do not have anyone to show here yet.":`${emptyName} does not have anyone to show here yet.`}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{people.map(person=><button key={`${active}-${person.id}`} onClick={()=>openProfile?.(person)} className="ch profile-link" style={{...cardStyle,padding:16,borderRadius:18,textAlign:"left",display:"flex",gap:12,alignItems:"center",minWidth:0}}><Av i={person.av} src={person.avatarUrl} positionX={person.avatarPositionX} positionY={person.avatarPositionY} size={44}/><span style={{minWidth:0}}><b style={{display:"block",color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={person.name} person={person} size={14}/></b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:3}}>{[person.handle,person.industry||person.loc].filter(Boolean).join(" · ")}</span></span></button>)}</div>}</section>;
+  return <section style={{marginTop:18}}><SectionHead eyebrow="Network" title={active} count={`${fmt(people.length)} people`}/>{people.length===0?<EmptyState title={`No ${active.toLowerCase()} yet`} text={emptyName==="You"?"You do not have anyone to show here yet.":`${emptyName} does not have anyone to show here yet.`}/>:<div className="directory-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}}>{people.map(person=><button key={`${active}-${person.id}`} onClick={()=>openProfile?.(person)} className="ch profile-link" style={{...cardStyle,padding:16,borderRadius:18,textAlign:"left",display:"flex",gap:12,alignItems:"center",minWidth:0}}><Av i={person.av} src={person.avatarUrl} positionX={person.avatarPositionX} positionY={person.avatarPositionY} scale={person.avatarScale} size={44}/><span style={{minWidth:0}}><b style={{display:"block",color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}><NameWithVerified name={person.name} person={person} size={14}/></b><span style={{display:"block",fontSize:12,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:3}}>{[person.handle,person.industry||person.loc].filter(Boolean).join(" · ")}</span></span></button>)}</div>}</section>;
 }
 
 const SectionHead=({eyebrow,title,count})=>(
@@ -5380,7 +5390,7 @@ const SectionHead=({eyebrow,title,count})=>(
   </div>
 );
 
-function ProfileImageEditor({kind,src,x=50,y=50,onMove,initials="YO"}){
+function ProfileImageEditor({kind,src,x=50,y=50,scale=1,onMove,initials="YO"}){
   const drag=useRef(null);
   const image=safeImageUrl(src);
   const round=kind==="avatar";
@@ -5415,15 +5425,16 @@ function ProfileImageEditor({kind,src,x=50,y=50,onMove,initials="YO"}){
     onPointerCancel={stop}
     onKeyDown={image?onKeyDown:undefined}
   >
-    {image?<div className="profile-image-editor-image" style={{backgroundImage:`url("${image}")`,backgroundPosition:profileImagePosition(x,y)}}/>:<div style={{position:"absolute",inset:0,background:round?C.aLight:GR,display:"grid",placeItems:"center",color:round?C.accent:"#fff",fontSize:round?38:22,fontWeight:950}}>{round?initials:"Add a cover that feels like you"}</div>}
+    {image?<div className="profile-image-editor-image" style={{overflow:"hidden"}}><img src={image} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:profileImagePosition(x,y),transform:`scale(${round?clampProfileScale(scale):1})`,transformOrigin:profileImagePosition(x,y),pointerEvents:"none"}}/></div>:<div style={{position:"absolute",inset:0,background:round?C.aLight:GR,display:"grid",placeItems:"center",color:round?C.accent:"#fff",fontSize:round?38:22,fontWeight:950}}>{round?initials:"Add a cover that feels like you"}</div>}
     {image&&<><span className="profile-image-editor-guide"/><span className="profile-image-editor-hint"><Icon name="move" size={13} color="currentColor"/> Drag to reposition</span></>}
   </div>;
 }
 
-function ProfilePositionControls({x=50,y=50,onMove,label}){
+function ProfilePositionControls({x=50,y=50,scale,onMove,onScale,label}){
   return <div className="profile-image-controls" aria-label={`${label} position controls`}>
     <label><span>Left / right</span><input type="range" min="0" max="100" value={clampProfilePosition(x)} onChange={event=>onMove(Number(event.target.value),y)}/><span>{Math.round(clampProfilePosition(x))}%</span></label>
     <label><span>Up / down</span><input type="range" min="0" max="100" value={clampProfilePosition(y)} onChange={event=>onMove(x,Number(event.target.value))}/><span>{Math.round(clampProfilePosition(y))}%</span></label>
+    {onScale&&<label><span>Photo size</span><input type="range" min="1" max="3" step="0.05" value={clampProfileScale(scale)} onChange={event=>onScale(Number(event.target.value))}/><span>{Math.round(clampProfileScale(scale)*100)}%</span></label>}
   </div>;
 }
 
@@ -5432,10 +5443,11 @@ const ProfileStudioField=({label,help,wide=false,children})=><label className={`
 function ProfileStudio({profile,setProfile,onUpload,onSave,onCancel}){
   const initials=(profile.name||"YO").split(" ").map(part=>part[0]).slice(0,2).join("").toUpperCase()||"YO";
   const username=cleanUsername(profile.username||profile.handle||"");
-  const completionFields=[profile.avatarUrl,profile.coverUrl,profile.name,username,profile.headline,profile.bio,profile.industry,profile.location,profile.goal,profile.lookingFor];
+  const completionFields=[profile.avatarUrl,profile.coverUrl,profile.name,username,profile.headline,profile.bio,profile.industry,profile.location,profile.lookingFor];
   const completion=Math.round((completionFields.filter(Boolean).length/completionFields.length)*100);
   const update=(key,value)=>setProfile(current=>({...current,[key]:value}));
   const setPosition=(kind,x,y)=>setProfile(current=>({...current,[`${kind}PositionX`]:x,[`${kind}PositionY`]:y}));
+  const setAvatarScale=scale=>setProfile(current=>({...current,avatarScale:clampProfileScale(scale)}));
   const sectionHead=(eyebrow,title,copy)=><div className="profile-studio-section-head"><div><div style={{fontSize:10,fontWeight:950,letterSpacing:1.8,textTransform:"uppercase",color:C.accent,marginBottom:7}}>{eyebrow}</div><h2 style={{fontSize:22,lineHeight:1.12,color:C.text}}>{title}</h2><p style={{fontSize:13,color:C.muted,lineHeight:1.55,marginTop:7,maxWidth:620}}>{copy}</p></div></div>;
   return <div className="profile-studio-shell">
     <header className="profile-studio-header">
@@ -5455,7 +5467,7 @@ function ProfileStudio({profile,setProfile,onUpload,onSave,onCancel}){
         <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden",boxShadow:"0 24px 70px rgba(5,8,6,.1)"}}>
           <div style={{height:168,background:safeImageUrl(profile.coverUrl)?`${profileImagePosition(profile.coverPositionX,profile.coverPositionY)} / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/>
           <div style={{padding:"0 20px 22px"}}>
-            <div style={{marginTop:-46,marginBottom:12}}><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={96} grad style={{border:"5px solid #fff",boxShadow:"0 12px 30px rgba(5,8,6,.18)"}}/></div>
+            <div style={{marginTop:-46,marginBottom:12}}><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={96} grad style={{border:"5px solid #fff",boxShadow:"0 12px 30px rgba(5,8,6,.18)"}}/></div>
             <h2 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.03,color:C.text,overflowWrap:"anywhere"}}>{profile.name||"Your Name"}</h2>
             <div style={{fontSize:13,color:C.muted,fontWeight:750,marginTop:6,overflowWrap:"anywhere"}}>@{username||"username"}{profile.location?` · ${profile.location}`:""}</div>
             {profile.headline&&<div style={{fontSize:15,fontWeight:900,color:C.text,lineHeight:1.4,marginTop:15}}>{profile.headline}</div>}
@@ -5471,11 +5483,11 @@ function ProfileStudio({profile,setProfile,onUpload,onSave,onCancel}){
       <div className="profile-studio-form">
         <section className="profile-studio-section">
           {sectionHead("Visual identity","Profile picture","Choose a clear photo, then drag it so your face or focal point sits exactly where you want it.")}
-          <ProfileImageEditor kind="avatar" src={profile.avatarUrl} x={profile.avatarPositionX} y={profile.avatarPositionY} initials={initials} onMove={(x,y)=>setPosition("avatar",x,y)}/>
-          {profile.avatarUrl&&<ProfilePositionControls label="Profile picture" x={profile.avatarPositionX} y={profile.avatarPositionY} onMove={(x,y)=>setPosition("avatar",x,y)}/>}
+          <ProfileImageEditor kind="avatar" src={profile.avatarUrl} x={profile.avatarPositionX} y={profile.avatarPositionY} scale={profile.avatarScale} initials={initials} onMove={(x,y)=>setPosition("avatar",x,y)}/>
+          {profile.avatarUrl&&<ProfilePositionControls label="Profile picture" x={profile.avatarPositionX} y={profile.avatarPositionY} scale={profile.avatarScale} onMove={(x,y)=>setPosition("avatar",x,y)} onScale={setAvatarScale}/>}
           <div className="profile-media-actions">
             <label className="bs" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:9,padding:"10px 13px",fontSize:12,fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer"}}><Icon name="camera" size={15}/> {profile.avatarUrl?"Change photo":"Add photo"}<input aria-label="Upload profile picture" type="file" accept="image/*" onChange={event=>onUpload(event,"avatarUrl")} style={{display:"none"}}/></label>
-            {profile.avatarUrl&&<button type="button" onClick={()=>setProfile(current=>({...current,avatarUrl:"",avatarPositionX:50,avatarPositionY:50}))} className="bs" style={{background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:9,padding:"10px 13px",fontSize:12,fontWeight:900}}>Remove</button>}
+            {profile.avatarUrl&&<button type="button" onClick={()=>setProfile(current=>({...current,avatarUrl:"",avatarPositionX:50,avatarPositionY:50,avatarScale:1}))} className="bs" style={{background:"transparent",color:C.muted,border:`1px solid ${C.border}`,borderRadius:9,padding:"10px 13px",fontSize:12,fontWeight:900}}>Remove</button>}
           </div>
         </section>
         <section className="profile-studio-section">
@@ -5501,7 +5513,6 @@ function ProfileStudio({profile,setProfile,onUpload,onSave,onCancel}){
           {sectionHead("Your direction","Make your next move visible","This is what helps fear.social introduce you to useful people, conversations, and opportunities.")}
           <div className="profile-studio-fields">
             <ProfileStudioField label="What are you looking for?"><input className="if" value={profile.lookingFor||""} onChange={event=>update("lookingFor",event.target.value)} placeholder="A role, collaborators, guidance, clients..."/></ProfileStudioField>
-            <ProfileStudioField label="Your first step"><input className="if" value={profile.goal||""} onChange={event=>update("goal",event.target.value)} placeholder="Build a portfolio, meet an operator..."/></ProfileStudioField>
             <ProfileStudioField label="Bio" wide help="Write like a person. Share what you care about, what you are trying, and what would be useful right now."><textarea className="if" value={profile.bio||""} onChange={event=>update("bio",event.target.value)} placeholder="Tell people where you are and where you want to go."/></ProfileStudioField>
             <ProfileStudioField label="Website or portfolio" wide><input className="if" autoComplete="url" value={profile.website||""} onChange={event=>update("website",event.target.value)} placeholder="Portfolio, LinkedIn, personal site, or store"/></ProfileStudioField>
           </div>
@@ -5524,17 +5535,17 @@ function ProfilePanel({profile,setEditProfile,onCreatePost,onOpenSettings,stats,
   const [activeMetric,setActiveMetric]=useState(normalizedMetric);
   useEffect(()=>setActiveMetric(initialMetric==="RSVPs"?"Posts":initialMetric),[initialMetric]);
   const profileInitials=(profile.name||"YO").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase();
-  const detailRows=[["First step",profile.goal],["Looking for",profile.lookingFor],["Field",profile.industry||"Exploring"]].filter(([,v])=>v);
+  const detailRows=[["Looking for",profile.lookingFor],["Field",profile.industry||"Exploring"]].filter(([,v])=>v);
   const metricPeople={Followers:followers,Following:following};
   const metricPosts={Posts:posts,Saved:savedPosts};
-  const profileSignals=[profile.avatarUrl,profile.coverUrl,profile.headline,profile.bio,profile.industry,profile.goal,profile.lookingFor].filter(Boolean).length;
-  const profileCompletion=Math.round((profileSignals/7)*100);
+  const profileSignals=[profile.avatarUrl,profile.coverUrl,profile.headline,profile.bio,profile.industry,profile.lookingFor].filter(Boolean).length;
+  const profileCompletion=Math.round((profileSignals/6)*100);
   return <div className="directory-wrap" style={{maxWidth:860}}>
     <div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:12,boxShadow:"0 18px 44px rgba(15,23,42,0.04)"}}>
       <div style={{height:190,background:safeImageUrl(profile.coverUrl)?`${profileImagePosition(profile.coverPositionX,profile.coverPositionY)} / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/>
       <div style={{padding:"0 28px 26px"}}>
         <div className="profile-hero-row" style={{display:"grid",gridTemplateColumns:"104px minmax(0,1fr) auto",alignItems:"end",gap:18,marginTop:-38}}>
-          <Av i={profileInitials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={104} style={{background:"#fff",color:C.accent,border:"6px solid #fff",boxShadow:"0 12px 28px rgba(15,23,42,0.12)"}}/>
+          <Av i={profileInitials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={104} style={{background:"#fff",color:C.accent,border:"6px solid #fff",boxShadow:"0 12px 28px rgba(15,23,42,0.12)"}}/>
           <div className="profile-hero-copy" style={{minWidth:0,paddingTop:44}}>
             <h1 style={{fontFamily:"Georgia,serif",fontSize:36,letterSpacing:0,overflowWrap:"anywhere",color:C.text,lineHeight:1.02}}><NameWithVerified name={profile.name||"Your Name"} person={profile} size={20} nameStyle={{whiteSpace:"normal",overflow:"visible"}}/></h1>
             <div style={{color:C.muted,overflowWrap:"anywhere",marginTop:7,fontSize:14,fontWeight:700}}>{profileMeta(profile)}</div>
@@ -5556,7 +5567,6 @@ function ProfilePanel({profile,setEditProfile,onCreatePost,onOpenSettings,stats,
         <div style={{fontSize:10,fontWeight:950,letterSpacing:1.7,textTransform:"uppercase",color:C.accent,marginBottom:8}}>Your direction</div>
         <h2 style={{fontSize:20,lineHeight:1.15,color:C.text}}>What you want people to know</h2>
         <div style={{display:"grid",gap:11,marginTop:14}}>
-          <div style={{display:"grid",gridTemplateColumns:"100px minmax(0,1fr)",gap:12,fontSize:13,lineHeight:1.5}}><b style={{color:C.muted}}>First step</b><span style={{color:C.text,overflowWrap:"anywhere"}}>{profile.goal||"Add the next move you want to make."}</span></div>
           <div style={{display:"grid",gridTemplateColumns:"100px minmax(0,1fr)",gap:12,fontSize:13,lineHeight:1.5}}><b style={{color:C.muted}}>Looking for</b><span style={{color:C.text,overflowWrap:"anywhere"}}>{profile.lookingFor||"Tell people what kind of help or opportunity would matter."}</span></div>
         </div>
       </section>
@@ -5581,14 +5591,14 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],connecti
     ["Following",fmt(following.length)],
     ["Field",profile.industry||"Exploring"],
   ];
-  const details=[["First step",profile.goal],["Looking for",profile.lookingFor],["Headline",profile.headline]].filter(([,v])=>v);
+  const details=[["Looking for",profile.lookingFor],["Headline",profile.headline]].filter(([,v])=>v);
   return <div className="directory-wrap" style={{maxWidth:860}}>
     <button onClick={onBack} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:999,padding:"9px 14px",fontSize:13,fontWeight:900,color:C.text,marginBottom:14,display:"inline-flex",alignItems:"center",gap:8}}><Icon name="close" size={14}/> Back</button>
     <div className="profile-hero" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:24,overflow:"hidden",marginBottom:12,boxShadow:"0 18px 44px rgba(15,23,42,0.04)"}}>
       <div style={{height:146,background:safeImageUrl(profile.coverUrl)?`${profileImagePosition(profile.coverPositionX,profile.coverPositionY)} / cover no-repeat url("${safeImageUrl(profile.coverUrl)}")`:GR}}/>
       <div style={{padding:"0 28px 26px"}}>
         <div className="profile-hero-row profile-public-hero-row" style={{display:"grid",gridTemplateColumns:"104px minmax(0,1fr)",alignItems:"end",gap:18,marginTop:-38}}>
-          <Av i={profileInitials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} size={104} style={{background:"#fff",color:C.accent,border:"6px solid #fff",boxShadow:"0 12px 28px rgba(15,23,42,0.12)"}} online/>
+          <Av i={profileInitials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={104} style={{background:"#fff",color:C.accent,border:"6px solid #fff",boxShadow:"0 12px 28px rgba(15,23,42,0.12)"}} online/>
           <div className="profile-hero-copy" style={{minWidth:0,paddingTop:44}}>
             <h1 style={{fontFamily:"Georgia,serif",fontSize:36,letterSpacing:0,overflowWrap:"anywhere",color:C.text,lineHeight:1.02}}><NameWithVerified name={profile.name} person={profile} size={20} nameStyle={{whiteSpace:"normal",overflow:"visible"}}/></h1>
             <div style={{color:C.muted,overflowWrap:"anywhere",marginTop:7,fontSize:14,fontWeight:700}}>{profileMeta(profile)}</div>
@@ -5618,7 +5628,7 @@ function ProfilePostsSection({posts=[],emptyTitle,emptyText}){
     {safePosts.length===0?<EmptyState title={emptyTitle} text={emptyText}/>:<div style={{display:"grid",gap:12}}>{safePosts.map(post=><article key={post.id} className="ch post-card" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden"}}>
       <div style={{padding:20}}>
         <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12,minWidth:0}}>
-          <Av i={post.av} src={post.avatarUrl} size={44}/>
+          <Av i={post.av} src={post.avatarUrl} positionX={post.avatarPositionX} positionY={post.avatarPositionY} scale={post.avatarScale} size={44}/>
           <div style={{minWidth:0,flex:1}}>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><b style={{color:C.text,minWidth:0}}><NameWithVerified name={post.user} person={post} size={15}/></b><Tag label={post.type||"Update"} style={{background:C.aLight,color:C.accent}}/><IT label={post.tag}/></div>
             <div style={{fontSize:12,color:C.dim,marginTop:2}}>{post.handle} · {post.time} ago{post.edited?" · edited":""}</div>
