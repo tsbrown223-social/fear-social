@@ -74,6 +74,16 @@ const E2EE_MESSAGE_PREFIX = "__fear_e2ee_v1__:";
 const FEAR_AI_DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const FEAR_AI_MAX_PROMPT_LENGTH = 6000;
 const FEAR_AI_MAX_RESPONSE_LENGTH = 16000;
+const FEAR_AI_MAX_OUTPUT_TOKENS = 1400;
+const FEAR_AI_FREE_DAILY_NEURONS = 10000;
+const FEAR_AI_DAILY_NEURON_BUDGET = Math.floor(FEAR_AI_FREE_DAILY_NEURONS * 0.8);
+const FEAR_AI_MODEL_BUDGETS = Object.freeze({
+  [FEAR_AI_DEFAULT_MODEL]: Object.freeze({
+    maxInputTokens: 24000,
+    inputNeuronsPerMillionTokens: 26668,
+    outputNeuronsPerMillionTokens: 204805,
+  }),
+});
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const VERIFIED_HANDLES = new Set(["@taylorbrown", "@fear.social"]);
 const VERIFIED_EMAILS = new Set(["tsbrown223@gmail.com", "official@fear.social"]);
@@ -2040,6 +2050,61 @@ async function finishAiGeneration(db, userId, generationId, status) {
 
 const encodeAiStreamEvent = (encoder, payload) => encoder.encode(`${JSON.stringify(payload)}\n`);
 
+const aiBudgetResetAt = (now = new Date()) => {
+  const reset = new Date(now);
+  reset.setUTCHours(24, 0, 0, 0);
+  return reset.toISOString();
+};
+
+const estimateAiNeuronReservation = (model, messages) => {
+  const pricing = FEAR_AI_MODEL_BUDGETS[model];
+  if (!pricing) return null;
+  const characters = messages.reduce((total, message) => total + String(message?.content || "").length, 0);
+  // Four tokens per JS character is a conservative upper bound for UTF-8 tokenization.
+  const inputTokens = Math.min(pricing.maxInputTokens, Math.max(1, Math.ceil(characters * 4)));
+  const inputNeurons = (inputTokens * pricing.inputNeuronsPerMillionTokens) / 1_000_000;
+  const outputNeurons = (FEAR_AI_MAX_OUTPUT_TOKENS * pricing.outputNeuronsPerMillionTokens) / 1_000_000;
+  return Math.max(1, Math.ceil(inputNeurons + outputNeurons));
+};
+
+async function reserveAiDailyBudget(db, neuronReservation, now = new Date()) {
+  const usageDate = now.toISOString().slice(0, 10);
+  await db
+    .prepare("INSERT OR IGNORE INTO ai_daily_budget (usage_date, reserved_neurons, request_count, updated_at) VALUES (?, 0, 0, CURRENT_TIMESTAMP)")
+    .bind(usageDate)
+    .run();
+  const result = await db
+    .prepare(
+      `UPDATE ai_daily_budget
+       SET reserved_neurons = reserved_neurons + ?, request_count = request_count + 1, updated_at = CURRENT_TIMESTAMP
+       WHERE usage_date = ? AND reserved_neurons + ? <= ?`
+    )
+    .bind(neuronReservation, usageDate, neuronReservation, FEAR_AI_DAILY_NEURON_BUDGET)
+    .run();
+  const row = await db
+    .prepare("SELECT reserved_neurons, request_count FROM ai_daily_budget WHERE usage_date = ? LIMIT 1")
+    .bind(usageDate)
+    .first();
+  return {
+    ok: Number(result.meta?.changes || 0) === 1,
+    reservedNeurons: Number(row?.reserved_neurons || 0),
+    requestCount: Number(row?.request_count || 0),
+    resetAt: aiBudgetResetAt(now),
+  };
+}
+
+async function releaseAiDailyBudget(db, neuronReservation, now = new Date()) {
+  const usageDate = now.toISOString().slice(0, 10);
+  await db
+    .prepare(
+      `UPDATE ai_daily_budget
+       SET reserved_neurons = MAX(0, reserved_neurons - ?), request_count = MAX(0, request_count - 1), updated_at = CURRENT_TIMESTAMP
+       WHERE usage_date = ?`
+    )
+    .bind(neuronReservation, usageDate)
+    .run();
+}
+
 async function handleRequest(context) {
   const { request, env, params } = context;
   const db = requireDb(env);
@@ -2821,7 +2886,7 @@ async function handleRequest(context) {
   }
 
   if (method === "POST" && path === "/ai/chat") {
-    const limited = await enforceRateLimit(db, request, `fear-ai-chat:${user.id}`, 80, 3600);
+    const limited = await enforceRateLimit(db, request, `fear-ai-chat:${user.id}`, 12, 86400);
     if (limited) return limited;
     if (!env.AI || typeof env.AI.run !== "function") {
       return json(
@@ -2894,10 +2959,29 @@ async function handleRequest(context) {
         { role: "system", content: fearAiSystemPrompt(user, mode) },
         ...contextMessages,
       ],
-      max_tokens: 1400,
+      max_tokens: FEAR_AI_MAX_OUTPUT_TOKENS,
       temperature: 0.55,
       top_p: 0.9,
     };
+    const neuronReservation = estimateAiNeuronReservation(model, modelInput.messages);
+    if (!neuronReservation) {
+      console.error("fear AI model is not covered by the free-tier guard", { model });
+      return json(
+        { error: "fear AI is paused because this model is not approved for free usage.", code: "AI_MODEL_NOT_BUDGETED" },
+        { status: 503 }
+      );
+    }
+    const dailyBudget = await reserveAiDailyBudget(db, neuronReservation);
+    if (!dailyBudget.ok) {
+      return json(
+        {
+          error: "fear AI has reached today’s free usage limit. It will be ready again after the daily reset.",
+          code: "AI_FREE_DAILY_LIMIT",
+          resetAt: dailyBudget.resetAt,
+        },
+        { status: 429, headers: { "retry-after": String(Math.max(1, Math.ceil((Date.parse(dailyBudget.resetAt) - Date.now()) / 1000))) } }
+      );
+    }
 
     if (wantsStream) {
       await db
@@ -2908,6 +2992,7 @@ async function handleRequest(context) {
       try {
         generated = await env.AI.run(model, { ...modelInput, stream: true });
       } catch (error) {
+        await releaseAiDailyBudget(db, neuronReservation);
         await finishAiGeneration(db, user.id, generationId, "failed");
         console.error("fear AI stream failed to start", { model, message: error?.message });
         return json(
@@ -3041,6 +3126,7 @@ async function handleRequest(context) {
     try {
       generated = await env.AI.run(model, modelInput);
     } catch (error) {
+      await releaseAiDailyBudget(db, neuronReservation);
       console.error("fear AI inference failed", { model, message: error?.message });
       return json(
         { error: "fear AI could not finish that response. Your message is saved, so you can try again.", code: "AI_INFERENCE_FAILED", conversationId },

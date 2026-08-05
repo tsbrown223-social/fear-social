@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS ai_daily_budget (
+  usage_date TEXT PRIMARY KEY,
+  reserved_neurons INTEGER NOT NULL DEFAULT 0,
+  request_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -5,12 +5,14 @@ const workerPath = new URL("../functions/api/[[path]].js", import.meta.url);
 const migrationPath = new URL("../migrations/0031_retire_legacy_session_tokens.sql", import.meta.url);
 const aiMigrationPath = new URL("../migrations/0033_fear_ai.sql", import.meta.url);
 const aiControlsMigrationPath = new URL("../migrations/0034_ai_generation_controls.sql", import.meta.url);
+const aiBudgetMigrationPath = new URL("../migrations/0035_ai_free_tier_guard.sql", import.meta.url);
 const appPath = new URL("../src/App.jsx", import.meta.url);
-const [worker, migration, aiMigration, aiControlsMigration, app] = await Promise.all([
+const [worker, migration, aiMigration, aiControlsMigration, aiBudgetMigration, app] = await Promise.all([
   readFile(workerPath, "utf8"),
   readFile(migrationPath, "utf8"),
   readFile(aiMigrationPath, "utf8"),
   readFile(aiControlsMigrationPath, "utf8"),
+  readFile(aiBudgetMigrationPath, "utf8"),
   readFile(appPath, "utf8"),
 ]);
 
@@ -53,6 +55,31 @@ assert.match(
   worker,
   /enforceRateLimit\(db,\s*request,\s*`fear-ai-chat:\$\{user\.id\}`/,
   "AI generation must be rate limited per authenticated user."
+);
+assert.match(
+  worker,
+  /FEAR_AI_DAILY_NEURON_BUDGET\s*=\s*Math\.floor\(FEAR_AI_FREE_DAILY_NEURONS \* 0\.8\)/,
+  "The application AI budget must remain below the 10,000-neuron free daily allocation."
+);
+assert.match(
+  worker,
+  /reserved_neurons \+ \? <= \?/,
+  "AI budget reservations must use an atomic conditional update."
+);
+assert.match(
+  worker,
+  /AI_FREE_DAILY_LIMIT/,
+  "AI generation must fail closed when the shared daily budget is exhausted."
+);
+assert.match(
+  worker,
+  /`fear-ai-chat:\$\{user\.id\}`,\s*12,\s*86400/,
+  "Each user must have a daily AI generation ceiling."
+);
+assert.match(
+  aiBudgetMigration,
+  /CREATE TABLE IF NOT EXISTS ai_daily_budget[\s\S]*usage_date TEXT PRIMARY KEY[\s\S]*reserved_neurons INTEGER NOT NULL/,
+  "The account-wide AI free-tier budget must be persisted in D1."
 );
 assert.match(
   worker,
