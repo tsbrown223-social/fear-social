@@ -4,8 +4,6 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-NOTIFICATION_EMAIL = "contact@fear.social"
-EMAIL_FROM = "fear.social <contact@fear.social>"
 FEAR_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
 [ai]
