@@ -3916,14 +3916,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
 }
 
 function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel}){
-  const [view,setView]=useLocalState("fear-view","ai");
-  const enteredProfileRef=useRef("");
-  useEffect(()=>{
-    if(profile.id&&enteredProfileRef.current!==profile.id){
-      enteredProfileRef.current=profile.id;
-      setView("ai");
-    }
-  },[profile.id,setView]);
+  const [view,setView]=useState("feed");
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});
   },[view]);
@@ -4280,8 +4273,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     else if(view==="publicProfile"&&!selectedProfile) setView("discover");
   },[selectedProfile,setView,view]);
   const tabs=[
-    ["ai","fear AI"],
     ["feed","Feed"],
+    ["ai","fear AI"],
     ["discover","Discover"],
     ["events","fear.club"],
     ["messages","Messages"],
@@ -4300,8 +4293,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     settings:{eyebrow:"Your experience",title:"Settings",copy:"Control your profile, privacy, layout, accessibility, and account preferences."},
   };
   const mobileTabs=[
-    ["ai","AI","brain"],
     ["feed","Feed","home"],
+    ["ai","AI","brain"],
     ["messages","DMs","mail"],
     ["notifications","Activity","heart"],
     ["profile","Profile","user"],
@@ -4923,7 +4916,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     <div className={appLayoutClass} style={{minHeight:"100vh",background:C.bg}}>
       <a className="skip-link" href="#app-main">Skip to main content</a>
       <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-        <button className="app-topbar-logo" aria-label="Go to fear AI" onClick={()=>setView("ai")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap",background:"none",border:"none",padding:"6px 0",minHeight:36}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></button>
+        <button className="app-topbar-logo" aria-label="Go to Feed" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap",background:"none",border:"none",padding:"6px 0",minHeight:36}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></button>
         <div className="desktop-app-tabs" role="navigation" aria-label="Main app navigation" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
