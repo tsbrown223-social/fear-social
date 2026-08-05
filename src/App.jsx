@@ -1455,19 +1455,25 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .ai-new-chat{width:100%;min-height:44px;display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:10px 12px;border:1px solid rgba(22,199,78,.35);border-radius:7px;background:rgba(22,199,78,.09);color:#65DF89;font-size:13px;font-weight:850;}
 .theme-light .ai-new-chat{color:#0B7F33;background:#E8FBF0;}
 .ai-new-chat:hover{border-color:#16C74E;background:rgba(22,199,78,.14);}
+.ai-history-search{min-height:38px;display:flex;align-items:center;gap:8px;margin-top:10px;padding:0 9px;border:1px solid var(--app-line);border-radius:7px;background:var(--app-panel-2);color:var(--app-muted);}
+.ai-history-search:focus-within{border-color:rgba(22,199,78,.45);color:#65DF89;}
+.ai-history-search input{width:100%;min-width:0;border:0;background:transparent;color:var(--app-copy);font-size:12px;}
 .ai-history-label{padding:21px 7px 8px;color:var(--app-muted);font-size:9px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;}
 .ai-history-list{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;gap:3px;padding-right:2px;}
 .ai-history-empty{font-size:12px;line-height:1.55;color:var(--app-muted);padding:9px 7px;}
-.ai-history-item{display:grid;grid-template-columns:minmax(0,1fr) 32px;gap:2px;align-items:center;border-radius:7px;border:1px solid transparent;}
+.ai-history-item{display:grid;grid-template-columns:minmax(0,1fr) 62px;gap:2px;align-items:center;border-radius:7px;border:1px solid transparent;}
 .ai-history-item:hover{background:var(--app-panel-2);}
 .ai-history-item.active{background:rgba(22,199,78,.09);border-color:rgba(22,199,78,.2);}
 .ai-history-item>button:first-child{display:grid;gap:3px;min-width:0;padding:10px 9px;text-align:left;background:transparent;border:0;color:var(--app-copy);}
 .ai-history-item b,.ai-history-item span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ai-history-item b{font-size:12px;line-height:1.25;}
 .ai-history-item span{font-size:10px;color:var(--app-muted);font-weight:600;}
-.ai-history-delete{width:30px;height:30px;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:transparent;color:var(--app-muted);opacity:0;}
-.ai-history-item:hover .ai-history-delete,.ai-history-item.active .ai-history-delete,.ai-history-delete:focus-visible{opacity:1;}
-.ai-history-delete:hover{color:#E65B57;}
+.ai-history-actions{display:flex;align-items:center;justify-content:flex-end;padding-right:3px;opacity:0;}
+.ai-history-item:hover .ai-history-actions,.ai-history-item.active .ai-history-actions,.ai-history-actions:focus-within{opacity:1;}
+.ai-history-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:5px;background:transparent;color:var(--app-muted);}
+.ai-history-actions button:hover{background:var(--app-line);color:var(--app-copy);}
+.ai-history-actions button:last-child:hover{color:#E65B57;}
+.ai-history-actions button:disabled{cursor:not-allowed;opacity:.35;background:transparent;color:var(--app-muted);}
 .ai-sidebar-foot{display:flex;gap:8px;align-items:flex-start;margin:12px 5px 0;padding:12px 4px 2px;border-top:1px solid var(--app-line);color:var(--app-muted);}
 .ai-sidebar-foot span{font-size:10px;line-height:1.45;}
 .ai-chat-panel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;}
@@ -1476,6 +1482,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .ai-chat-heading>div{min-width:0;}
 .ai-chat-heading span{display:block;margin-bottom:3px;color:#65DF89;font-size:9px;font-weight:950;letter-spacing:.15em;text-transform:uppercase;}
 .ai-chat-heading h1{max-width:520px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit!important;font-size:15px!important;font-weight:800;line-height:1.25!important;color:var(--app-copy)!important;}
+.ai-title-edit{width:30px;height:30px;min-height:30px;display:flex;align-items:center;justify-content:center;flex:0 0 30px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--app-muted);}
+.ai-title-edit:hover{background:var(--app-panel-2);color:var(--app-copy);}
 .ai-mode-switch{display:flex;gap:3px;padding:3px;border:1px solid var(--app-line);border-radius:7px;background:var(--app-panel-2);overflow-x:auto;}
 .ai-mode-switch button{min-height:34px;padding:7px 11px;border:0;border-radius:5px;background:transparent;color:var(--app-muted);font-size:11px;font-weight:850;}
 .ai-mode-switch button[aria-selected="true"]{background:var(--app-copy);color:var(--app-bg);}
@@ -1503,6 +1511,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .ai-message-meta b{color:var(--app-copy);font-size:11px;}
 .ai-message.user .ai-message-meta{justify-content:flex-end;}
 .ai-message-body{color:var(--app-soft);font-size:14px;line-height:1.68;overflow-wrap:anywhere;}
+.ai-message-body code:not(.ai-code-block code){padding:2px 5px;border:1px solid var(--app-line);border-radius:4px;background:var(--app-panel-2);color:var(--app-copy);font-family:"SFMono-Regular",Consolas,monospace;font-size:.9em;}
 .ai-message-body p{margin:0 0 8px!important;color:inherit!important;font-size:inherit!important;line-height:inherit!important;}
 .ai-message-body p:last-child{margin-bottom:0!important;}
 .ai-message-body h3{margin:16px 0 7px;color:var(--app-copy);font-size:15px;line-height:1.3;}
@@ -1512,16 +1521,29 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .ai-message-number-line>b{color:#65DF89;font-size:11px;padding-top:3px;}
 .ai-message.user .ai-message-body{max-width:620px;padding:11px 13px;border:1px solid rgba(22,199,78,.22);border-radius:8px 2px 8px 8px;background:rgba(22,199,78,.1);color:var(--app-copy);}
 .ai-message.error .ai-message-body{color:#E78682;}
-.ai-copy-button{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 0;border:0;background:transparent;color:var(--app-muted);font-size:10px;font-weight:800;}
-.ai-copy-button:hover{color:#65DF89;}
+.ai-message-actions{display:flex;align-items:center;gap:12px;min-height:26px;margin-top:5px;opacity:.25;}
+.ai-message:hover .ai-message-actions,.ai-message-actions:focus-within,.ai-message.streaming .ai-message-actions{opacity:1;}
+.ai-message.user .ai-message-actions{justify-content:flex-end;}
+.ai-message-actions button{display:flex;align-items:center;gap:5px;padding:5px 0;border:0;background:transparent;color:var(--app-muted);font-size:10px;font-weight:800;}
+.ai-message-actions button:hover{color:#65DF89;}
+.ai-code-block{margin:12px 0;border:1px solid var(--app-line);border-radius:7px;overflow:hidden;background:#090B0D;color:#E8ECE9;}
+.ai-code-block>div{min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.1);background:#121518;}
+.ai-code-block>div span{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#9CA6A0;}
+.ai-code-block button{display:flex;align-items:center;gap:5px;padding:4px;border:0;background:transparent;color:#C5CDC8;font-size:10px;font-weight:800;}
+.ai-code-block pre{max-width:100%;margin:0;overflow:auto;padding:14px;font:12px/1.65 "SFMono-Regular",Consolas,monospace;white-space:pre;tab-size:2;}
+.ai-code-block pre code{font:inherit;color:inherit;}
 .ai-thinking{height:28px;display:flex;align-items:center;gap:4px;}
 .ai-thinking i{width:5px;height:5px;border-radius:50%;background:#65DF89;animation:softBlink 1.2s ease-in-out infinite;}
 .ai-thinking i:nth-child(2){animation-delay:.16s}.ai-thinking i:nth-child(3){animation-delay:.32s}
 .ai-composer-wrap{padding:12px max(18px,calc((100% - 860px)/2)) 14px;background:linear-gradient(180deg,transparent,var(--app-panel) 18%);}
+.ai-editing-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 6px;padding:7px 10px;border-left:2px solid #16C74E;background:rgba(22,199,78,.08);color:var(--app-copy);font-size:10px;font-weight:800;}
+.ai-editing-bar span{display:flex;align-items:center;gap:7px;}
+.ai-editing-bar button{border:0;background:transparent;color:#65DF89;font-size:10px;font-weight:900;}
 .ai-composer{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;align-items:end;padding:7px 7px 7px 14px;border:1px solid var(--app-line);border-radius:8px;background:var(--app-panel-2);box-shadow:0 18px 60px rgba(0,0,0,.16);}
 .ai-composer:focus-within{border-color:rgba(22,199,78,.46);box-shadow:0 0 0 3px rgba(22,199,78,.08),0 18px 60px rgba(0,0,0,.16);}
 .ai-composer textarea{width:100%;min-height:52px;max-height:180px;resize:none;padding:14px 0 9px;border:0!important;background:transparent!important;color:var(--app-copy)!important;font-size:15px!important;line-height:1.5;box-shadow:none!important;}
 .ai-composer button{width:42px;height:42px;min-height:42px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:6px;background:#16C74E;color:#071008;}
+.ai-composer button.stop{background:var(--app-copy);color:var(--app-bg);}
 .ai-composer button:disabled{background:var(--app-line);color:var(--app-muted);}
 .ai-composer-wrap>p{margin:7px 4px 0!important;text-align:center;color:var(--app-muted)!important;font-size:9px!important;line-height:1.4!important;}
 .ai-history-toggle,.ai-mobile-close,.ai-sidebar-backdrop{display:none;}
@@ -1534,6 +1556,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ai-sidebar-backdrop{position:fixed;inset:0;z-index:1190;border:0;background:rgba(0,0,0,.56);opacity:0;pointer-events:none;}
   .ai-sidebar-backdrop.open{display:block;opacity:1;pointer-events:auto;}
   .ai-history-toggle,.ai-mobile-close{display:flex;align-items:center;justify-content:center;width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0;border:1px solid var(--app-line);border-radius:6px;background:transparent;color:var(--app-copy);}
+  .ai-history-actions{opacity:1;}
 }
 @media(max-width:760px){
   .app-shell.ai-shell{padding:0 0 calc(74px + env(safe-area-inset-bottom))!important;}
@@ -1542,6 +1565,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ai-chat-panel{height:100%;border-left:0;border-right:0;border-bottom:0;border-radius:0;}
   .ai-chat-header{min-height:92px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:9px 12px;}
   .ai-chat-heading h1{font-size:14px!important;}
+  .ai-title-edit{margin-left:auto;}
   .ai-mode-switch{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;}
   .ai-mode-switch button{width:100%;min-width:0;padding:7px 3px;font-size:10px;}
   .ai-message-list{padding:20px 14px;scrollbar-gutter:auto;}
@@ -1555,6 +1579,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ai-message-avatar{width:28px;height:28px;flex-basis:28px;}
   .ai-message-body{font-size:13px;line-height:1.62;}
   .ai-message.user .ai-message-body{max-width:calc(100vw - 84px);}
+  .ai-message-actions{opacity:1;}
+  .ai-code-block{max-width:calc(100vw - 76px);}
+  .ai-code-block pre{font-size:11px;}
   .ai-composer-wrap{padding:8px 10px max(9px,env(safe-area-inset-bottom));}
   .ai-composer{grid-template-columns:minmax(0,1fr) 40px;padding-left:12px;}
   .ai-composer textarea{font-size:16px!important;min-height:48px;padding-top:12px;}
@@ -1690,6 +1717,10 @@ const iconPaths = {
   trash:<><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></>,
   copy:<><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"/></>,
   menu:<path d="M4 7h16M4 12h16M4 17h16"/>,
+  edit:<><path d="m4 20 4.4-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.4 16 4 20Z"/><path d="m14.8 6.6 3 3"/></>,
+  search:<><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
+  refresh:<><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 0-2 5"/></>,
+  stop:<rect x="6" y="6" width="12" height="12" rx="2"/>,
   info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>,
   sparkle:<path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"/>,
   network:<><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><circle cx="12" cy="17" r="3"/><path d="m9.5 10.5 1.5 3M14.5 10.5 13 14M10 8h4"/></>,
@@ -1896,6 +1927,66 @@ async function api(path,options={}){
     window.clearTimeout(timeout);
     options.signal?.removeEventListener?.("abort",abortFromCaller);
   }
+}
+
+async function streamAiChat(payload,{signal,onEvent}={}){
+  const token=getSessionToken();
+  const requestId=crypto?.randomUUID?.()||`web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const response=await fetch("/api/ai/chat",{
+    method:"POST",
+    credentials:"same-origin",
+    signal,
+    headers:{
+      accept:"application/x-ndjson",
+      "content-type":"application/json",
+      "x-client-request-id":requestId,
+      ...(token?{"x-fear-token":token}:{}),
+    },
+    body:JSON.stringify({...payload,stream:true}),
+  });
+  if(!response.ok){
+    const data=await response.json().catch(()=>({}));
+    if(response.status===401&&token){
+      clearSessionToken();
+      window.dispatchEvent(new CustomEvent("fear:session-expired"));
+    }
+    throw new ApiError(data.error||"fear AI could not start that response.",{
+      status:response.status,
+      code:data.code||`HTTP_${response.status}`,
+      requestId:data.requestId||response.headers.get("x-request-id")||requestId,
+      retryAfter:response.headers.get("retry-after")||"",
+    });
+  }
+  if(!response.body?.getReader)throw new ApiError("Streaming is not available in this browser yet.",{code:"STREAM_UNAVAILABLE",requestId});
+  const reader=response.body.getReader();
+  const decoder=new TextDecoder();
+  let buffer="";
+  let completed=null;
+  const processLine=async line=>{
+    const raw=String(line||"").trim();
+    if(!raw)return;
+    let event;
+    try{event=JSON.parse(raw);}catch{return;}
+    if(event.type==="error")throw new ApiError(event.error||"fear AI lost that response.",{code:event.code||"AI_STREAM_INTERRUPTED",requestId});
+    if(event.type==="done")completed=event;
+    await onEvent?.(event);
+  };
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split(/\r?\n/);
+      buffer=lines.pop()||"";
+      for(const line of lines)await processLine(line);
+    }
+    buffer+=decoder.decode();
+    if(buffer.trim())await processLine(buffer);
+  }catch(error){
+    await reader.cancel().catch(()=>{});
+    throw error;
+  }
+  return completed;
 }
 
 const E2EE_PREFIX="__fear_e2ee_v1__:";
@@ -3872,7 +3963,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [aiActiveConversationId,setAiActiveConversationId]=useState("");
   const [aiMode,setAiMode]=useState("work");
   const [aiLoading,setAiLoading]=useState(false);
+  const [aiStreaming,setAiStreaming]=useState(false);
   const [aiLoaded,setAiLoaded]=useState(false);
+  const aiGenerationRef=useRef(null);
+  const aiGenerationIdRef=useRef("");
   const messageSyncInFlight=useRef(false);
   useEffect(()=>{
     const online=()=>setConnectionState("connecting");
@@ -3941,8 +4035,14 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     applyBackendState(data);
     return data;
   },[applyBackendState]);
+  const signalAiStop=useCallback(()=>{
+    const generationId=aiGenerationIdRef.current;
+    if(generationId)void callBackend(`/ai/generations/${encodeURIComponent(generationId)}/stop`,{method:"POST",body:"{}"}).catch(()=>{});
+    aiGenerationRef.current?.abort();
+  },[callBackend]);
   const openAiConversation=useCallback(async id=>{
     if(!id)return;
+    signalAiStop();
     setAiActiveConversationId(id);
     setAiMessages([]);
     setAiLoading(true);
@@ -3956,7 +4056,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     }finally{
       setAiLoading(false);
     }
-  },[callBackend,notify]);
+  },[callBackend,notify,signalAiStop]);
   useEffect(()=>{
     if(view!=="ai"||aiLoaded)return;
     let active=true;
@@ -3977,9 +4077,21 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     return()=>{active=false;};
   },[aiLoaded,callBackend,notify,openAiConversation,view]);
   const startNewAiConversation=()=>{
+    signalAiStop();
     setAiActiveConversationId("");
     setAiMessages([]);
     setAiMode("work");
+  };
+  const renameAiConversation=async(id,title)=>{
+    const cleanTitle=String(title||"").trim();
+    if(!id||cleanTitle.length<2)return;
+    try{
+      const data=await callBackend(`/ai/conversations/${encodeURIComponent(id)}`,{method:"PUT",body:JSON.stringify({title:cleanTitle})});
+      setAiConversations(Array.isArray(data.conversations)?data.conversations:aiConversations);
+      notify("Conversation renamed");
+    }catch(err){
+      notify(err.message||"Could not rename that conversation","error");
+    }
   };
   const deleteAiConversation=async id=>{
     const conversation=aiConversations.find(item=>item.id===id);
@@ -3998,26 +4110,63 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       notify(err.message||"Could not delete that conversation","error");
     }
   };
-  const sendAiMessage=async(message,mode=aiMode)=>{
+  const stopAiGeneration=signalAiStop;
+  const sendAiMessage=async(message,mode=aiMode,options={})=>{
     const text=String(message||"").trim();
-    if(!text||aiLoading)return;
-    const optimisticId=`ai_pending_${Date.now()}`;
+    if((!text&&!options.regenerate)||aiLoading||aiStreaming)return;
+    const optimisticUserId=`ai_pending_user_${Date.now()}`;
+    const optimisticAssistantId=`ai_stream_${Date.now()}`;
+    const generationId=crypto?.randomUUID?.()||`web-generation-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const controller=new AbortController();
+    aiGenerationRef.current=controller;
+    aiGenerationIdRef.current=generationId;
     setAiMode(mode);
-    setAiMessages(current=>[...current,{id:optimisticId,role:"user",content:text,createdAt:new Date().toISOString(),pending:true}]);
-    setAiLoading(true);
+    setAiMessages(current=>{
+      let next=[...current];
+      if(options.editMessageId){
+        const index=next.findIndex(item=>item.id===options.editMessageId);
+        if(index>=0)next=[...next.slice(0,index),{...next[index],content:text,pending:true}];
+      }else if(options.regenerate){
+        const lastUserIndex=next.map(item=>item.role).lastIndexOf("user");
+        if(lastUserIndex>=0)next=next.slice(0,lastUserIndex+1);
+      }else{
+        next.push({id:optimisticUserId,role:"user",content:text,createdAt:new Date().toISOString(),pending:true});
+      }
+      next.push({id:optimisticAssistantId,role:"assistant",content:"",createdAt:new Date().toISOString(),streaming:true});
+      return next;
+    });
+    setAiStreaming(true);
     try{
-      const data=await callBackend("/ai/chat",{method:"POST",body:JSON.stringify({conversationId:aiActiveConversationId,message:text,mode}),timeout:60000});
-      setAiActiveConversationId(data.conversationId||data.conversation?.id||aiActiveConversationId);
-      setAiMessages(Array.isArray(data.messages)?data.messages:[]);
-      setAiConversations(Array.isArray(data.conversations)?data.conversations:aiConversations);
+      await streamAiChat({conversationId:aiActiveConversationId,message:text,mode,regenerate:Boolean(options.regenerate),editMessageId:options.editMessageId||"",generationId},{
+        signal:controller.signal,
+        onEvent:event=>{
+          if(event.type==="meta"){
+            const conversation=event.conversation||{};
+            setAiActiveConversationId(conversation.id||aiActiveConversationId);
+            setAiConversations(current=>conversation.id?[{...conversation,preview:text||current.find(item=>item.id===conversation.id)?.preview||"",messageCount:Math.max(1,Number(current.find(item=>item.id===conversation.id)?.messageCount||0))},...current.filter(item=>item.id!==conversation.id)]:current);
+            setAiMessages(current=>current.map(item=>item.id===optimisticUserId?{...event.userMessage,pending:false}:item.id===options.editMessageId?{...item,...event.userMessage,pending:false}:item));
+          }
+          if(event.type==="delta"&&event.delta){
+            setAiMessages(current=>current.map(item=>item.id===optimisticAssistantId?{...item,content:`${item.content||""}${event.delta}`}:item));
+          }
+          if(event.type==="done"){
+            if(Array.isArray(event.conversations))setAiConversations(event.conversations);
+            setAiMessages(current=>current.map(item=>item.id===optimisticAssistantId?{...(event.message||item),streaming:false,stopped:Boolean(event.stopped)}:item));
+          }
+        },
+      });
     }catch(err){
-      setAiMessages(current=>[
-        ...current.map(item=>item.id===optimisticId?{...item,pending:false}:item),
-        {id:`ai_error_${Date.now()}`,role:"assistant",content:err.message||"I couldn’t finish that response. Your message is still here, so please try again.",createdAt:new Date().toISOString(),error:true},
-      ]);
-      notify(err.message||"fear AI could not finish that response","error");
+      if(err?.name==="AbortError"){
+        setAiMessages(current=>current.map(item=>item.id===optimisticAssistantId?{...item,streaming:false,stopped:true}:item).filter(item=>item.id!==optimisticAssistantId||item.content));
+        notify("Response stopped","info");
+      }else{
+        setAiMessages(current=>current.map(item=>item.id===optimisticUserId||item.id===options.editMessageId?{...item,pending:false}:item).map(item=>item.id===optimisticAssistantId?{...item,streaming:false,error:true,content:item.content||err.message||"I couldn’t finish that response. Your message is saved, so you can retry it."}:item));
+        notify(err.message||"fear AI could not finish that response","error");
+      }
     }finally{
-      setAiLoading(false);
+      if(aiGenerationRef.current===controller)aiGenerationRef.current=null;
+      if(aiGenerationIdRef.current===generationId)aiGenerationIdRef.current="";
+      setAiStreaming(false);
     }
   };
   useEffect(()=>{
@@ -4799,7 +4948,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <div key={`${view}-${searchTerm?"search":"view"}`} className="app-content-stage" data-view={view}>
         {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
         {!searchTerm&&viewMeta[view]&&<AppViewIntro {...viewMeta[view]} />}
-        {!searchTerm&&view==="ai"&&<FearAiWorkspace profile={profile} conversations={aiConversations} messages={aiMessages} activeConversationId={aiActiveConversationId} mode={aiMode} loading={aiLoading} onModeChange={setAiMode} onNew={startNewAiConversation} onOpen={openAiConversation} onDelete={deleteAiConversation} onSend={sendAiMessage} notify={notify}/>}
+        {!searchTerm&&view==="ai"&&<FearAiWorkspace profile={profile} conversations={aiConversations} messages={aiMessages} activeConversationId={aiActiveConversationId} mode={aiMode} loading={aiLoading} streaming={aiStreaming} onModeChange={setAiMode} onNew={startNewAiConversation} onOpen={openAiConversation} onDelete={deleteAiConversation} onRename={renameAiConversation} onSend={sendAiMessage} onStop={stopAiGeneration} notify={notify}/>}
         {view==="feed"&&(
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:interfaceSettings.rightRail===false?"270px minmax(0,1fr)":"270px minmax(0,1fr) 310px",gap:interfaceSettings.density==="compact"?14:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
@@ -4932,8 +5081,8 @@ const FEAR_AI_STARTERS=[
   {icon:"diamond",mode:"decide",title:"Make a clear decision",prompt:"Help me make a professional decision. Structure the options, assumptions, tradeoffs, and a recommendation I can act on."},
 ];
 
-const AiInlineText=({text})=>String(text||"").split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part,index)=>part.startsWith("**")&&part.endsWith("**")?<strong key={`${part}-${index}`}>{part.slice(2,-2)}</strong>:<span key={`${part}-${index}`}>{part}</span>);
-const AiMessageBody=({content})=><div className="ai-message-body">{String(content||"").split("\n").map((line,index)=>{
+const AiInlineText=({text})=>String(text||"").split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part,index)=>part.startsWith("**")&&part.endsWith("**")?<strong key={`${part}-${index}`}>{part.slice(2,-2)}</strong>:part.startsWith("`")&&part.endsWith("`")?<code key={`${part}-${index}`}>{part.slice(1,-1)}</code>:<span key={`${part}-${index}`}>{part}</span>);
+const AiTextLines=({content})=>String(content||"").split("\n").map((line,index)=>{
   const trimmed=line.trim();
   if(!trimmed)return <div className="ai-message-space" key={`space-${index}`}/>;
   if(/^#{1,3}\s+/.test(trimmed))return <h3 key={`heading-${index}`}><AiInlineText text={trimmed.replace(/^#{1,3}\s+/,"")}/></h3>;
@@ -4941,32 +5090,91 @@ const AiMessageBody=({content})=><div className="ai-message-body">{String(conten
   const numbered=trimmed.match(/^(\d+)[.)]\s+(.+)$/);
   if(numbered)return <div className="ai-message-number-line" key={`number-${index}`}><b>{numbered[1]}</b><span><AiInlineText text={numbered[2]}/></span></div>;
   return <p key={`line-${index}`}><AiInlineText text={line}/></p>;
-})}</div>;
+});
+function AiCodeBlock({language,code}){
+  const [copied,setCopied]=useState(false);
+  const copy=async()=>{
+    try{
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(()=>setCopied(false),1400);
+    }catch{}
+  };
+  return <div className="ai-code-block"><div><span>{language||"code"}</span><button type="button" onClick={copy}><Icon name="copy" size={13}/>{copied?"Copied":"Copy"}</button></div><pre><code>{code}</code></pre></div>;
+}
+function AiMessageBody({content}){
+  const value=String(content||"");
+  const blocks=[];
+  const pattern=/```([A-Za-z0-9_+.-]*)\n?([\s\S]*?)```/g;
+  let lastIndex=0;
+  let match;
+  while((match=pattern.exec(value))){
+    if(match.index>lastIndex)blocks.push({type:"text",content:value.slice(lastIndex,match.index)});
+    blocks.push({type:"code",language:match[1],content:match[2].replace(/\s+$/,"")});
+    lastIndex=pattern.lastIndex;
+  }
+  if(lastIndex<value.length)blocks.push({type:"text",content:value.slice(lastIndex)});
+  if(blocks.length===0)blocks.push({type:"text",content:value});
+  return <div className="ai-message-body">{blocks.map((block,index)=>block.type==="code"?<AiCodeBlock key={`code-${index}`} language={block.language} code={block.content}/>:<AiTextLines key={`text-${index}`} content={block.content}/>)}</div>;
+}
 
-function FearAiWorkspace({profile,conversations,messages,activeConversationId,mode,loading,onModeChange,onNew,onOpen,onDelete,onSend,notify}){
+function FearAiWorkspace({profile,conversations,messages,activeConversationId,mode,loading,streaming,onModeChange,onNew,onOpen,onDelete,onRename,onSend,onStop,notify}){
   const [draft,setDraft]=useState("");
   const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [historySearch,setHistorySearch]=useState("");
+  const [editingMessageId,setEditingMessageId]=useState("");
   const endRef=useRef(null);
   const inputRef=useRef(null);
+  const historySearchRef=useRef(null);
   const safeConversations=Array.isArray(conversations)?conversations:[];
   const safeMessages=Array.isArray(messages)?messages:[];
   const activeConversation=safeConversations.find(item=>item.id===activeConversationId);
+  const filteredConversations=safeConversations.filter(item=>`${item.title||""} ${item.preview||""}`.toLowerCase().includes(historySearch.trim().toLowerCase()));
+  const lastAssistantIndex=safeMessages.map(item=>item.role).lastIndexOf("assistant");
   const firstName=String(profile?.name||"").trim().split(/\s+/)[0]||"there";
   useEffect(()=>{
     endRef.current?.scrollIntoView?.({block:"end",behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth"});
-  },[loading,safeMessages.length]);
+  },[activeConversationId,loading,streaming,safeMessages.length,safeMessages[safeMessages.length-1]?.content?.length]);
   useEffect(()=>setSidebarOpen(false),[activeConversationId]);
+  useEffect(()=>setEditingMessageId(""),[activeConversationId]);
   useEffect(()=>{
     const input=inputRef.current;
     if(!input)return;
     input.style.height="auto";
     input.style.height=`${Math.min(180,Math.max(52,input.scrollHeight))}px`;
   },[draft]);
-  const submit=async(value=draft,nextMode=mode)=>{
+  useEffect(()=>{
+    const onKeyDown=event=>{
+      if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){
+        event.preventDefault();
+        setSidebarOpen(true);
+        requestAnimationFrame(()=>historySearchRef.current?.focus());
+      }
+      if(event.key==="Escape"){
+        setSidebarOpen(false);
+        setEditingMessageId("");
+      }
+    };
+    window.addEventListener("keydown",onKeyDown);
+    return()=>window.removeEventListener("keydown",onKeyDown);
+  },[]);
+  const submit=async(value=draft,nextMode=mode,options={})=>{
     const text=String(value||"").trim();
-    if(!text||loading)return;
+    if(!text||loading||streaming)return;
     setDraft("");
-    await onSend(text,nextMode);
+    const editMessageId=options.editMessageId||editingMessageId;
+    setEditingMessageId("");
+    await onSend(text,nextMode,{...options,editMessageId});
+  };
+  const beginEdit=message=>{
+    if(streaming)return;
+    setEditingMessageId(message.id);
+    setDraft(message.content||"");
+    requestAnimationFrame(()=>inputRef.current?.focus());
+  };
+  const renameConversation=conversation=>{
+    const title=window.prompt("Rename conversation",conversation.title||"New conversation");
+    if(title&&title.trim()!==conversation.title)void onRename(conversation.id,title);
   };
   const copyMessage=async content=>{
     try{
@@ -4984,31 +5192,34 @@ function FearAiWorkspace({profile,conversations,messages,activeConversationId,mo
         <button type="button" className="ai-mobile-close" aria-label="Close conversation history" onClick={()=>setSidebarOpen(false)}><Icon name="close" size={17}/></button>
       </div>
       <button type="button" className="ai-new-chat" onClick={()=>{onNew();setSidebarOpen(false);requestAnimationFrame(()=>inputRef.current?.focus());}}><Icon name="plus" size={17}/>New conversation</button>
-      <div className="ai-history-label">Recent</div>
+      <label className="ai-history-search"><Icon name="search" size={15}/><span className="sr-only">Search conversations</span><input ref={historySearchRef} value={historySearch} onChange={event=>setHistorySearch(event.target.value)} placeholder="Search conversations"/></label>
+      <div className="ai-history-label">{historySearch.trim()?"Search results":"Recent"}</div>
       <div className="ai-history-list">
-        {safeConversations.length===0?<p className="ai-history-empty">Your conversations will stay here and follow you across devices.</p>:safeConversations.map(conversation=><div key={conversation.id} className={`ai-history-item ${activeConversationId===conversation.id?"active":""}`}>
+        {safeConversations.length===0?<p className="ai-history-empty">Your conversations will stay here and follow you across devices.</p>:filteredConversations.length===0?<p className="ai-history-empty">No conversations match that search.</p>:filteredConversations.map(conversation=><div key={conversation.id} className={`ai-history-item ${activeConversationId===conversation.id?"active":""}`}>
           <button type="button" onClick={()=>onOpen(conversation.id)}>
             <b>{conversation.title||"New conversation"}</b>
             <span>{conversation.preview||"Open conversation"}</span>
           </button>
-          <button type="button" className="ai-history-delete" aria-label={`Delete ${conversation.title||"conversation"}`} title="Delete conversation" onClick={()=>onDelete(conversation.id)}><Icon name="trash" size={15}/></button>
+          <div className="ai-history-actions"><button type="button" aria-label={`Rename ${conversation.title||"conversation"}`} title="Rename conversation" onClick={()=>renameConversation(conversation)}><Icon name="edit" size={14}/></button><button type="button" disabled={streaming&&activeConversationId===conversation.id} aria-label={`Delete ${conversation.title||"conversation"}`} title={streaming&&activeConversationId===conversation.id?"Stop the response before deleting":"Delete conversation"} onClick={()=>onDelete(conversation.id)}><Icon name="trash" size={14}/></button></div>
         </div>)}
       </div>
       <div className="ai-sidebar-foot"><Icon name="lock" size={14}/><span>Your chats are private to your account and stored so they work across your devices.</span></div>
     </aside>
 
     <div className="ai-chat-panel">
+      <div className="sr-only" role="status" aria-live="polite">{streaming?"fear AI is responding.":loading?"Loading conversation.":""}</div>
       <header className="ai-chat-header">
         <div className="ai-chat-heading">
           <button type="button" className="ai-history-toggle" aria-label="Open conversation history" onClick={()=>setSidebarOpen(true)}><Icon name="menu" size={18}/></button>
           <div><span>{activeConversation?"Conversation":"fear AI"}</span><h1>{activeConversation?.title||"Your next move starts here."}</h1></div>
+          {activeConversation&&<button type="button" className="ai-title-edit" aria-label="Rename conversation" title="Rename conversation" onClick={()=>renameConversation(activeConversation)}><Icon name="edit" size={14}/></button>}
         </div>
         <div className="ai-mode-switch" role="tablist" aria-label="fear AI mode">
-          {FEAR_AI_MODES.map(item=><button key={item.id} type="button" role="tab" aria-selected={mode===item.id} title={item.copy} onClick={()=>onModeChange(item.id)}>{item.label}</button>)}
+          {FEAR_AI_MODES.map(item=><button key={item.id} type="button" role="tab" aria-selected={mode===item.id} disabled={streaming} title={item.copy} onClick={()=>onModeChange(item.id)}>{item.label}</button>)}
         </div>
       </header>
 
-      <div className={`ai-message-list ${safeMessages.length===0?"empty":""}`} aria-live="polite">
+      <div className={`ai-message-list ${safeMessages.length===0?"empty":""}`}>
         {safeMessages.length===0?<div className="ai-welcome">
           <div className="ai-welcome-mark"><Icon name="brain" size={27}/></div>
           <div className="ai-welcome-eyebrow">Private business and career intelligence</div>
@@ -5020,25 +5231,30 @@ function FearAiWorkspace({profile,conversations,messages,activeConversationId,mo
             </button>)}
           </div>
         </div>:<div className="ai-message-column">
-          {safeMessages.map(message=><article key={message.id} className={`ai-message ${message.role} ${message.error?"error":""}`}>
+          {safeMessages.map((message,index)=><article key={message.id} className={`ai-message ${message.role} ${message.error?"error":""} ${message.streaming?"streaming":""}`}>
             <div className="ai-message-avatar">{message.role==="assistant"?<Icon name="brain" size={17}/>:String(profile?.name||"Y").split(" ").map(part=>part[0]).slice(0,2).join("").toUpperCase()}</div>
             <div className="ai-message-content">
-              <div className="ai-message-meta"><b>{message.role==="assistant"?"fear AI":"You"}</b>{message.pending&&<span>Sending</span>}</div>
-              <AiMessageBody content={message.content}/>
-              {message.role==="assistant"&&!message.error&&<button type="button" className="ai-copy-button" onClick={()=>copyMessage(message.content)} title="Copy response"><Icon name="copy" size={14}/>Copy</button>}
+              <div className="ai-message-meta"><b>{message.role==="assistant"?"fear AI":"You"}</b>{message.pending&&<span>Sending</span>}{message.streaming&&<span>Writing</span>}{message.stopped&&<span>Stopped</span>}</div>
+              {message.streaming&&!message.content?<div className="ai-thinking" aria-label="fear AI is thinking"><i/><i/><i/></div>:<AiMessageBody content={message.content}/>}
+              <div className="ai-message-actions">
+                {message.role==="assistant"&&message.content&&!message.error&&<button type="button" onClick={()=>copyMessage(message.content)} title="Copy response"><Icon name="copy" size={14}/>Copy</button>}
+                {message.role==="assistant"&&index===lastAssistantIndex&&!streaming&&!loading&&<button type="button" onClick={()=>void onSend("",mode,{regenerate:true})} title="Regenerate response"><Icon name="refresh" size={14}/>Regenerate</button>}
+                {message.role==="user"&&!message.pending&&!streaming&&!loading&&<button type="button" onClick={()=>beginEdit(message)} title="Edit message"><Icon name="edit" size={14}/>Edit</button>}
+              </div>
             </div>
           </article>)}
-          {loading&&<article className="ai-message assistant"><div className="ai-message-avatar"><Icon name="brain" size={17}/></div><div className="ai-message-content"><div className="ai-message-meta"><b>fear AI</b><span>Thinking</span></div><div className="ai-thinking" aria-label="fear AI is thinking"><i/><i/><i/></div></div></article>}
+          {loading&&!streaming&&<article className="ai-message assistant"><div className="ai-message-avatar"><Icon name="brain" size={17}/></div><div className="ai-message-content"><div className="ai-message-meta"><b>fear AI</b><span>Loading</span></div><div className="ai-thinking" aria-label="Conversation is loading"><i/><i/><i/></div></div></article>}
           <div ref={endRef}/>
         </div>}
       </div>
 
       <div className="ai-composer-wrap">
-        <form className="ai-composer" onSubmit={event=>{event.preventDefault();void submit();}}>
-          <textarea ref={inputRef} value={draft} disabled={loading} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void submit();}}} placeholder="Ask fear AI about the work, idea, decision, or next step..." aria-label="Message fear AI" rows={1}/>
-          <button type="submit" disabled={loading||!draft.trim()} aria-label="Send message" title="Send message"><Icon name="arrowRight" size={19}/></button>
+        {editingMessageId&&<div className="ai-editing-bar"><span><Icon name="edit" size={14}/>Editing your message</span><button type="button" onClick={()=>{setEditingMessageId("");setDraft("");}}>Cancel</button></div>}
+        <form className={`ai-composer ${streaming?"is-streaming":""}`} onSubmit={event=>{event.preventDefault();streaming?onStop():void submit();}}>
+          <textarea ref={inputRef} value={draft} disabled={loading} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();if(!streaming)void submit();}}} placeholder={editingMessageId?"Update your message...":"Ask anything about your work, career, idea, or next move..."} aria-label="Message fear AI" rows={1}/>
+          <button type="submit" className={streaming?"stop":""} disabled={loading||(!streaming&&!draft.trim())} aria-label={streaming?"Stop response":"Send message"} title={streaming?"Stop response":"Send message"}><Icon name={streaming?"stop":"arrowRight"} size={streaming?17:19}/></button>
         </form>
-        <p>fear AI can make mistakes. Verify important legal, financial, medical, and business decisions.</p>
+        <p>{streaming?"fear AI is responding. You can stop it at any time.":"fear AI can make mistakes. Verify important legal, financial, medical, and business decisions."}</p>
       </div>
     </div>
   </section>;

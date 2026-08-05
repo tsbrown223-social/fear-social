@@ -1978,7 +1978,70 @@ const extractAiResponse = (result) => {
   return "";
 };
 
-async function handleRequest({ request, env, params }) {
+const extractAiStreamToken = (payload) => {
+  if (!payload || typeof payload !== "object") return "";
+  if (typeof payload.response === "string") return payload.response;
+  if (typeof payload.result?.response === "string") return payload.result.response;
+  if (typeof payload.choices?.[0]?.delta?.content === "string") return payload.choices[0].delta.content;
+  if (typeof payload.choices?.[0]?.text === "string") return payload.choices[0].text;
+  return "";
+};
+
+async function saveAiAssistantResponse(db, userId, conversation, mode, rawAnswer) {
+  let answer = cleanText(rawAnswer, FEAR_AI_MAX_RESPONSE_LENGTH);
+  if (!answer) return null;
+  const responseIssue = moderationIssue(answer);
+  if (responseIssue) {
+    await queueModerationReview(db, userId, "ai_response", conversation.id, `Automated AI response filter flagged ${responseIssue}. Review within 24 hours.`);
+    answer = "I can’t help with that response. Let’s reframe the request around a safe, legitimate business or career goal.";
+  }
+  const id = createId("ai_message");
+  const createdAt = new Date().toISOString();
+  await db
+    .prepare("INSERT INTO ai_messages (id, conversation_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'assistant', ?, ?)")
+    .bind(id, conversation.id, userId, answer, createdAt)
+    .run();
+  await db.prepare("UPDATE ai_conversations SET updated_at = ? WHERE id = ? AND user_id = ?").bind(createdAt, conversation.id, userId).run();
+  return { id, role: "assistant", content: answer, createdAt, mode };
+}
+
+async function getOwnedAiUserMessage(db, userId, conversationId, messageId = "") {
+  const whereMessage = messageId ? "AND m.id = ?" : "";
+  const bindings = messageId ? [conversationId, userId, messageId] : [conversationId, userId];
+  return db
+    .prepare(
+      `SELECT m.id, m.content, m.created_at, m.rowid AS row_order
+       FROM ai_messages m
+       JOIN ai_conversations c ON c.id = m.conversation_id
+       WHERE m.conversation_id = ? AND c.user_id = ? AND m.role = 'user' ${whereMessage}
+       ORDER BY m.rowid DESC
+       LIMIT 1`
+    )
+    .bind(...bindings)
+    .first();
+}
+
+async function isAiGenerationStopped(db, userId, generationId) {
+  if (!generationId) return false;
+  const generation = await db
+    .prepare("SELECT status FROM ai_generations WHERE id = ? AND user_id = ? LIMIT 1")
+    .bind(generationId, userId)
+    .first();
+  return generation?.status === "stopped";
+}
+
+async function finishAiGeneration(db, userId, generationId, status) {
+  if (!generationId) return;
+  await db
+    .prepare("UPDATE ai_generations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?")
+    .bind(status, generationId, userId)
+    .run();
+}
+
+const encodeAiStreamEvent = (encoder, payload) => encoder.encode(`${JSON.stringify(payload)}\n`);
+
+async function handleRequest(context) {
+  const { request, env, params } = context;
   const db = requireDb(env);
   const method = request.method;
   const rawPath = Array.isArray(params.path) ? params.path.join("/") : params.path || "";
@@ -2719,6 +2782,22 @@ async function handleRequest({ request, env, params }) {
     });
   }
 
+  if (method === "PUT" && segments[0] === "ai" && segments[1] === "conversations" && segments.length === 3) {
+    const limited = await enforceRateLimit(db, request, `ai-conversations-rename:${user.id}`, 40, 3600);
+    if (limited) return limited;
+    const conversationId = cleanText(segments[2], 120);
+    const conversation = await getAiConversation(db, user.id, conversationId);
+    if (!conversation) return json({ error: "Conversation not found" }, { status: 404 });
+    const title = cleanText(body.title || "", 80).replace(/\s+/g, " ");
+    if (title.length < 2) return json({ error: "Give the conversation a longer name." }, { status: 400 });
+    const updatedAt = new Date().toISOString();
+    await db.prepare("UPDATE ai_conversations SET title = ?, updated_at = ? WHERE id = ? AND user_id = ?").bind(title, updatedAt, conversationId, user.id).run();
+    return json({
+      conversation: { id: conversationId, title, mode: normalizeAiMode(conversation.mode), createdAt: conversation.created_at, updatedAt },
+      conversations: await getAiConversations(db, user.id),
+    });
+  }
+
   if (method === "DELETE" && segments[0] === "ai" && segments[1] === "conversations" && segments.length === 3) {
     const limited = await enforceRateLimit(db, request, "ai-conversations-delete", 40, 3600);
     if (limited) return limited;
@@ -2730,8 +2809,19 @@ async function handleRequest({ request, env, params }) {
     return json({ ok: true, conversations: await getAiConversations(db, user.id) });
   }
 
+  if (method === "POST" && segments[0] === "ai" && segments[1] === "generations" && segments[3] === "stop" && segments.length === 4) {
+    const limited = await enforceRateLimit(db, request, `fear-ai-stop:${user.id}`, 100, 3600);
+    if (limited) return limited;
+    const generationId = cleanText(segments[2], 120);
+    const result = await db
+      .prepare("UPDATE ai_generations SET status = 'stopped', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND status = 'running'")
+      .bind(generationId, user.id)
+      .run();
+    return json({ ok: true, stopped: Number(result.meta?.changes || 0) > 0 });
+  }
+
   if (method === "POST" && path === "/ai/chat") {
-    const limited = await enforceRateLimit(db, request, `fear-ai-chat:${user.id}`, 40, 3600);
+    const limited = await enforceRateLimit(db, request, `fear-ai-chat:${user.id}`, 80, 3600);
     if (limited) return limited;
     if (!env.AI || typeof env.AI.run !== "function") {
       return json(
@@ -2740,14 +2830,28 @@ async function handleRequest({ request, env, params }) {
       );
     }
 
-    const prompt = cleanText(body.message || "", FEAR_AI_MAX_PROMPT_LENGTH);
-    if (prompt.length < 2) return json({ error: "Write a message before sending." }, { status: 400 });
-    const promptSafety = await rejectObjectionableContent(db, user.id, "ai_prompt", prompt);
-    if (promptSafety) return promptSafety;
-
+    const wantsStream = body.stream === true;
+    const generationId = wantsStream ? cleanText(body.generationId || createId("ai_generation"), 120) : "";
+    const regenerate = body.regenerate === true;
+    const editMessageId = cleanText(body.editMessageId || "", 120);
     let conversationId = cleanText(body.conversationId || "", 120);
     let conversation = conversationId ? await getAiConversation(db, user.id, conversationId) : null;
     if (conversationId && !conversation) return json({ error: "Conversation not found" }, { status: 404 });
+    if ((regenerate || editMessageId) && !conversation) return json({ error: "Open a conversation before retrying a response." }, { status: 400 });
+
+    let targetUserMessage = null;
+    let prompt = cleanText(body.message || "", FEAR_AI_MAX_PROMPT_LENGTH);
+    if (regenerate) {
+      targetUserMessage = await getOwnedAiUserMessage(db, user.id, conversationId);
+      if (!targetUserMessage) return json({ error: "There is no earlier message to retry." }, { status: 400 });
+      prompt = cleanText(targetUserMessage.content, FEAR_AI_MAX_PROMPT_LENGTH);
+    } else if (editMessageId) {
+      targetUserMessage = await getOwnedAiUserMessage(db, user.id, conversationId, editMessageId);
+      if (!targetUserMessage) return json({ error: "That message can no longer be edited." }, { status: 404 });
+    }
+    if (prompt.length < 2) return json({ error: "Write a message before sending." }, { status: 400 });
+    const promptSafety = await rejectObjectionableContent(db, user.id, "ai_prompt", prompt);
+    if (promptSafety) return promptSafety;
 
     const mode = normalizeAiMode(body.mode || conversation?.mode || "work");
     const now = new Date().toISOString();
@@ -2764,29 +2868,178 @@ async function handleRequest({ request, env, params }) {
       conversation = { ...conversation, mode, updated_at: now };
     }
 
-    const userMessageId = createId("ai_message");
-    await db
-      .prepare("INSERT INTO ai_messages (id, conversation_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'user', ?, ?)")
-      .bind(userMessageId, conversationId, user.id, prompt, now)
-      .run();
+    let userMessageId = targetUserMessage?.id || "";
+    if (regenerate) {
+      await db.prepare("DELETE FROM ai_messages WHERE conversation_id = ? AND user_id = ? AND rowid > ?").bind(conversationId, user.id, Number(targetUserMessage.row_order)).run();
+    } else if (editMessageId) {
+      await db.prepare("DELETE FROM ai_messages WHERE conversation_id = ? AND user_id = ? AND rowid > ?").bind(conversationId, user.id, Number(targetUserMessage.row_order)).run();
+      await db.prepare("UPDATE ai_messages SET content = ?, created_at = ? WHERE id = ? AND conversation_id = ? AND user_id = ? AND role = 'user'").bind(prompt, now, editMessageId, conversationId, user.id).run();
+      userMessageId = editMessageId;
+    } else {
+      userMessageId = createId("ai_message");
+      await db
+        .prepare("INSERT INTO ai_messages (id, conversation_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'user', ?, ?)")
+        .bind(userMessageId, conversationId, user.id, prompt, now)
+        .run();
+    }
     await db.prepare("UPDATE ai_conversations SET updated_at = ? WHERE id = ? AND user_id = ?").bind(now, conversationId, user.id).run();
 
     const storedMessages = await getAiMessages(db, user.id, conversationId, 100);
     const contextMessages = storedMessages
-      .slice(-18)
+      .slice(-28)
       .map((message) => ({ role: message.role, content: cleanText(message.content, 6000) }));
     const model = cleanText(env.FEAR_AI_MODEL || FEAR_AI_DEFAULT_MODEL, 180) || FEAR_AI_DEFAULT_MODEL;
+    const modelInput = {
+      messages: [
+        { role: "system", content: fearAiSystemPrompt(user, mode) },
+        ...contextMessages,
+      ],
+      max_tokens: 1400,
+      temperature: 0.55,
+      top_p: 0.9,
+    };
+
+    if (wantsStream) {
+      await db
+        .prepare("INSERT INTO ai_generations (id, user_id, conversation_id, status, created_at, updated_at) VALUES (?, ?, ?, 'running', ?, ?)")
+        .bind(generationId, user.id, conversationId, now, now)
+        .run();
+      let generated;
+      try {
+        generated = await env.AI.run(model, { ...modelInput, stream: true });
+      } catch (error) {
+        await finishAiGeneration(db, user.id, generationId, "failed");
+        console.error("fear AI stream failed to start", { model, message: error?.message });
+        return json(
+          { error: "fear AI could not start that response. Your message is saved, so you can retry it.", code: "AI_STREAM_FAILED", conversationId },
+          { status: 503 }
+        );
+      }
+
+      const source = generated instanceof Response ? generated.body : generated;
+      const encoder = new TextEncoder();
+      let sourceReader = null;
+      let outputController = null;
+      let stopped = false;
+      const output = new ReadableStream({
+        start(controller) {
+          outputController = controller;
+        },
+        async cancel() {
+          stopped = true;
+          try { await sourceReader?.cancel?.("Client stopped generation"); } catch {}
+        },
+      });
+      const emit = (payload) => {
+        try { outputController?.enqueue(encodeAiStreamEvent(encoder, payload)); } catch {}
+      };
+      const finish = () => {
+        try { outputController?.close(); } catch {}
+      };
+
+      const streamWork = (async () => {
+        let answer = "";
+        emit({
+          type: "meta",
+          generationId,
+          conversation: { id: conversationId, title: conversation.title, mode, createdAt: conversation.created_at, updatedAt: now },
+          userMessage: { id: userMessageId, role: "user", content: prompt, createdAt: editMessageId ? now : (targetUserMessage?.created_at || now) },
+        });
+        try {
+          if (!source || typeof source.getReader !== "function") {
+            const fallback = extractAiResponse(generated);
+            if (fallback) {
+              answer = fallback;
+              emit({ type: "delta", delta: fallback });
+            }
+          } else {
+            sourceReader = source.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+            let lastStopCheck = 0;
+            try {
+              while (!stopped) {
+                const { done, value } = await sourceReader.read();
+                if (done) break;
+                if (Date.now() - lastStopCheck >= 250) {
+                  lastStopCheck = Date.now();
+                  stopped = await isAiGenerationStopped(db, user.id, generationId);
+                  if (stopped) {
+                    try { await sourceReader.cancel("Generation stopped by user"); } catch {}
+                    break;
+                  }
+                }
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split(/\r?\n/);
+                buffer = lines.pop() || "";
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (!trimmed || trimmed.startsWith("event:") || trimmed.startsWith(":")) continue;
+                  const raw = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+                  if (!raw || raw === "[DONE]") continue;
+                  try {
+                    const token = extractAiStreamToken(JSON.parse(raw));
+                    if (token) {
+                      answer += token;
+                      emit({ type: "delta", delta: token });
+                    }
+                  } catch {}
+                }
+              }
+            } catch (error) {
+              if (!stopped) throw error;
+            }
+            buffer += decoder.decode();
+            const raw = buffer.trim().replace(/^data:\s*/, "");
+            if (raw && raw !== "[DONE]") {
+              try {
+                const token = extractAiStreamToken(JSON.parse(raw));
+                if (token) {
+                  answer += token;
+                  emit({ type: "delta", delta: token });
+                }
+              } catch {}
+            }
+          }
+
+          if (!stopped) stopped = await isAiGenerationStopped(db, user.id, generationId);
+          const savedMessage = await saveAiAssistantResponse(db, user.id, conversation, mode, answer);
+          await finishAiGeneration(db, user.id, generationId, stopped ? "stopped" : "completed");
+          if (!savedMessage) {
+            emit({ type: "error", error: stopped ? "Response stopped before any text was generated." : "fear AI returned an empty response. Retry when you are ready.", code: "AI_EMPTY_RESPONSE" });
+          } else {
+            emit({
+              type: "done",
+              stopped,
+              conversationId,
+              message: savedMessage,
+              conversations: await getAiConversations(db, user.id),
+            });
+          }
+        } catch (error) {
+          await finishAiGeneration(db, user.id, generationId, stopped ? "stopped" : "failed");
+          console.error("fear AI streaming response failed", { model, conversationId, message: error?.message });
+          emit({ type: "error", error: "fear AI lost the response. Your message is saved, so you can retry it.", code: "AI_STREAM_INTERRUPTED" });
+        } finally {
+          finish();
+        }
+      })();
+      context.waitUntil?.(streamWork);
+
+      return new Response(output, {
+        status: 200,
+        headers: {
+          ...SECURITY_RESPONSE_HEADERS,
+          "content-type": "application/x-ndjson; charset=utf-8",
+          "cache-control": "private, no-store, max-age=0",
+          "x-content-type-options": "nosniff",
+        },
+      });
+    }
+
     let generated;
     try {
-      generated = await env.AI.run(model, {
-        messages: [
-          { role: "system", content: fearAiSystemPrompt(user, mode) },
-          ...contextMessages,
-        ],
-        max_tokens: 1100,
-        temperature: 0.55,
-        top_p: 0.9,
-      });
+      generated = await env.AI.run(model, modelInput);
     } catch (error) {
       console.error("fear AI inference failed", { model, message: error?.message });
       return json(
@@ -2795,26 +3048,15 @@ async function handleRequest({ request, env, params }) {
       );
     }
 
-    let answer = cleanText(extractAiResponse(generated), FEAR_AI_MAX_RESPONSE_LENGTH);
+    const answer = cleanText(extractAiResponse(generated), FEAR_AI_MAX_RESPONSE_LENGTH);
     if (!answer) {
       return json(
         { error: "fear AI returned an empty response. Your message is saved, so you can try again.", code: "AI_EMPTY_RESPONSE", conversationId },
         { status: 503 }
       );
     }
-    const responseIssue = moderationIssue(answer);
-    if (responseIssue) {
-      await queueModerationReview(db, user.id, "ai_response", conversationId, `Automated AI response filter flagged ${responseIssue}. Review within 24 hours.`);
-      answer = "I can’t help with that response. Let’s reframe the request around a safe, legitimate business or career goal.";
-    }
-
-    const assistantMessageId = createId("ai_message");
-    const completedAt = new Date().toISOString();
-    await db
-      .prepare("INSERT INTO ai_messages (id, conversation_id, user_id, role, content, created_at) VALUES (?, ?, ?, 'assistant', ?, ?)")
-      .bind(assistantMessageId, conversationId, user.id, answer, completedAt)
-      .run();
-    await db.prepare("UPDATE ai_conversations SET updated_at = ? WHERE id = ? AND user_id = ?").bind(completedAt, conversationId, user.id).run();
+    const assistantMessage = await saveAiAssistantResponse(db, user.id, conversation, mode, answer);
+    const completedAt = assistantMessage?.createdAt || new Date().toISOString();
 
     return json({
       conversationId,

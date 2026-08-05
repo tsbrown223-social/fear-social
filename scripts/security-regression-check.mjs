@@ -4,11 +4,13 @@ import { readFile } from "node:fs/promises";
 const workerPath = new URL("../functions/api/[[path]].js", import.meta.url);
 const migrationPath = new URL("../migrations/0031_retire_legacy_session_tokens.sql", import.meta.url);
 const aiMigrationPath = new URL("../migrations/0033_fear_ai.sql", import.meta.url);
+const aiControlsMigrationPath = new URL("../migrations/0034_ai_generation_controls.sql", import.meta.url);
 const appPath = new URL("../src/App.jsx", import.meta.url);
-const [worker, migration, aiMigration, app] = await Promise.all([
+const [worker, migration, aiMigration, aiControlsMigration, app] = await Promise.all([
   readFile(workerPath, "utf8"),
   readFile(migrationPath, "utf8"),
   readFile(aiMigrationPath, "utf8"),
+  readFile(aiControlsMigrationPath, "utf8"),
   readFile(appPath, "utf8"),
 ]);
 
@@ -58,6 +60,21 @@ assert.match(
   "AI inference must run on the server through the Cloudflare binding."
 );
 assert.match(
+  worker,
+  /env\.AI\.run\(model,\s*\{\s*\.\.\.modelInput,\s*stream:\s*true\s*\}\)/,
+  "AI responses must stream from the server binding rather than expose a provider credential to the browser."
+);
+assert.match(
+  worker,
+  /UPDATE ai_conversations SET title = \?, updated_at = \? WHERE id = \? AND user_id = \?/,
+  "Conversation renames must remain scoped to the authenticated owner."
+);
+assert.match(
+  worker,
+  /JOIN ai_conversations c ON c\.id = m\.conversation_id[\s\S]{0,180}c\.user_id = \?[\s\S]{0,180}m\.role = 'user'/,
+  "AI message edits and retries must verify conversation ownership and message role."
+);
+assert.match(
   aiMigration,
   /CREATE TABLE IF NOT EXISTS ai_conversations[\s\S]*user_id TEXT NOT NULL/,
   "AI conversation history must be scoped to a user."
@@ -67,10 +84,30 @@ assert.match(
   /FOREIGN KEY \(conversation_id\) REFERENCES ai_conversations\(id\) ON DELETE CASCADE/,
   "Deleting a conversation must remove its messages."
 );
+assert.match(
+  worker,
+  /UPDATE ai_generations SET status = 'stopped'[^;]+WHERE id = \? AND user_id = \? AND status = 'running'/,
+  "Stopping an AI generation must remain scoped to the authenticated owner."
+);
+assert.match(
+  aiControlsMigration,
+  /CREATE TABLE IF NOT EXISTS ai_generations[\s\S]*user_id TEXT NOT NULL[\s\S]*conversation_id TEXT NOT NULL/,
+  "AI generation controls must be scoped to both a user and conversation."
+);
+assert.match(
+  app,
+  /\/ai\/generations\/\$\{encodeURIComponent\(generationId\)\}\/stop/,
+  "The Stop control must signal the authenticated server before aborting the browser stream."
+);
 assert.doesNotMatch(
   app,
   /(OPENAI_API_KEY|CLOUDFLARE_API_TOKEN|authorization:\s*["'`]Bearer)/i,
   "The browser bundle must not contain model-provider credentials."
+);
+assert.match(
+  app,
+  /accept:"application\/x-ndjson"/,
+  "The browser must consume the authenticated first-party AI stream."
 );
 
 console.log("Security regression checks passed.");
