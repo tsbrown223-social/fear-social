@@ -9,7 +9,7 @@ const FEAR_BOARD_TOOLS = [
   {name:"fear.agency",icon:"megaphone",label:"Personal brand growth",copy:"Build your identity, promote yourself with purpose, and grow a personal brand people remember."},
   {name:"fear.style",icon:"heart",label:"Lifestyle and wellness",copy:"Track your goals, habits, health, and routines, then get personalized recommendations for improving your everyday life."},
   {name:"fear.prod",icon:"camera",label:"Photo, video and audio",copy:"Your first step for producing campaigns, videos, photography, recordings, and the media behind what you want to promote."},
-  {name:"fearai",icon:"brain",label:"Learn, build and connect",copy:"Learn how AI works, shape an idea into a real product, and find the people who can help you build it."},
+  {name:"fear AI Pro",icon:"brain",label:"Advanced AI workspaces",copy:"Move beyond the free fear AI chat with deeper project workspaces, reusable business context, and guided building tools."},
   {name:"fear.finance",icon:"briefcase",label:"Markets and financial news",copy:"Stay current with the market information, financial context, and news you need to remain informed and in the loop."},
 ];
 const C = {
@@ -1442,6 +1442,130 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .profile-image-controls{grid-template-columns:minmax(0,1fr);}
   .profile-studio-header h1{font-size:34px!important;}
 }
+.app-shell.ai-shell{width:min(100%,1560px)!important;max-width:1560px!important;padding:18px 22px 24px!important;}
+.ai-shell .app-content-stage[data-view="ai"]{height:calc(100dvh - 116px);min-height:650px;}
+.ai-workspace{height:100%;display:grid;grid-template-columns:278px minmax(0,1fr);gap:12px;color:var(--app-copy);}
+.ai-sidebar,.ai-chat-panel{background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;min-width:0;overflow:hidden;}
+.ai-sidebar{display:flex;flex-direction:column;padding:16px 12px;}
+.ai-sidebar-brand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 6px 18px;}
+.ai-sidebar-brand>div{display:grid;gap:3px;}
+.ai-sidebar-brand>div>span{font-family:Georgia,serif;font-size:23px;font-weight:800;letter-spacing:0;color:var(--app-copy);}
+.ai-sidebar-brand>div>span span{color:#16C74E;}
+.ai-sidebar-brand small{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--app-muted);}
+.ai-new-chat{width:100%;min-height:44px;display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:10px 12px;border:1px solid rgba(22,199,78,.35);border-radius:7px;background:rgba(22,199,78,.09);color:#65DF89;font-size:13px;font-weight:850;}
+.theme-light .ai-new-chat{color:#0B7F33;background:#E8FBF0;}
+.ai-new-chat:hover{border-color:#16C74E;background:rgba(22,199,78,.14);}
+.ai-history-label{padding:21px 7px 8px;color:var(--app-muted);font-size:9px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;}
+.ai-history-list{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;gap:3px;padding-right:2px;}
+.ai-history-empty{font-size:12px;line-height:1.55;color:var(--app-muted);padding:9px 7px;}
+.ai-history-item{display:grid;grid-template-columns:minmax(0,1fr) 32px;gap:2px;align-items:center;border-radius:7px;border:1px solid transparent;}
+.ai-history-item:hover{background:var(--app-panel-2);}
+.ai-history-item.active{background:rgba(22,199,78,.09);border-color:rgba(22,199,78,.2);}
+.ai-history-item>button:first-child{display:grid;gap:3px;min-width:0;padding:10px 9px;text-align:left;background:transparent;border:0;color:var(--app-copy);}
+.ai-history-item b,.ai-history-item span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ai-history-item b{font-size:12px;line-height:1.25;}
+.ai-history-item span{font-size:10px;color:var(--app-muted);font-weight:600;}
+.ai-history-delete{width:30px;height:30px;display:flex;align-items:center;justify-content:center;padding:0;border:0;background:transparent;color:var(--app-muted);opacity:0;}
+.ai-history-item:hover .ai-history-delete,.ai-history-item.active .ai-history-delete,.ai-history-delete:focus-visible{opacity:1;}
+.ai-history-delete:hover{color:#E65B57;}
+.ai-sidebar-foot{display:flex;gap:8px;align-items:flex-start;margin:12px 5px 0;padding:12px 4px 2px;border-top:1px solid var(--app-line);color:var(--app-muted);}
+.ai-sidebar-foot span{font-size:10px;line-height:1.45;}
+.ai-chat-panel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;}
+.ai-chat-header{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 18px;border-bottom:1px solid var(--app-line);}
+.ai-chat-heading{display:flex;align-items:center;gap:10px;min-width:0;}
+.ai-chat-heading>div{min-width:0;}
+.ai-chat-heading span{display:block;margin-bottom:3px;color:#65DF89;font-size:9px;font-weight:950;letter-spacing:.15em;text-transform:uppercase;}
+.ai-chat-heading h1{max-width:520px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit!important;font-size:15px!important;font-weight:800;line-height:1.25!important;color:var(--app-copy)!important;}
+.ai-mode-switch{display:flex;gap:3px;padding:3px;border:1px solid var(--app-line);border-radius:7px;background:var(--app-panel-2);overflow-x:auto;}
+.ai-mode-switch button{min-height:34px;padding:7px 11px;border:0;border-radius:5px;background:transparent;color:var(--app-muted);font-size:11px;font-weight:850;}
+.ai-mode-switch button[aria-selected="true"]{background:var(--app-copy);color:var(--app-bg);}
+.ai-message-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:28px max(22px,calc((100% - 860px)/2));}
+.ai-message-list.empty{display:grid;place-items:center;padding-top:36px;padding-bottom:36px;}
+.ai-welcome{width:min(100%,800px);text-align:center;margin:auto;}
+.ai-welcome-mark{width:52px;height:52px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:1px solid rgba(22,199,78,.38);border-radius:8px;background:rgba(22,199,78,.1);color:#65DF89;box-shadow:0 0 44px rgba(22,199,78,.12);}
+.ai-welcome-eyebrow{margin-bottom:10px;color:#65DF89;font-size:9px;font-weight:950;letter-spacing:.18em;text-transform:uppercase;}
+.ai-welcome h2{font-family:Georgia,serif;font-size:clamp(31px,4vw,48px);line-height:1;letter-spacing:0;color:var(--app-copy);text-wrap:balance;}
+.ai-welcome>p{width:min(100%,620px);margin:14px auto 24px;color:var(--app-muted);font-size:13px;line-height:1.65;}
+.ai-starter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;text-align:left;}
+.ai-starter-grid button{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:10px;row-gap:3px;min-height:92px;padding:13px;border:1px solid var(--app-line);border-radius:7px;background:var(--app-panel-2);color:var(--app-copy);text-align:left;white-space:normal!important;}
+.ai-starter-grid button:hover{border-color:rgba(22,199,78,.38);transform:translateY(-1px);}
+.ai-starter-grid button>span{grid-row:1/3;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(22,199,78,.1);color:#65DF89;}
+.ai-starter-grid b{align-self:end;font-size:13px;line-height:1.2;}
+.ai-starter-grid small{align-self:start;color:var(--app-muted);font-size:10px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.ai-message-column{width:min(100%,860px);margin:0 auto;display:grid;gap:22px;}
+.ai-message{display:flex;align-items:flex-start;gap:11px;min-width:0;}
+.ai-message.user{flex-direction:row-reverse;}
+.ai-message-avatar{width:31px;height:31px;flex:0 0 31px;display:flex;align-items:center;justify-content:center;border:1px solid var(--app-line);border-radius:6px;background:var(--app-panel-2);color:#65DF89;font-size:9px;font-weight:950;}
+.ai-message.user .ai-message-avatar{background:rgba(22,199,78,.12);color:#65DF89;border-color:rgba(22,199,78,.24);}
+.ai-message-content{min-width:0;max-width:min(100%,740px);}
+.ai-message.user .ai-message-content{display:grid;justify-items:end;}
+.ai-message-meta{display:flex;align-items:center;gap:8px;margin:1px 0 7px;color:var(--app-muted);font-size:10px;}
+.ai-message-meta b{color:var(--app-copy);font-size:11px;}
+.ai-message.user .ai-message-meta{justify-content:flex-end;}
+.ai-message-body{color:var(--app-soft);font-size:14px;line-height:1.68;overflow-wrap:anywhere;}
+.ai-message-body p{margin:0 0 8px!important;color:inherit!important;font-size:inherit!important;line-height:inherit!important;}
+.ai-message-body p:last-child{margin-bottom:0!important;}
+.ai-message-body h3{margin:16px 0 7px;color:var(--app-copy);font-size:15px;line-height:1.3;}
+.ai-message-space{height:7px;}
+.ai-message-list-line,.ai-message-number-line{display:grid;grid-template-columns:16px minmax(0,1fr);gap:7px;margin:5px 0;align-items:start;}
+.ai-message-list-line i{width:4px;height:4px;margin:10px 0 0 4px;border-radius:50%;background:#65DF89;}
+.ai-message-number-line>b{color:#65DF89;font-size:11px;padding-top:3px;}
+.ai-message.user .ai-message-body{max-width:620px;padding:11px 13px;border:1px solid rgba(22,199,78,.22);border-radius:8px 2px 8px 8px;background:rgba(22,199,78,.1);color:var(--app-copy);}
+.ai-message.error .ai-message-body{color:#E78682;}
+.ai-copy-button{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 0;border:0;background:transparent;color:var(--app-muted);font-size:10px;font-weight:800;}
+.ai-copy-button:hover{color:#65DF89;}
+.ai-thinking{height:28px;display:flex;align-items:center;gap:4px;}
+.ai-thinking i{width:5px;height:5px;border-radius:50%;background:#65DF89;animation:softBlink 1.2s ease-in-out infinite;}
+.ai-thinking i:nth-child(2){animation-delay:.16s}.ai-thinking i:nth-child(3){animation-delay:.32s}
+.ai-composer-wrap{padding:12px max(18px,calc((100% - 860px)/2)) 14px;background:linear-gradient(180deg,transparent,var(--app-panel) 18%);}
+.ai-composer{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;align-items:end;padding:7px 7px 7px 14px;border:1px solid var(--app-line);border-radius:8px;background:var(--app-panel-2);box-shadow:0 18px 60px rgba(0,0,0,.16);}
+.ai-composer:focus-within{border-color:rgba(22,199,78,.46);box-shadow:0 0 0 3px rgba(22,199,78,.08),0 18px 60px rgba(0,0,0,.16);}
+.ai-composer textarea{width:100%;min-height:52px;max-height:180px;resize:none;padding:14px 0 9px;border:0!important;background:transparent!important;color:var(--app-copy)!important;font-size:15px!important;line-height:1.5;box-shadow:none!important;}
+.ai-composer button{width:42px;height:42px;min-height:42px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:6px;background:#16C74E;color:#071008;}
+.ai-composer button:disabled{background:var(--app-line);color:var(--app-muted);}
+.ai-composer-wrap>p{margin:7px 4px 0!important;text-align:center;color:var(--app-muted)!important;font-size:9px!important;line-height:1.4!important;}
+.ai-history-toggle,.ai-mobile-close,.ai-sidebar-backdrop{display:none;}
+@media(max-width:900px){
+  .app-shell.ai-shell{padding:12px!important;}
+  .ai-shell .app-content-stage[data-view="ai"]{height:calc(100dvh - 98px);min-height:590px;}
+  .ai-workspace{grid-template-columns:minmax(0,1fr);}
+  .ai-sidebar{position:fixed;left:0;top:0;bottom:0;z-index:1200;width:min(86vw,320px);border-radius:0;transform:translateX(-104%);transition:transform .22s ease;box-shadow:30px 0 80px rgba(0,0,0,.38);}
+  .ai-sidebar.open{transform:translateX(0);}
+  .ai-sidebar-backdrop{position:fixed;inset:0;z-index:1190;border:0;background:rgba(0,0,0,.56);opacity:0;pointer-events:none;}
+  .ai-sidebar-backdrop.open{display:block;opacity:1;pointer-events:auto;}
+  .ai-history-toggle,.ai-mobile-close{display:flex;align-items:center;justify-content:center;width:36px;height:36px;min-height:36px;flex:0 0 36px;padding:0;border:1px solid var(--app-line);border-radius:6px;background:transparent;color:var(--app-copy);}
+}
+@media(max-width:760px){
+  .app-shell.ai-shell{padding:0 0 calc(74px + env(safe-area-inset-bottom))!important;}
+  .ai-shell .app-content-stage[data-view="ai"]{height:calc(100dvh - 58px - 74px - env(safe-area-inset-bottom));min-height:0;}
+  .ai-workspace{gap:0;}
+  .ai-chat-panel{height:100%;border-left:0;border-right:0;border-bottom:0;border-radius:0;}
+  .ai-chat-header{min-height:92px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:9px 12px;}
+  .ai-chat-heading h1{font-size:14px!important;}
+  .ai-mode-switch{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;}
+  .ai-mode-switch button{width:100%;min-width:0;padding:7px 3px;font-size:10px;}
+  .ai-message-list{padding:20px 14px;scrollbar-gutter:auto;}
+  .ai-message-list.empty{display:block;padding-top:24px;}
+  .ai-welcome-mark{width:44px;height:44px;margin-bottom:13px;}
+  .ai-welcome h2{font-size:31px;}
+  .ai-welcome>p{margin:11px auto 18px;font-size:12px;}
+  .ai-starter-grid{grid-template-columns:minmax(0,1fr);gap:7px;}
+  .ai-starter-grid button{min-height:74px;}
+  .ai-message-column{gap:18px;}
+  .ai-message-avatar{width:28px;height:28px;flex-basis:28px;}
+  .ai-message-body{font-size:13px;line-height:1.62;}
+  .ai-message.user .ai-message-body{max-width:calc(100vw - 84px);}
+  .ai-composer-wrap{padding:8px 10px max(9px,env(safe-area-inset-bottom));}
+  .ai-composer{grid-template-columns:minmax(0,1fr) 40px;padding-left:12px;}
+  .ai-composer textarea{font-size:16px!important;min-height:48px;padding-top:12px;}
+  .ai-composer button{width:40px;height:40px;min-height:40px;}
+}
+@media(max-width:360px){
+  .ai-chat-header{padding-left:9px;padding-right:9px;}
+  .ai-message-list{padding-left:10px;padding-right:10px;}
+  .ai-welcome h2{font-size:27px;}
+  .ai-starter-grid button{padding:10px;}
+}
 `;
 
 const Tag=({label,style={},className=""})=><span className={`tag-chip ${className}`.trim()} style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:6,padding:"3px 9px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
@@ -1562,6 +1686,10 @@ const iconPaths = {
   check:<path d="M20 6 9 17l-5-5"/>,
   arrowRight:<><path d="M5 12h14"/><path d="m14 7 5 5-5 5"/></>,
   close:<path d="M18 6 6 18M6 6l12 12"/>,
+  plus:<path d="M12 5v14M5 12h14"/>,
+  trash:<><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></>,
+  copy:<><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"/></>,
+  menu:<path d="M4 7h16M4 12h16M4 17h16"/>,
   info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>,
   sparkle:<path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"/>,
   network:<><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><circle cx="12" cy="17" r="3"/><path d="m9.5 10.5 1.5 3M14.5 10.5 13 14M10 8h4"/></>,
@@ -2581,7 +2709,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
           <div className="fs2-access-head"><div><div className="fs2-eyebrow">Start now. Grow later.</div><h2>Early access is open.</h2></div><p>The social platform is free to join today. FEAR Pro will add a focused toolkit for the work, habits, media, technology, and information behind your next chapter.</p></div>
           <div className="fs2-plans">
             <article className="fs2-plan"><div className="fs2-plan-label">Available now</div><h3>fear.social</h3><p>Your profile, people, posts, groups, messages, and opportunities in one social network built for first moves.</p><div className="fs2-plan-list"><span>Public or private profile</span><span>Posts, likes, comments, saves</span><span>People and groups</span><span>Messages and opportunities</span></div><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Join free</button><button className="fs2-secondary" style={{color:"#111",borderColor:"#D7DED9",background:"#fff"}} onClick={()=>setScreen("login")}>Log in</button></div></article>
-            <article id="board" className="fs2-plan pro"><div className="fs2-plan-label">Coming with FEAR Pro</div><h3>fear. board</h3><p>A future workspace connecting personal branding, lifestyle guidance, production, AI building, market intelligence, mentorship, and fear.club.</p><div className="fs2-plan-list"><span>fear.agency</span><span>fear.style</span><span>fear.prod</span><span>fearai + finance</span></div><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("board")}>Preview what is coming</button></div></article>
+            <article id="board" className="fs2-plan pro"><div className="fs2-plan-label">Coming with FEAR Pro</div><h3>fear. board</h3><p>A future workspace connecting personal branding, lifestyle guidance, production, advanced AI workflows, market intelligence, mentorship, and fear.club.</p><div className="fs2-plan-list"><span>fear.agency</span><span>fear.style</span><span>fear.prod</span><span>fear AI Pro + finance</span></div><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("board")}>Preview what is coming</button></div></article>
           </div>
         </section>
 
@@ -2731,7 +2859,7 @@ function LandingPage({setScreen,notify,onOpenPanel}){
   ];
   const pricingRows=[
     {name:"Free",price:"$0",period:"forever",note:"For anyone ready to take the first real step toward their career, work, or future.",features:["Public profile and people directory","Progress posts, comments, likes, and saves","Discovery for people, groups, and opportunities","Direct messages, rooms, and community signals","Email verification and password login"],grad:false,button:"Join free"},
-    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["FEAR Pro mentor program and guided introductions","fear.club events, live sessions, and member rooms","fear. board access when it launches","Personal-brand and lifestyle tools","Photo, video, audio, and creative production","AI building plus market and financial information"],grad:true,button:"Reserve Pro access"},
+    {name:"FEAR Pro",price:"$19",period:"month",note:"Planned founding-member launch price. No charge today.",features:["FEAR Pro mentor program and guided introductions","fear.club events, live sessions, and member rooms","fear. board access when it launches","Personal-brand and lifestyle tools","Photo, video, audio, and creative production","Advanced AI workspaces plus market and financial information"],grad:true,button:"Reserve Pro access"},
   ];
   return(
     <div className="landing-root landing-cinematic-root" style={{background:"#050506",minHeight:"100vh",overflowX:"hidden",position:"relative"}}>
@@ -3156,7 +3284,7 @@ function FearBoardComingSoonPage({setScreen}){
             </div>
             <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(58px,9vw,112px)",lineHeight:.86,letterSpacing:0,marginBottom:28}}>fear<span style={{color:C.accent}}>.</span><br/>board</h1>
             <p style={{fontSize:"clamp(17px,2vw,22px)",lineHeight:1.65,color:"rgba(255,255,255,.66)",maxWidth:500,marginBottom:18}}>The operating layer for what comes after your first step.</p>
-            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.46)",maxWidth:500,marginBottom:30}}>fear. board will bring personal branding, lifestyle guidance, production, AI building, and market intelligence into one focused workspace. These modules are early product foundations, not live features yet.</p>
+            <p style={{fontSize:15,lineHeight:1.75,color:"rgba(255,255,255,.46)",maxWidth:500,marginBottom:30}}>fear. board will bring personal branding, lifestyle guidance, production, advanced AI workflows, and market intelligence into one focused workspace. These modules are early product foundations, not live features yet.</p>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
               <button onClick={()=>setScreen("signup")} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950,boxShadow:"0 18px 50px rgba(22,199,78,.25)"}}>Reserve Pro access</button>
               <button onClick={()=>setScreen("landing")} className="bs" style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.14)",borderRadius:999,padding:"14px 22px",fontSize:14,fontWeight:950}}>Explore fear.social</button>
@@ -3697,7 +3825,14 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
 }
 
 function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel}){
-  const [view,setView]=useLocalState("fear-view","feed");
+  const [view,setView]=useLocalState("fear-view","ai");
+  const enteredProfileRef=useRef("");
+  useEffect(()=>{
+    if(profile.id&&enteredProfileRef.current!==profile.id){
+      enteredProfileRef.current=profile.id;
+      setView("ai");
+    }
+  },[profile.id,setView]);
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});
   },[view]);
@@ -3732,6 +3867,12 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [pendingConnectionIds,setPendingConnectionIds]=useState([]);
   const [profileReturnView,setProfileReturnView]=useState("discover");
   const [profileMetric,setProfileMetric]=useState("Posts");
+  const [aiConversations,setAiConversations]=useState([]);
+  const [aiMessages,setAiMessages]=useState([]);
+  const [aiActiveConversationId,setAiActiveConversationId]=useState("");
+  const [aiMode,setAiMode]=useState("work");
+  const [aiLoading,setAiLoading]=useState(false);
+  const [aiLoaded,setAiLoaded]=useState(false);
   const messageSyncInFlight=useRef(false);
   useEffect(()=>{
     const online=()=>setConnectionState("connecting");
@@ -3800,6 +3941,85 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     applyBackendState(data);
     return data;
   },[applyBackendState]);
+  const openAiConversation=useCallback(async id=>{
+    if(!id)return;
+    setAiActiveConversationId(id);
+    setAiMessages([]);
+    setAiLoading(true);
+    try{
+      const data=await callBackend(`/ai/conversations/${encodeURIComponent(id)}`);
+      setAiActiveConversationId(data.conversation?.id||id);
+      setAiMode(data.conversation?.mode||"work");
+      setAiMessages(Array.isArray(data.messages)?data.messages:[]);
+    }catch(err){
+      notify(err.message||"Could not open that conversation","error");
+    }finally{
+      setAiLoading(false);
+    }
+  },[callBackend,notify]);
+  useEffect(()=>{
+    if(view!=="ai"||aiLoaded)return;
+    let active=true;
+    callBackend("/ai/conversations")
+      .then(async data=>{
+        if(!active)return;
+        const conversations=Array.isArray(data.conversations)?data.conversations:[];
+        setAiConversations(conversations);
+        setAiLoaded(true);
+        if(conversations[0])await openAiConversation(conversations[0].id);
+      })
+      .catch(err=>{
+        if(active){
+          setAiLoaded(true);
+          notify(err.message||"fear AI could not load your conversations","error");
+        }
+      });
+    return()=>{active=false;};
+  },[aiLoaded,callBackend,notify,openAiConversation,view]);
+  const startNewAiConversation=()=>{
+    setAiActiveConversationId("");
+    setAiMessages([]);
+    setAiMode("work");
+  };
+  const deleteAiConversation=async id=>{
+    const conversation=aiConversations.find(item=>item.id===id);
+    if(!id||!window.confirm(`Delete “${conversation?.title||"this conversation"}”? This cannot be undone.`))return;
+    try{
+      const data=await callBackend(`/ai/conversations/${encodeURIComponent(id)}`,{method:"DELETE"});
+      const remaining=Array.isArray(data.conversations)?data.conversations:[];
+      setAiConversations(remaining);
+      if(aiActiveConversationId===id){
+        setAiActiveConversationId("");
+        setAiMessages([]);
+        if(remaining[0])await openAiConversation(remaining[0].id);
+      }
+      notify("Conversation deleted");
+    }catch(err){
+      notify(err.message||"Could not delete that conversation","error");
+    }
+  };
+  const sendAiMessage=async(message,mode=aiMode)=>{
+    const text=String(message||"").trim();
+    if(!text||aiLoading)return;
+    const optimisticId=`ai_pending_${Date.now()}`;
+    setAiMode(mode);
+    setAiMessages(current=>[...current,{id:optimisticId,role:"user",content:text,createdAt:new Date().toISOString(),pending:true}]);
+    setAiLoading(true);
+    try{
+      const data=await callBackend("/ai/chat",{method:"POST",body:JSON.stringify({conversationId:aiActiveConversationId,message:text,mode}),timeout:60000});
+      setAiActiveConversationId(data.conversationId||data.conversation?.id||aiActiveConversationId);
+      setAiMessages(Array.isArray(data.messages)?data.messages:[]);
+      setAiConversations(Array.isArray(data.conversations)?data.conversations:aiConversations);
+    }catch(err){
+      setAiMessages(current=>[
+        ...current.map(item=>item.id===optimisticId?{...item,pending:false}:item),
+        {id:`ai_error_${Date.now()}`,role:"assistant",content:err.message||"I couldn’t finish that response. Your message is still here, so please try again.",createdAt:new Date().toISOString(),error:true},
+      ]);
+      notify(err.message||"fear AI could not finish that response","error");
+    }finally{
+      setAiLoading(false);
+    }
+  };
   useEffect(()=>{
     let active=true;
     api("/bootstrap").then(data=>{if(active){setConnectionState("online");applyBackendState(data);}}).catch(error=>{
@@ -3911,6 +4131,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     else if(view==="publicProfile"&&!selectedProfile) setView("discover");
   },[selectedProfile,setView,view]);
   const tabs=[
+    ["ai","fear AI"],
     ["feed","Feed"],
     ["discover","Discover"],
     ["events","fear.club"],
@@ -3930,8 +4151,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     settings:{eyebrow:"Your experience",title:"Settings",copy:"Control your profile, privacy, layout, accessibility, and account preferences."},
   };
   const mobileTabs=[
+    ["ai","AI","brain"],
     ["feed","Feed","home"],
-    ["discover","Find","diamond"],
     ["messages","DMs","mail"],
     ["notifications","Activity","heart"],
     ["profile","Profile","user"],
@@ -4553,7 +4774,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     <div className={appLayoutClass} style={{minHeight:"100vh",background:C.bg}}>
       <a className="skip-link" href="#app-main">Skip to main content</a>
       <div className="app-topbar" style={{position:"sticky",top:0,zIndex:200,background:"rgba(255,255,255,0.96)",backdropFilter:"blur(18px)",borderBottom:`1px solid ${C.border}`,padding:"0 24px",minHeight:68,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-        <button className="app-topbar-logo" aria-label="Go to feed" onClick={()=>setView("feed")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap",background:"none",border:"none",padding:"6px 0",minHeight:36}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></button>
+        <button className="app-topbar-logo" aria-label="Go to fear AI" onClick={()=>setView("ai")} style={{fontFamily:"Georgia,serif",fontWeight:800,fontSize:22,color:C.text,cursor:"pointer",whiteSpace:"nowrap",background:"none",border:"none",padding:"6px 0",minHeight:36}}>fear<span style={{color:C.accent}}>.</span><span style={{color:C.accent}}>social</span></button>
         <div className="desktop-app-tabs" role="navigation" aria-label="Main app navigation" style={{display:"flex",gap:3,overflowX:"auto",flex:1}}>
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
@@ -4564,7 +4785,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <span className={`app-connection-state ${connectionState}`} aria-live="polite"><i/>{connectionState==="online"?"Online":connectionState==="offline"?"Offline":"Connecting"}</span>
         <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
       </div>
-      <main id="app-main" className="app-shell" tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
+      <main id="app-main" className={`app-shell ${view==="ai"?"ai-shell":""}`} tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
         {(view==="discover"||searchTerm)&&<div className="mobile-app-search">
           <input type="search" aria-label="Search fear.social" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, groups..." className="if" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"13px 14px",fontSize:16,color:C.text,boxShadow:"0 10px 30px rgba(13,15,20,0.04)"}}/>
         </div>}
@@ -4578,6 +4799,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
         <div key={`${view}-${searchTerm?"search":"view"}`} className="app-content-stage" data-view={view}>
         {searchTerm&&<SearchResultsPanel term={query.trim()} results={searchResults} onClear={closeSearch}/>}
         {!searchTerm&&viewMeta[view]&&<AppViewIntro {...viewMeta[view]} />}
+        {!searchTerm&&view==="ai"&&<FearAiWorkspace profile={profile} conversations={aiConversations} messages={aiMessages} activeConversationId={aiActiveConversationId} mode={aiMode} loading={aiLoading} onModeChange={setAiMode} onNew={startNewAiConversation} onOpen={openAiConversation} onDelete={deleteAiConversation} onSend={sendAiMessage} notify={notify}/>}
         {view==="feed"&&(
           <div className="feed-grid" style={{display:"grid",gridTemplateColumns:interfaceSettings.rightRail===false?"270px minmax(0,1fr)":"270px minmax(0,1fr) 310px",gap:interfaceSettings.density==="compact"?14:22,alignItems:"start"}}>
             <aside className="desktop-feed-side" style={{position:"sticky",top:92,display:"flex",flexDirection:"column",gap:14}}>
@@ -4589,7 +4811,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
                 <div style={{fontSize:10,fontWeight:800,letterSpacing:1.5,opacity:.65,marginBottom:8}}>FEAR PRO</div>
                 <div style={{fontWeight:900,fontSize:18,marginBottom:7}}>The FEAR Pro launch</div>
                 <div style={{fontSize:13,opacity:.72,lineHeight:1.55,marginBottom:10}}>Guided mentorship, fear.club gatherings, and a focused board for brand, lifestyle, production, AI, and market tools.</div>
-                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>mentorship · fear.club · agency · style · prod · fearai · finance</div>
+                <div style={{fontSize:10,fontWeight:850,opacity:.56,lineHeight:1.5,marginBottom:16}}>mentorship · fear.club · agency · style · prod · fear AI Pro · finance</div>
                 <button onClick={()=>setScreen("board")} className="bs" style={{background:"#fff",border:"none",borderRadius:9,padding:"10px 14px",fontSize:13,fontWeight:900,color:C.accent,width:"100%"}}>Preview FEAR Pro</button>
               </div>
               <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:18}}>
@@ -4695,6 +4917,131 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
       {postRulesOpen&&<PostRulesConfirmModal onClose={()=>setPostRulesOpen(false)} onConfirm={()=>publish({confirmed:true})}/>}
     </div>
   );
+}
+
+const FEAR_AI_MODES=[
+  {id:"work",label:"Work",copy:"Think through anything"},
+  {id:"plan",label:"Plan",copy:"Build the next steps"},
+  {id:"write",label:"Write",copy:"Make the words sharper"},
+  {id:"decide",label:"Decide",copy:"Compare the tradeoffs"},
+];
+const FEAR_AI_STARTERS=[
+  {icon:"briefcase",mode:"plan",title:"Build my next move",prompt:"Help me build a practical 30-day plan for the next step in my career. Start by asking me the one question you need most."},
+  {icon:"zap",mode:"work",title:"Pressure-test an idea",prompt:"Help me pressure-test a business idea. Give me the strongest case for it, the biggest risk, the fastest validation test, and the next move."},
+  {icon:"megaphone",mode:"write",title:"Write the outreach",prompt:"Help me write a concise, human outreach message to someone I want to learn from or work with. Ask me who it is for and what I want from the conversation."},
+  {icon:"diamond",mode:"decide",title:"Make a clear decision",prompt:"Help me make a professional decision. Structure the options, assumptions, tradeoffs, and a recommendation I can act on."},
+];
+
+const AiInlineText=({text})=>String(text||"").split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part,index)=>part.startsWith("**")&&part.endsWith("**")?<strong key={`${part}-${index}`}>{part.slice(2,-2)}</strong>:<span key={`${part}-${index}`}>{part}</span>);
+const AiMessageBody=({content})=><div className="ai-message-body">{String(content||"").split("\n").map((line,index)=>{
+  const trimmed=line.trim();
+  if(!trimmed)return <div className="ai-message-space" key={`space-${index}`}/>;
+  if(/^#{1,3}\s+/.test(trimmed))return <h3 key={`heading-${index}`}><AiInlineText text={trimmed.replace(/^#{1,3}\s+/,"")}/></h3>;
+  if(/^[-*]\s+/.test(trimmed))return <div className="ai-message-list-line" key={`bullet-${index}`}><i/><span><AiInlineText text={trimmed.replace(/^[-*]\s+/,"")}/></span></div>;
+  const numbered=trimmed.match(/^(\d+)[.)]\s+(.+)$/);
+  if(numbered)return <div className="ai-message-number-line" key={`number-${index}`}><b>{numbered[1]}</b><span><AiInlineText text={numbered[2]}/></span></div>;
+  return <p key={`line-${index}`}><AiInlineText text={line}/></p>;
+})}</div>;
+
+function FearAiWorkspace({profile,conversations,messages,activeConversationId,mode,loading,onModeChange,onNew,onOpen,onDelete,onSend,notify}){
+  const [draft,setDraft]=useState("");
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const endRef=useRef(null);
+  const inputRef=useRef(null);
+  const safeConversations=Array.isArray(conversations)?conversations:[];
+  const safeMessages=Array.isArray(messages)?messages:[];
+  const activeConversation=safeConversations.find(item=>item.id===activeConversationId);
+  const firstName=String(profile?.name||"").trim().split(/\s+/)[0]||"there";
+  useEffect(()=>{
+    endRef.current?.scrollIntoView?.({block:"end",behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth"});
+  },[loading,safeMessages.length]);
+  useEffect(()=>setSidebarOpen(false),[activeConversationId]);
+  useEffect(()=>{
+    const input=inputRef.current;
+    if(!input)return;
+    input.style.height="auto";
+    input.style.height=`${Math.min(180,Math.max(52,input.scrollHeight))}px`;
+  },[draft]);
+  const submit=async(value=draft,nextMode=mode)=>{
+    const text=String(value||"").trim();
+    if(!text||loading)return;
+    setDraft("");
+    await onSend(text,nextMode);
+  };
+  const copyMessage=async content=>{
+    try{
+      await navigator.clipboard.writeText(content);
+      notify("Response copied");
+    }catch{
+      notify("Could not copy that response","error");
+    }
+  };
+  return <section className="ai-workspace" aria-label="fear AI workspace">
+    <button className={`ai-sidebar-backdrop ${sidebarOpen?"open":""}`} aria-label="Close conversation history" onClick={()=>setSidebarOpen(false)}/>
+    <aside className={`ai-sidebar ${sidebarOpen?"open":""}`} aria-label="fear AI conversation history">
+      <div className="ai-sidebar-brand">
+        <div><span>fear<span>.</span>ai</span><small>Your working mind</small></div>
+        <button type="button" className="ai-mobile-close" aria-label="Close conversation history" onClick={()=>setSidebarOpen(false)}><Icon name="close" size={17}/></button>
+      </div>
+      <button type="button" className="ai-new-chat" onClick={()=>{onNew();setSidebarOpen(false);requestAnimationFrame(()=>inputRef.current?.focus());}}><Icon name="plus" size={17}/>New conversation</button>
+      <div className="ai-history-label">Recent</div>
+      <div className="ai-history-list">
+        {safeConversations.length===0?<p className="ai-history-empty">Your conversations will stay here and follow you across devices.</p>:safeConversations.map(conversation=><div key={conversation.id} className={`ai-history-item ${activeConversationId===conversation.id?"active":""}`}>
+          <button type="button" onClick={()=>onOpen(conversation.id)}>
+            <b>{conversation.title||"New conversation"}</b>
+            <span>{conversation.preview||"Open conversation"}</span>
+          </button>
+          <button type="button" className="ai-history-delete" aria-label={`Delete ${conversation.title||"conversation"}`} title="Delete conversation" onClick={()=>onDelete(conversation.id)}><Icon name="trash" size={15}/></button>
+        </div>)}
+      </div>
+      <div className="ai-sidebar-foot"><Icon name="lock" size={14}/><span>Your chats are private to your account and stored so they work across your devices.</span></div>
+    </aside>
+
+    <div className="ai-chat-panel">
+      <header className="ai-chat-header">
+        <div className="ai-chat-heading">
+          <button type="button" className="ai-history-toggle" aria-label="Open conversation history" onClick={()=>setSidebarOpen(true)}><Icon name="menu" size={18}/></button>
+          <div><span>{activeConversation?"Conversation":"fear AI"}</span><h1>{activeConversation?.title||"Your next move starts here."}</h1></div>
+        </div>
+        <div className="ai-mode-switch" role="tablist" aria-label="fear AI mode">
+          {FEAR_AI_MODES.map(item=><button key={item.id} type="button" role="tab" aria-selected={mode===item.id} title={item.copy} onClick={()=>onModeChange(item.id)}>{item.label}</button>)}
+        </div>
+      </header>
+
+      <div className={`ai-message-list ${safeMessages.length===0?"empty":""}`} aria-live="polite">
+        {safeMessages.length===0?<div className="ai-welcome">
+          <div className="ai-welcome-mark"><Icon name="brain" size={27}/></div>
+          <div className="ai-welcome-eyebrow">Private business and career intelligence</div>
+          <h2>What are we moving forward, {firstName}?</h2>
+          <p>Think through the idea, sharpen the pitch, map the career move, or turn a blank page into something useful.</p>
+          <div className="ai-starter-grid">
+            {FEAR_AI_STARTERS.map(starter=><button key={starter.title} type="button" onClick={()=>{onModeChange(starter.mode);void submit(starter.prompt,starter.mode);}}>
+              <span><Icon name={starter.icon} size={18}/></span><b>{starter.title}</b><small>{starter.prompt.split(".")[0]}.</small>
+            </button>)}
+          </div>
+        </div>:<div className="ai-message-column">
+          {safeMessages.map(message=><article key={message.id} className={`ai-message ${message.role} ${message.error?"error":""}`}>
+            <div className="ai-message-avatar">{message.role==="assistant"?<Icon name="brain" size={17}/>:String(profile?.name||"Y").split(" ").map(part=>part[0]).slice(0,2).join("").toUpperCase()}</div>
+            <div className="ai-message-content">
+              <div className="ai-message-meta"><b>{message.role==="assistant"?"fear AI":"You"}</b>{message.pending&&<span>Sending</span>}</div>
+              <AiMessageBody content={message.content}/>
+              {message.role==="assistant"&&!message.error&&<button type="button" className="ai-copy-button" onClick={()=>copyMessage(message.content)} title="Copy response"><Icon name="copy" size={14}/>Copy</button>}
+            </div>
+          </article>)}
+          {loading&&<article className="ai-message assistant"><div className="ai-message-avatar"><Icon name="brain" size={17}/></div><div className="ai-message-content"><div className="ai-message-meta"><b>fear AI</b><span>Thinking</span></div><div className="ai-thinking" aria-label="fear AI is thinking"><i/><i/><i/></div></div></article>}
+          <div ref={endRef}/>
+        </div>}
+      </div>
+
+      <div className="ai-composer-wrap">
+        <form className="ai-composer" onSubmit={event=>{event.preventDefault();void submit();}}>
+          <textarea ref={inputRef} value={draft} disabled={loading} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void submit();}}} placeholder="Ask fear AI about the work, idea, decision, or next step..." aria-label="Message fear AI" rows={1}/>
+          <button type="submit" disabled={loading||!draft.trim()} aria-label="Send message" title="Send message"><Icon name="arrowRight" size={19}/></button>
+        </form>
+        <p>fear AI can make mistakes. Verify important legal, financial, medical, and business decisions.</p>
+      </div>
+    </div>
+  </section>;
 }
 
 const cardStyle={background:C.card,border:`1px solid ${C.border}`,borderRadius:18,padding:22,overflow:"hidden",minWidth:0};
@@ -5669,7 +6016,7 @@ function TermsConditionsPanel({onClose}){
   const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
   return (
     <ModalShell title="Terms and Conditions" eyebrow="Legal" onClose={onClose}>
-      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 13, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated August 5, 2026. These Terms govern access to and use of fear.social. They are a practical operating baseline and should be reviewed by legal counsel before broad public launch.</p>
       {section("Acceptance of Terms and Community Rules","By creating an account, checking the agreement box, accessing the platform, posting, commenting, messaging, uploading media, or using any fear.social feature, you agree to these Terms, the Privacy Policy, and all community and safety rules shown in the product. You explicitly agree not to post, upload, message, or promote abusive, hateful, harassing, threatening, sexually explicit, exploitative, illegal, fraudulent, or otherwise objectionable content. If you do not agree, do not create an account or use the service.")}
       {section("Purpose of the Platform","fear.social is designed to help people take practical first steps into careers, projects, networking, mentorship, professional collaboration, and the future they want to build. The service may include profiles, posts, comments, messaging, notifications, directories, events, rooms, opportunities, and future paid tools.")}
       {section("Eligibility and COPPA","You must be legally able to agree to these Terms. fear.social is not directed to children under 13, and children under 13 may not create accounts or submit personal information. If we learn that a child under 13 provided personal information without required verifiable parental consent, we may close the account and delete the information. If you are under the age of majority where you live, use the service only with permission from a parent or guardian.")}
@@ -5684,7 +6031,8 @@ function TermsConditionsPanel({onClose}){
       {section("Content Filtering, Reports, Blocks, and 24-Hour Review","fear.social may use automated filters and manual review queues to catch and hide highly objectionable content before or shortly after it goes live. Users can report posts, comments, media, profiles, messages, groups, opportunities, or other content that may violate these Terms. Users can block abusive users; blocking hides that user's historical and future posts and comments from the blocking user's feed where technically feasible. Open reports are routed to a moderation queue intended for review and action within 24 hours. We may remove content, limit distribution, suspend accounts, ban users, preserve evidence, contact affected users, notify service providers, or report matters to law enforcement when appropriate. Reporting content does not guarantee removal, and not reporting content does not mean fear.social endorses it.")}
       {section("Opportunities and User Interactions","Users are responsible for evaluating collaborators, mentors, jobs, gigs, investments, services, advice, and opportunities they discover through fear.social. We do not guarantee any user's identity, qualifications, results, funding, employment, partnership, or career or business outcome.")}
       {section("No Professional Advice","fear.social does not provide legal, financial, tax, investment, medical, employment, or other professional advice. Content on the platform is for general community and informational purposes. Verify important decisions with qualified professionals.")}
-      {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. fear. board and planned modules such as fear.agency, fear.style, fear.prod, fearai, and fear.finance are product previews and are not currently available unless the service clearly says otherwise. Names, features, pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after launch. Final paid terms and charges will be presented before purchase.")}
+      {section("fear AI","fear AI generates responses from the prompts and context you provide. AI output may be incomplete, inaccurate, outdated, biased, or inappropriate and must not be treated as a guaranteed result or substitute for qualified legal, financial, medical, tax, employment, or other professional advice. You remain responsible for reviewing output before relying on, publishing, or acting on it. Do not use fear AI to create malware, facilitate fraud, impersonate people, violate rights, evade safety controls, make unlawful automated decisions, or generate prohibited content. We may limit or suspend AI access when needed for safety, security, capacity, or enforcement.")}
+      {section("Payments and Future Paid Plans","Some features may later require payment, subscription, checkout, or separate terms. The core fear AI chat is available without a FEAR Pro subscription during early access. fear. board and planned modules such as fear.agency, fear.style, fear.prod, fear AI Pro, and fear.finance are product previews and are not currently available unless the service clearly says otherwise. Names, features, pricing, billing cycles, refunds, trials, plan limits, and availability may change before or after launch. Final paid terms and charges will be presented before purchase.")}
       {section("Email, Verification, and Notifications","By signing up, you agree that fear.social may send verification, security, account, signup, transactional, and service-related emails to the email address on your account, including from contact@fear.social. You may also receive in-app notifications for follows, messages, comments, account activity, and platform updates.")}
       {section("Privacy and Data","Your use of fear.social is also governed by the Privacy Policy. The platform may collect account details, profile information, posts, messages, comments, activity data, device/session data, and other information needed to provide and secure the service.")}
       {section("Moderation, Bans, and Section 230","fear.social hosts user-generated content and may moderate in good faith. We may remove content, limit visibility, suspend features, ban users, revoke access, delete accounts, preserve evidence, or report activity when we believe it is necessary to protect users, comply with law, enforce these Terms, respond to complaints, or maintain platform integrity. Under laws such as 47 U.S.C. § 230, platforms may receive protection from being treated as the publisher or speaker of third-party user content and may receive protection for good-faith restriction of objectionable material. These Terms do not waive any protections, defenses, immunities, safe harbors, or limitations available to fear.social.")}
@@ -5708,16 +6056,17 @@ function PrivacyPolicyPanel({onClose,onOpenAccessibility}){
   const section=(title,body)=><div style={{borderTop:`1px solid ${C.border}`,paddingTop:18,marginTop:18}}><h3 style={{fontSize:16,color:C.text,marginBottom:8}}>{title}</h3><p style={{fontSize:14,color:C.tSoft,lineHeight:1.75}}>{body}</p></div>;
   return (
     <ModalShell title="Privacy Policy" eyebrow="Legal" onClose={onClose}>
-      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated July 13, 2026. This policy describes how fear.social collects, uses, stores, shares, and protects information. It is a practical baseline informed by privacy laws such as the California Consumer Privacy Act as amended by the CPRA, and should be reviewed by legal counsel before broad public launch.</p>
+      <p style={{fontSize:13,color:C.muted,lineHeight:1.7,marginBottom:18}}>Last updated August 5, 2026. This policy describes how fear.social collects, uses, stores, shares, and protects information. It is a practical baseline informed by privacy laws such as the California Consumer Privacy Act as amended by the CPRA, and should be reviewed by legal counsel before broad public launch.</p>
       {section("Information We Collect","When someone signs up, joins the waitlist, posts, comments, messages, follows users, joins groups, posts opportunities, uploads photos or videos, records camera media, RSVPs, requests mentors, or edits a profile, fear.social may collect the information they provide. This can include name, username, email address, password hash, profile details, location text, industry, bio, website links, photos, videos, post text, comments, direct messages, group activity, opportunity listings, notifications, support requests, and account activity. We also collect technical and security information such as session tokens, timestamps, device/browser information, IP-derived security signals, cookie/local-storage preferences, and logs needed to keep the service working.")}
       {section("Sensitive Information","fear.social is not designed to collect government IDs, payment card numbers, health records, precise geolocation, biometric identifiers, or sensitive demographic information. Do not post sensitive personal information in profiles, posts, messages, groups, comments, photos, or videos. If future features require sensitive information, we should provide a separate notice and collect only what is necessary.")}
       {section("How We Use Information","We use information to create and secure accounts, verify email addresses, operate profiles, feeds, posts, media, messages, groups, notifications, opportunities, and search, personalize rankings and recommendations, send requested registration and waitlist notices, prevent spam and abuse, moderate content, investigate reports, improve reliability, respond to user requests, comply with law, and protect users and the platform.")}
+      {section("fear AI Prompts and Responses","When you use fear AI, the prompts you submit, generated responses, conversation titles, mode selections, and timestamps are stored with your account so your history can sync across signed-in browsers and devices. Recent conversation context and limited career-profile context may be processed by Cloudflare Workers AI to generate a response. Prompts and responses may also be processed for security, abuse prevention, moderation, reliability, and support. Avoid entering passwords, financial account details, government identifiers, health records, confidential employer information, or another person's private information. You can delete individual AI conversations in the chat workspace, and account deletion removes associated AI conversations where feasible, subject to legal, security, backup, and abuse-prevention exceptions.")}
       {section("Direct Messages: Storage, Visibility, and Review","Direct messages are stored in fear.social systems so conversations can be delivered, synced, and displayed to conversation participants on any browser or device where they log in. Message text, participants, timestamps, reports, and delivery records may be processed for reliability, moderation, abuse prevention, safety review, support, and legal compliance. Some legacy messages may still have encrypted payloads from an earlier browser-key system; when a participant can decrypt one, a synced readable copy may be saved so the conversation remains available across devices.")}
       {section("Photos, Videos, and Camera Capture","If you upload media or use the in-app camera, your browser may request camera and microphone permission. Captured photos and videos are attached to your post only after you choose to capture and publish them. Media may be stored and displayed in the app as part of your post, profile, message, or other feature. You can delete posts where available or request account deletion by contacting contact@fear.social.")}
       {section("California Privacy Rights","California residents may have rights to know what personal information is collected, access specific pieces of information, delete personal information, correct inaccurate information, opt out of sale or sharing, limit certain uses of sensitive personal information, and avoid discrimination for exercising privacy rights. fear.social does not currently sell personal information or share it for cross-context behavioral advertising. To exercise privacy rights, email contact@fear.social with the request and enough information to verify your account. Some deletion requests may be limited by legal, security, fraud-prevention, backup, dispute, or operational exceptions.")}
       {section("How Users Can Delete or Correct Data","Users can edit profile information in the app, delete their own posts where the feature is available, and delete their account from their profile danger zone. Users can also request access, correction, export, or deletion help by contacting contact@fear.social. We may need to verify identity before fulfilling access, correction, or deletion requests. If an account is deleted, profile content, posts, messages, follows, group membership, media, and active sessions are removed where feasible, but some records may be retained for security, legal compliance, abuse prevention, backups, dispute resolution, or audit purposes.")}
       {section("Cookies and Local Storage","fear.social uses essential local storage and cookies for sign-in state, session continuity, cookie preference storage, accessibility preferences, theme settings, and basic app functionality. Optional analytics or marketing cookies should remain off unless those services are added and consent is collected where required. Browser settings may let you clear local storage, but doing so may sign you out or reset preferences.")}
-      {section("Sharing and Processors","Information may be processed by infrastructure and service providers used to run the site, including Cloudflare services for hosting, database, serverless functions, security, and delivery, and email providers used for verification or transactional messages. We may disclose information if required by law, to enforce Terms, to investigate abuse or security issues, to respond to user requests, to protect users or the public, or as part of a merger, acquisition, financing, or business transfer with appropriate protections.")}
+      {section("Sharing and Processors","Information may be processed by infrastructure and service providers used to run the site, including Cloudflare services for hosting, database, serverless functions, security, delivery, and AI inference, and email providers used for verification or transactional messages. We may disclose information if required by law, to enforce Terms, to investigate abuse or security issues, to respond to user requests, to protect users or the public, or as part of a merger, acquisition, financing, or business transfer with appropriate protections.")}
       {section("Public Content and Other Users","Profiles, posts, comments, groups, opportunities, follower activity, and other social features may be visible to other users or the public depending on product settings. Direct messages are intended for the conversation participants but may be stored and reviewed when needed for safety, support, abuse prevention, or legal compliance. Do not share information you are not comfortable making available through the service.")}
       {section("Encryption and Security Standards","fear.social uses HTTPS/TLS for data in transit and relies on Cloudflare-hosted infrastructure, database access controls, security headers, email verification, password hashing, session controls, restricted browser permissions, rate limits, and moderation tooling. Direct messages are synced through fear.social systems so users can access conversations across browsers and devices; they are not currently marketed as end-to-end encrypted. Some legacy encrypted DM payloads may remain during transition, but posts, profiles, media, comments, groups, opportunities, notifications, DMs, and metadata should be treated as stored platform data protected by operational security controls rather than device-only E2EE.")}
       {section("Security and Retention","No internet service can guarantee perfect security, so security is maintained as an ongoing process. We retain information as long as needed to operate the service, provide requested features, maintain records, resolve disputes, prevent abuse, comply with law, and protect users and the platform.")}
