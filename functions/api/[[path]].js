@@ -317,6 +317,12 @@ const cleanMediaUrl = (value, kind = "image", max = MAX_MEDIA_URL_BYTES) => {
   return "";
 };
 
+const normalizeProfileBio = (value) => {
+  const bio = cleanText(value || "", 400);
+  if (/^(?:signed in with (?:google|apple|oauth)\.?|figuring out what comes next\.?)$/i.test(bio)) return "";
+  return bio;
+};
+
 const requireDb = (env) => {
   if (!env.DB) {
     throw json({ error: "D1 database binding DB is missing" }, { status: 500 });
@@ -347,7 +353,7 @@ const normalizeProfile = (profile = {}) => {
     location: cleanText(profile.location || "", 80),
     industry: cleanText(profile.industry || "Exploring", 40),
     stage: cleanText(profile.stage || "I'm actively building", 80),
-    bio: cleanText(profile.bio || "Figuring out what comes next.", 400),
+    bio: normalizeProfileBio(profile.bio),
     privacy: ["public", "private"].includes(profile.privacy) ? profile.privacy : "public",
     avatarUrl: cleanMediaUrl(profile.avatarUrl || profile.avatar_url || "", "image", 700000),
     coverUrl: cleanMediaUrl(profile.coverUrl || profile.cover_url || "", "image", 900000),
@@ -922,7 +928,7 @@ async function createOrLinkOAuthUser(db, request, profile) {
         String(profile.name || email.split("@")[0]).slice(0, 80),
         finalHandle,
         email,
-        `Signed in with ${providerLabel}.`,
+        "",
         TERMS_VERSION,
         provider,
         subject,
@@ -1759,7 +1765,7 @@ async function getBootstrap(db, user) {
         website: locked ? "" : person.website || "",
         lookingFor: locked ? "" : person.looking_for || "",
         goal: locked ? "" : person.goal || "",
-        bio: locked ? "This member keeps their full profile private. Request access to see their posts, details, and activity." : person.bio || "",
+        bio: locked ? "This member keeps their full profile private. Request access to see their posts, details, and activity." : normalizeProfileBio(person.bio),
         e2eePublicKey: parseStoredE2EEPublicKey(person.e2ee_public_key),
         verified: isVerifiedAccount(person),
         online: Boolean(person.online),

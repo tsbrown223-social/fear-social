@@ -28,6 +28,10 @@ const C = {
   }
 };
 const fmt=n=>Number(n||0).toLocaleString();
+const visibleProfileBio=value=>{
+  const bio=String(value||"").trim();
+  return /^(?:signed in with (?:google|apple|oauth)\.?|figuring out what comes next\.?)$/i.test(bio)?"":bio;
+};
 
 const css = `
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -4607,7 +4611,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     handle:person.handle||"@member",
     location:person.location||person.loc||"",
     industry:person.industry||person.tag||"Exploring",
-    bio:person.bio||"Figuring out what comes next.",
+    bio:visibleProfileBio(person.bio),
     avatarUrl:person.avatarUrl||person.avatar_url||"",
     avatarPositionX:person.avatarPositionX??person.avatar_position_x??50,
     avatarPositionY:person.avatarPositionY??person.avatar_position_y??50,
@@ -5247,7 +5251,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div><p className="profile-card-body" style={bodyCopy}>{p.bio}</p>{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
+        {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div>{p.bio&&<p className="profile-card-body" style={bodyCopy}>{p.bio}</p>}{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
         {view==="notifications"&&<NotificationsView notifications={notifications} markRead={markNotificationsRead} openProfile={openProfile}/>}
@@ -6234,7 +6238,7 @@ function ProfileStudio({profile,setProfile,onUpload,onSave,onCancel}){
             <h2 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.03,color:C.text,overflowWrap:"anywhere"}}>{profile.name||"Your Name"}</h2>
             <div style={{fontSize:13,color:C.muted,fontWeight:750,marginTop:6,overflowWrap:"anywhere"}}>@{username||"username"}{profile.location?` · ${profile.location}`:""}</div>
             {profile.headline&&<div style={{fontSize:15,fontWeight:900,color:C.text,lineHeight:1.4,marginTop:15}}>{profile.headline}</div>}
-            <p style={{fontSize:14,color:C.tSoft,lineHeight:1.65,marginTop:12}}>{profile.bio||"Tell people what matters to you and what you are moving toward."}</p>
+            {visibleProfileBio(profile.bio)&&<p style={{fontSize:14,color:C.tSoft,lineHeight:1.65,marginTop:12}}>{visibleProfileBio(profile.bio)}</p>}
             <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:14}}>
               {profile.industry&&<IT label={profile.industry}/>}
               {profile.lookingFor&&<Tag label={`Looking for: ${profile.lookingFor}`} style={{background:C.aLight,color:C.accent,maxWidth:"100%"}}/>}
@@ -6320,7 +6324,7 @@ function ProfilePanel({profile,setEditProfile,onCreatePost,onOpenSettings,stats,
           </div>
         </div>
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
-        <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio||"Figuring out what comes next."}</p>
+        {visibleProfileBio(profile.bio)&&<p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{visibleProfileBio(profile.bio)}</p>}
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
         <div className="profile-detail-row" style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{detailRows.map(([k,v])=><span key={k} className="profile-detail-chip" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
@@ -6375,7 +6379,7 @@ function PublicProfilePanel({profile,posts=[],followers=[],following=[],connecti
         </div>
         {locked&&<div style={{marginTop:18,background:C.aLight,border:`1px solid ${C.aSoft}`,borderRadius:16,padding:16,display:"flex",gap:12,alignItems:"center"}}><span style={{width:42,height:42,borderRadius:14,background:C.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="lock" size={19} color="currentColor"/></span><div><b style={{display:"block",color:C.text,marginBottom:4}}>This profile is private.</b><span style={{fontSize:13,color:C.muted,lineHeight:1.5}}>Request access to see full profile details, posts, and activity after this member approves you.</span></div></div>}
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
-        <p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{profile.bio}</p>
+        {visibleProfileBio(profile.bio)&&<p style={{marginTop:14,maxWidth:760,lineHeight:1.65,color:C.tSoft,overflowWrap:"anywhere",fontSize:15}}>{visibleProfileBio(profile.bio)}</p>}
         {profile.website&&<a href={profile.website} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",gap:7,color:C.accent,fontWeight:900,fontSize:13,marginTop:12,textDecoration:"none",overflowWrap:"anywhere"}}><Icon name="link" size={15}/> {profile.website.replace(/^https?:\/\//,"")}</a>}
         <div className="profile-detail-row" style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16}}>{details.map(([k,v])=><span key={k} className="profile-detail-chip" style={{background:C.aLight,color:C.accent,border:`1px solid ${C.aSoft}`,borderRadius:999,padding:"8px 11px",fontSize:12,fontWeight:900,maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{k}: {v}</span>)}</div>
       </div>
@@ -6594,7 +6598,7 @@ export default function App(){
     email:"",
     location:"",
     industry:"Exploring",
-    bio:"Figuring out what comes next.",
+    bio:"",
     avatarUrl:"",
   });
   const setScreen=useCallback((next)=>{
