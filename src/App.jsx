@@ -1593,6 +1593,205 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .ai-welcome h2{font-size:27px;}
   .ai-starter-grid button{padding:10px;}
 }
+
+/* Calm social platform rebuild: less interface, clearer movement. */
+.app-view{
+  --app-bg:#F3F5F2;
+  --app-panel:#FFFFFF;
+  --app-panel-2:#F7F8F6;
+  --app-line:#DDE2DD;
+  --app-copy:#111411;
+  --app-muted:#6A736C;
+  --app-soft:#3E4740;
+  background:var(--app-bg)!important;
+  color:var(--app-copy)!important;
+}
+.theme-dark .app-view{
+  --app-bg:#0B0D0C;
+  --app-panel:#131614;
+  --app-panel-2:#181C19;
+  --app-line:#292E2A;
+  --app-copy:#F2F5F2;
+  --app-muted:#909991;
+  --app-soft:#C8CEC9;
+  background:var(--app-bg)!important;
+}
+.app-view:before,.app-topbar:after,.app-topbar-logo:after,.app-view-intro-index,.app-view-intro-signal,.desktop-feed-side>div:before,.settings-grid>div:before,.post-card:before{display:none!important;}
+.global-flow-wave[data-screen="app"]{display:none!important;}
+.app-content-stage{animation:appStageIn .2s ease-out both!important;}
+.app-view .ch,.app-view .bs,.app-view .uh,.app-view button{transition:background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease!important;}
+.app-view .ch:hover,.app-view .bs:hover,.app-view .uh:hover,.app-view button:hover{transform:none!important;filter:none!important;box-shadow:none!important;}
+.app-topbar{
+  height:64px!important;
+  min-height:64px!important;
+  padding:0 max(18px,calc((100vw - 1320px)/2))!important;
+  gap:9px!important;
+  background:rgba(255,255,255,.94)!important;
+  border-bottom:1px solid var(--app-line)!important;
+  backdrop-filter:blur(16px)!important;
+  box-shadow:none!important;
+}
+.theme-dark .app-topbar{background:rgba(11,13,12,.94)!important;border-bottom-color:var(--app-line)!important;}
+.app-topbar-logo{font-size:21px!important;margin-right:12px!important;color:var(--app-copy)!important;}
+.app-topbar-logo span:last-child{color:var(--app-copy)!important;}
+.desktop-app-tabs{height:auto!important;align-items:center!important;gap:3px!important;}
+.desktop-app-tabs .nl{
+  height:38px!important;
+  padding:0 13px!important;
+  border-radius:7px!important;
+  color:var(--app-muted)!important;
+  font-size:12px!important;
+  font-weight:750!important;
+}
+.desktop-app-tabs .nl[aria-current="page"]{background:var(--app-panel-2)!important;color:var(--app-copy)!important;}
+.desktop-app-tabs .nl[aria-current="page"]:after{display:none!important;}
+.desktop-app-search{width:210px!important;height:38px!important;border-radius:7px!important;background:var(--app-panel-2)!important;border-color:var(--app-line)!important;color:var(--app-copy)!important;}
+.app-topbar>button:not(.app-topbar-logo):not(.nl){height:38px!important;min-height:38px!important;border:1px solid var(--app-line)!important;border-radius:7px!important;background:transparent!important;color:var(--app-muted)!important;}
+.app-topbar>button:hover{border-color:#AAB3AC!important;color:var(--app-copy)!important;}
+.app-topbar .app-profile-button{border:0!important;width:38px!important;padding:0!important;}
+.app-topbar .app-profile-button>div>div{width:36px!important;height:36px!important;}
+.app-mobile-search-button{display:none!important;}
+.app-topbar>.app-ai-button[aria-current="page"]{background:rgba(22,199,78,.09)!important;border-color:rgba(22,199,78,.28)!important;color:#16A844!important;}
+.app-more-button{width:38px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+.app-topbar>.app-menu-backdrop{position:fixed!important;inset:64px 0 0!important;width:100%!important;height:calc(100dvh - 64px)!important;border:0!important;border-radius:0!important;background:rgba(8,10,9,.18)!important;z-index:390!important;}
+.app-more-menu{
+  position:fixed;
+  z-index:400;
+  top:72px;
+  right:max(18px,calc((100vw - 1320px)/2));
+  width:300px;
+  padding:8px;
+  border:1px solid var(--app-line);
+  border-radius:10px;
+  background:var(--app-panel);
+  color:var(--app-copy);
+  box-shadow:0 18px 50px rgba(13,18,14,.14);
+}
+.app-more-profile{display:flex;align-items:center;gap:11px;padding:10px 10px 13px;margin-bottom:4px;border-bottom:1px solid var(--app-line);}
+.app-more-profile>div:last-child{min-width:0;display:grid;gap:2px;}
+.app-more-profile b,.app-more-profile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.app-more-profile b{font-size:13px;}.app-more-profile span{font-size:11px;color:var(--app-muted);}
+.app-more-menu>button[role="menuitem"]{width:100%;min-height:54px;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--app-copy);display:flex;align-items:center;gap:12px;text-align:left;}
+.app-more-menu>button[role="menuitem"]:hover{background:var(--app-panel-2)!important;}
+.app-more-menu>button[role="menuitem"]>span{display:grid;gap:2px;}
+.app-more-menu>button[role="menuitem"] b{font-size:12px;}.app-more-menu>button[role="menuitem"] small{font-size:10px;color:var(--app-muted);}
+.app-more-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:5px;padding:10px;border-top:1px solid var(--app-line);}
+.app-more-footer>button{border:0;background:transparent;color:var(--app-muted);font-size:11px;font-weight:800;}
+.app-shell{width:min(100%,1260px)!important;max-width:1260px!important;padding:24px 22px 104px!important;}
+.app-view-intro{display:block!important;min-height:0!important;padding:14px 2px 22px!important;margin-bottom:18px!important;border-bottom:1px solid var(--app-line)!important;overflow:visible!important;}
+.app-view-intro span{margin-bottom:7px!important;font-size:9px!important;letter-spacing:1.5px!important;color:#149E3F!important;}
+.app-view-intro h1{font-size:clamp(30px,3.2vw,44px)!important;line-height:1.02!important;max-width:720px!important;color:var(--app-copy)!important;}
+.app-view-intro p{margin-top:9px!important;padding:0!important;max-width:660px!important;font-size:13px!important;line-height:1.62!important;color:var(--app-muted)!important;}
+.feed-grid{grid-template-columns:minmax(0,720px) 286px!important;gap:18px!important;justify-content:center!important;}
+.feed-grid>aside.desktop-feed-side:first-child{display:none!important;}
+.feed-grid:not(:has(> aside:nth-of-type(2))){grid-template-columns:minmax(0,760px)!important;}
+.feed-main{width:100%!important;max-width:720px!important;}
+.desktop-feed-side{top:82px!important;gap:12px!important;}
+.desktop-feed-side>div,.mobile-profile-summary,.composer-card,.post-card,.message-list,.message-panel,.profile-hero,.profile-danger-zone,.settings-grid>div,.directory-grid>.ch,.directory-grid>div,.search-results-panel{
+  background:var(--app-panel)!important;
+  border:1px solid var(--app-line)!important;
+  border-radius:8px!important;
+  backdrop-filter:none!important;
+  box-shadow:none!important;
+}
+.desktop-feed-side>div{padding:16px!important;overflow:visible!important;}
+.feed-mode-switch{margin-bottom:10px!important;border-bottom:1px solid var(--app-line)!important;}
+.feed-mode-switch button{min-height:48px!important;padding:9px 2px 11px!important;}
+.feed-mode-switch button span:first-child{font-family:inherit!important;font-size:13px!important;font-weight:850!important;}
+.fs-app-composer{padding:16px!important;margin-bottom:12px!important;border-radius:8px!important;background:var(--app-panel)!important;border-color:var(--app-line)!important;color:var(--app-copy)!important;box-shadow:none!important;}
+.fs-app-composer:before{display:none!important;}
+.fs-app-composer textarea,.theme-dark .fs-app-composer textarea{min-height:88px!important;border-radius:7px!important;background:var(--app-panel-2)!important;border-color:var(--app-line)!important;color:var(--app-copy)!important;}
+.composer-actions .post-type-btn,.composer-actions .composer-media-btn{border-radius:6px!important;}
+.composer-publish-btn{border-radius:7px!important;background:#16A844!important;color:#fff!important;}
+.composer-publish-btn:hover{background:#128D39!important;}
+.filter-row{margin:0 0 10px!important;padding:0!important;border:0!important;}
+.filter-row button{border-radius:7px!important;padding:7px 11px!important;}
+.filter-row button[aria-pressed="true"]{background:var(--app-copy)!important;border-color:var(--app-copy)!important;color:var(--app-bg)!important;}
+.post-card{margin-bottom:10px!important;padding:0!important;overflow:hidden!important;}
+.post-card:hover,.theme-light .post-card:hover{background:var(--app-panel)!important;border-color:#BFC7C1!important;}
+.post-card>div:first-child{padding:18px!important;}
+.post-actions{padding:10px 16px!important;background:transparent!important;gap:12px!important;}
+.post-actions button{font-size:12px!important;}
+.directory-wrap{max-width:1080px!important;}
+.directory-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))!important;gap:10px!important;}
+.directory-grid>.ch:hover,.directory-grid>div:hover{transform:none!important;border-color:#BFC7C1!important;}
+.profile-directory-card{padding:18px!important;}
+.messages-grid{grid-template-columns:270px minmax(0,1fr)!important;gap:10px!important;min-height:min(660px,calc(100dvh - 190px))!important;}
+.message-list{padding:7px!important;}.message-panel{padding:16px!important;min-height:540px!important;}
+.dm-thread-button{border-radius:6px!important;padding:10px!important;}
+.dm-thread-button[data-active="true"]{background:rgba(22,199,78,.09)!important;border-color:rgba(22,199,78,.22)!important;}
+.message-compose input{background:var(--app-panel-2)!important;border-color:var(--app-line)!important;}
+.profile-hero,.market-hero,.groups-hero{border-radius:8px!important;box-shadow:none!important;}
+.market-hero,.groups-hero{background:var(--app-panel)!important;border-color:var(--app-line)!important;color:var(--app-copy)!important;}
+.market-hero .directory-title,.groups-hero .directory-title{color:var(--app-copy)!important;}
+.market-hero p,.groups-hero p{color:var(--app-muted)!important;}
+.profile-stats,.settings-grid{gap:10px!important;}
+.settings-grid>div{padding:19px!important;}
+.profile-stat-button{border-radius:7px!important;box-shadow:none!important;}
+.profile-detail-chip,.industry-tag,.tag-chip{border-radius:5px!important;}
+.ai-workspace,.ai-sidebar,.ai-chat-panel,.ai-composer{box-shadow:none!important;}
+.ai-workspace{gap:10px!important;}.ai-sidebar,.ai-chat-panel{border-radius:8px!important;}
+.mobile-bottom-nav{box-shadow:none!important;}
+
+@media(max-width:1040px){
+  .desktop-app-tabs .nl{padding:0 9px!important;}
+  .desktop-app-search{width:176px!important;}
+  .app-ai-button span{display:none;}
+  .app-ai-button{width:38px!important;padding:0!important;justify-content:center!important;}
+  .feed-grid{grid-template-columns:minmax(0,720px)!important;}
+  .feed-grid>aside.desktop-feed-side:last-child{display:none!important;}
+}
+@media(max-width:760px){
+  .app-view{overflow-x:hidden!important;}
+  .app-topbar{height:56px!important;min-height:56px!important;padding:0 max(12px,env(safe-area-inset-left))!important;gap:7px!important;background:var(--app-panel)!important;}
+  .app-topbar-logo{font-size:18px!important;margin-right:auto!important;}
+  .desktop-app-tabs,.desktop-app-search,.app-ai-button,.app-topbar>button[aria-label*="unread notifications"]{display:none!important;}
+  .app-mobile-search-button{display:flex!important;width:36px!important;padding:0!important;align-items:center!important;justify-content:center!important;}
+  .app-topbar .app-profile-button{width:36px!important;height:36px!important;min-height:36px!important;}
+  .app-topbar .app-profile-button>div>div{width:34px!important;height:34px!important;}
+  .app-more-button{width:36px!important;height:36px!important;min-height:36px!important;}
+  .app-topbar>.app-menu-backdrop{inset:56px 0 0!important;height:calc(100dvh - 56px)!important;}
+  .app-more-menu{top:62px;right:10px;width:min(310px,calc(100vw - 20px));}
+  .app-shell{width:100%!important;max-width:100%!important;padding:12px 12px calc(82px + env(safe-area-inset-bottom))!important;}
+  .app-view-intro{padding:8px 1px 14px!important;margin-bottom:12px!important;}
+  .app-view-intro h1{font-size:27px!important;line-height:1.04!important;}
+  .app-view-intro p{font-size:12px!important;line-height:1.5!important;margin-top:7px!important;}
+  .feed-grid{display:block!important;}.feed-main{max-width:none!important;}
+  .mobile-profile-summary{display:block!important;padding:13px!important;margin-bottom:10px!important;}
+  .feed-mode-switch{margin-bottom:8px!important;}
+  .fs-app-composer{padding:12px!important;margin-bottom:9px!important;}
+  .fs-app-composer textarea{min-height:78px!important;}
+  .composer-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;overflow:visible!important;padding-bottom:0!important;}
+  .composer-post-types{display:flex!important;gap:7px!important;width:100%!important;overflow-x:auto!important;padding-bottom:2px!important;scrollbar-width:none;overscroll-behavior-x:contain;}
+  .composer-post-types::-webkit-scrollbar{display:none;}
+  .composer-post-types .post-type-btn{flex:0 0 auto!important;width:auto!important;min-width:78px!important;}
+  .composer-tools{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;}
+  .composer-tools .composer-media-btn{width:100%!important;min-width:0!important;grid-column:auto!important;}
+  .composer-tools .composer-publish-btn{width:100%!important;min-width:0!important;grid-column:1/-1!important;margin:0!important;}
+  .filter-row{overflow-x:auto!important;flex-wrap:nowrap!important;scrollbar-width:none;}
+  .post-card{margin-bottom:9px!important;}.post-card>div:first-child{padding:15px!important;}
+  .post-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;padding:8px!important;}
+  .post-actions button{justify-content:center!important;margin:0!important;padding:8px 3px!important;font-size:11px!important;white-space:nowrap!important;}
+  .directory-grid{grid-template-columns:minmax(0,1fr)!important;gap:9px!important;}
+  .profile-directory-card{padding:15px!important;}
+  .messages-grid{display:block!important;min-height:0!important;}
+  .message-list,.message-panel{width:100%!important;min-height:0!important;}
+  .mobile-section-tabs{margin:0 0 11px!important;padding:3px!important;border:1px solid var(--app-line)!important;border-radius:8px!important;background:var(--app-panel)!important;}
+  .mobile-section-tabs button{min-height:38px!important;border-radius:6px!important;font-size:11px!important;}
+  .mobile-bottom-nav{height:calc(66px + env(safe-area-inset-bottom))!important;padding:7px max(7px,env(safe-area-inset-left)) env(safe-area-inset-bottom)!important;border-top:1px solid var(--app-line)!important;background:var(--app-panel)!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+  .mobile-bottom-nav button{min-width:0!important;padding:4px 2px!important;color:var(--app-muted)!important;font-size:9px!important;gap:3px!important;}
+  .mobile-bottom-nav button.active{background:transparent!important;color:#149E3F!important;}
+  .mobile-bottom-nav button span{width:28px!important;height:24px!important;border-radius:6px!important;}
+  .mobile-bottom-nav button.active span{background:rgba(22,199,78,.1)!important;}
+  .ai-shell .app-content-stage[data-view="ai"]{height:calc(100dvh - 56px - 66px - env(safe-area-inset-bottom))!important;}
+}
+@media(max-width:360px){
+  .app-shell{padding-left:9px!important;padding-right:9px!important;}
+  .app-topbar{padding-left:10px!important;padding-right:10px!important;}
+  .app-topbar-logo{font-size:17px!important;}
+  .app-view-intro h1{font-size:25px!important;}
+  .post-actions button{font-size:10px!important;}
+}
 `;
 
 const Tag=({label,style={},className=""})=><span className={`tag-chip ${className}`.trim()} style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:6,padding:"3px 9px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
@@ -3917,8 +4116,10 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
 
 function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,setAccessibility,themeMode,setThemeMode,cookieConsent,setCookieConsent,onOpenPanel}){
   const [view,setView]=useState("feed");
+  const [navMenuOpen,setNavMenuOpen]=useState(false);
   useEffect(()=>{
     window.scrollTo({top:0,left:0,behavior:"auto"});
+    setNavMenuOpen(false);
   },[view]);
   const [posts,setPosts]=useLocalState("fear-posts",POSTS);
   const [people,setPeople]=useLocalState("fear-people",PEOPLE);
@@ -4274,15 +4475,10 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   },[selectedProfile,setView,view]);
   const tabs=[
     ["feed","Feed"],
-    ["ai","fear AI"],
     ["discover","Discover"],
-    ["events","fear.club"],
     ["messages","Messages"],
-    ["notifications","Activity"],
     ["groups","Groups"],
     ["opportunities","Deals"],
-    ["profile","Profile"],
-    ["settings","Settings"],
   ];
   const viewMeta={
     feed:{eyebrow:"Your space",title:"Make the next move visible",copy:"Share what you are working toward, find useful momentum, and keep your future moving in public."},
@@ -4294,8 +4490,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   };
   const mobileTabs=[
     ["feed","Feed","home"],
-    ["ai","AI","brain"],
-    ["messages","DMs","mail"],
+    ["discover","Discover","search"],
+    ["messages","Messages","mail"],
     ["notifications","Activity","heart"],
     ["profile","Profile","user"],
   ];
@@ -4921,11 +5117,22 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           {tabs.map(([id,label])=><button key={id} aria-current={view===id?"page":undefined} onClick={()=>setView(id)} className="bs nl" style={{background:view===id?C.aLight:"transparent",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:view===id?800:600,color:view===id?C.accent:C.muted,whiteSpace:"nowrap"}}>{label}{id==="notifications"&&unread>0?` ${unread}`:""}</button>)}
         </div>
         <input type="search" aria-label="Search people, posts, tags, groups, and deals" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchResults[0])searchResults[0].action();if(e.key==="Escape")closeSearch();}} placeholder="Search people, posts, tags" className="if desktop-app-search" style={{width:240,maxWidth:"32vw",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 13px",fontSize:13,color:C.text}}/>
-        <button onClick={inviteFriend} className="bs app-invite-button" aria-label="Invite a friend" title="Invite a friend" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",color:C.muted}}><Icon name="send" size={18} color="currentColor"/></button>
+        <button onClick={()=>setView("discover")} className="bs app-mobile-search-button" aria-label="Search fear.social" title="Search" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",color:C.muted}}><Icon name="search" size={18} color="currentColor"/></button>
+        <button onClick={()=>setView("ai")} className="bs app-ai-button" aria-current={view==="ai"?"page":undefined} aria-label="Open fear AI" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 11px",color:view==="ai"?C.accent:C.muted,display:"flex",alignItems:"center",gap:7,fontWeight:850,fontSize:12}}><Icon name="brain" size={17} color="currentColor"/><span>fear AI</span></button>
         <button onClick={()=>setView("notifications")} className="bs" aria-label={`${unread} unread notifications`} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:10,padding:"8px 10px",position:"relative",color:view==="notifications"?C.accent:C.muted}}><Icon name="heart" size={18} filled={view==="notifications"} color="currentColor"/>{unread>0&&<span style={{position:"absolute",top:-6,right:-6,minWidth:17,height:17,padding:"0 4px",borderRadius:999,background:C.coral,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
-        <button onClick={()=>setView("profile")} style={{background:"none",border:"none",padding:0}} aria-label="Open your profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={38} grad online/></button>
-        <span className={`app-connection-state ${connectionState}`} aria-live="polite"><i/>{connectionState==="online"?"Online":connectionState==="offline"?"Offline":"Connecting"}</span>
-        <button onClick={signOut} className="bs desktop-signout" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"8px 12px",fontSize:12,color:C.muted,fontWeight:700}}>Sign out</button>
+        <button className="app-profile-button" onClick={()=>setView("profile")} style={{background:"none",border:"none",padding:0}} aria-label="Open your profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={38} grad online/></button>
+        <button type="button" className="bs app-more-button" aria-label="Open more navigation" aria-expanded={navMenuOpen} onClick={()=>setNavMenuOpen(open=>!open)}><Icon name={navMenuOpen?"close":"menu"} size={18}/></button>
+        {navMenuOpen&&<>
+          <button type="button" className="app-menu-backdrop" aria-label="Close navigation menu" onClick={()=>setNavMenuOpen(false)}/>
+          <div className="app-more-menu" role="menu" aria-label="More fear.social navigation">
+            <div className="app-more-profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={42} grad online/><div><b>{profile.name||"Your profile"}</b><span>{profile.handle||"@yourhandle"}</span></div></div>
+            <button role="menuitem" onClick={()=>setView("ai")}><Icon name="brain" size={17}/><span><b>fear AI</b><small>Think through your next move</small></span></button>
+            <button role="menuitem" onClick={()=>setView("events")}><Icon name="calendar" size={17}/><span><b>fear.club</b><small>Coming with FEAR Pro</small></span></button>
+            <button role="menuitem" onClick={()=>setView("settings")}><Icon name="settings" size={17}/><span><b>Settings</b><small>Privacy, appearance, and account</small></span></button>
+            <button role="menuitem" onClick={()=>{setNavMenuOpen(false);inviteFriend();}}><Icon name="send" size={17}/><span><b>Invite a friend</b><small>Bring someone into your network</small></span></button>
+            <div className="app-more-footer"><span className={`app-connection-state ${connectionState}`} aria-live="polite"><i/>{connectionState==="online"?"Online":connectionState==="offline"?"Offline":"Connecting"}</span><button type="button" onClick={signOut}>Sign out</button></div>
+          </div>
+        </>}
       </div>
       <main id="app-main" className={`app-shell ${view==="ai"?"ai-shell":""}`} tabIndex={-1} style={{maxWidth:1320,margin:"0 auto",padding:"28px"}}>
         {(view==="discover"||searchTerm)&&<div className="mobile-app-search">
