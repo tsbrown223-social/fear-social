@@ -692,7 +692,14 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-intro-line{display:block;width:max-content;max-width:100%;margin:auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.65s steps(24,end) forwards;}
 .fs2-intro-line:last-child{animation-delay:1.7s;}
 .fs2-intro-line:last-child:after{content:"";display:inline-block;width:.07em;height:.76em;background:var(--fs-green);margin-left:.08em;animation:caretBlink .78s steps(1,end) infinite;}
+.fs2-intro-cue{position:absolute;left:50%;bottom:9dvh;z-index:3;transform:translateX(-50%);display:inline-flex;align-items:center;gap:12px;background:transparent;border:0;color:rgba(255,255,255,.52);font-size:10px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;padding:10px;}
+.fs2-intro-cue span{width:34px;height:34px;border:1px solid rgba(255,255,255,.16);border-radius:50%;display:grid;place-items:center;color:var(--fs-green);transition:background .2s ease,border-color .2s ease,transform .2s ease;}
+.fs2-intro-cue:hover{color:#fff}.fs2-intro-cue:hover span{background:rgba(22,199,78,.1);border-color:rgba(22,199,78,.5);transform:translateY(3px)}
 .fs2-flow{position:relative;z-index:2;margin-top:-12dvh;background:linear-gradient(180deg,transparent 0,#080A09 5%);}
+.fs2-journey-nav{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:8;display:grid;gap:7px;padding:7px;background:rgba(8,10,9,.78);border:1px solid rgba(255,255,255,.09);border-radius:12px;backdrop-filter:blur(18px);box-shadow:0 18px 60px rgba(0,0,0,.28);}
+.fs2-journey-nav button{width:40px;height:40px;border:0;border-radius:7px;background:transparent;color:rgba(255,255,255,.35);display:grid;place-items:center;transition:background .2s ease,color .2s ease,transform .2s ease;}
+.fs2-journey-nav button:hover{color:#fff;background:rgba(255,255,255,.07);transform:translateX(-2px)}
+.fs2-journey-nav button.active{color:#071009;background:var(--fs-green)}
 .fs2-section{position:relative;padding:118px max(28px,calc((100vw - 1180px)/2));}
 .fs2-eyebrow{display:flex;align-items:center;gap:10px;color:var(--fs-green);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px;}
 .fs2-eyebrow:before{content:"";width:30px;height:1px;background:currentColor;}
@@ -709,12 +716,14 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-story{height:330dvh;position:relative;}
 .fs2-story-sticky{height:100dvh;position:sticky;top:0;display:grid;grid-template-columns:minmax(300px,.72fr) minmax(0,1.28fr);gap:70px;align-items:center;padding:88px max(28px,calc((100vw - 1180px)/2)) 56px;overflow:hidden;}
 .fs2-story-copy{position:relative;min-height:390px;display:flex;flex-direction:column;justify-content:center;}
-.fs2-story-number{font-family:Georgia,serif;color:rgba(255,255,255,.18);font-size:26px;margin-bottom:24px;}
+.fs2-story-number{display:inline-flex;align-items:center;gap:10px;width:max-content;color:rgba(255,255,255,.54);font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:24px;}
+.fs2-story-number span{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;background:rgba(22,199,78,.1);border:1px solid rgba(22,199,78,.25);color:var(--fs-green);}
 .fs2-story-copy h2{font-family:Georgia,serif;font-size:60px;line-height:.96;letter-spacing:0;text-wrap:balance;margin-bottom:20px;}
 .fs2-story-copy p{color:rgba(255,255,255,.56);font-size:16px;line-height:1.75;max-width:470px;}
-.fs2-story-nav{display:flex;gap:8px;margin-top:34px;}
-.fs2-story-nav button{width:40px;height:4px;border:0;border-radius:99px;background:rgba(255,255,255,.14);transition:width .3s ease,background .3s ease;color:transparent;overflow:hidden;font-size:0;}
-.fs2-story-nav button.active{width:72px;background:var(--fs-green);}
+.fs2-story-nav{display:flex;gap:7px;margin-top:34px;flex-wrap:wrap;}
+.fs2-story-nav button{min-height:38px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.44);padding:0 11px;display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:900;transition:background .24s ease,border-color .24s ease,color .24s ease;}
+.fs2-story-nav button:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.fs2-story-nav button.active{color:#071009;background:var(--fs-green);border-color:var(--fs-green);}
 .fs2-product-frame{height:min(600px,calc(100dvh - 170px));min-height:500px;background:rgba(245,248,246,.96);color:#101311;border-radius:14px;padding:12px;box-shadow:0 50px 150px rgba(0,0,0,.46);transform:perspective(1400px) rotateY(-2deg);transition:transform .45s ease;position:relative;overflow:hidden;}
 .fs2-product-frame:hover{transform:perspective(1400px) rotateY(0deg) translateY(-4px);}
 .fs2-product-bar{height:54px;background:#0C0E0D;color:#fff;border-radius:8px;display:flex;align-items:center;padding:0 16px;gap:18px;}
@@ -754,7 +763,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-social-rail{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #CCD5CF;border-bottom:1px solid #CCD5CF;}
 .fs2-social-item{padding:28px 24px;min-height:190px;border-right:1px solid #CCD5CF;display:grid;grid-template-rows:auto 1fr;align-content:start;gap:22px;}
 .fs2-social-item>div{align-self:start;}
-.fs2-social-item:last-child{border-right:0;}.fs2-social-item span{font-family:Georgia,serif;font-size:30px;color:#18A646;}.fs2-social-item b{font-size:17px;margin-bottom:8px;display:block;}.fs2-social-item p{font-size:13px;line-height:1.6;color:#69726C;}
+.fs2-social-item:last-child{border-right:0;}.fs2-move-icon{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;color:#12813A;background:#E3F6E9;border:1px solid #BDE7C9;}.fs2-social-item b{font-size:17px;margin-bottom:8px;display:block;}.fs2-social-item p{font-size:13px;line-height:1.6;color:#69726C;}
 .fs2-why{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.7fr);gap:80px;align-items:center;background:linear-gradient(145deg,#0A0C0B,#101A13);}
 .fs2-why-copy p{font-size:17px;line-height:1.8;color:rgba(255,255,255,.57);max-width:580px;margin:24px 0 30px;}
 .fs2-acronym{display:grid;gap:2px;}
@@ -772,6 +781,9 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-cta{min-height:90dvh;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 65%,rgba(22,199,78,.2),transparent 34%),#080A09;}
 .fs2-cta-inner{max-width:860px;}.fs2-cta p{font-size:18px;line-height:1.75;color:rgba(255,255,255,.57);max-width:620px;margin:24px auto 34px;}.fs2-cta .fs2-actions{justify-content:center;}
 .fs2-footer{padding:28px max(24px,calc((100vw - 1180px)/2));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;border-top:1px solid rgba(255,255,255,.08);background:#080A09;}.fs2-footer-brand{font-family:Georgia,serif;font-size:18px;font-weight:800;}.fs2-footer-brand span{color:var(--fs-green);}.fs2-footer small{color:rgba(255,255,255,.3);}.fs2-footer-links{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;}.fs2-footer-links button{background:transparent;border:0;color:rgba(255,255,255,.46);font-size:11px;padding:8px;}
+.fs2-reveal{opacity:0;transform:translateY(28px);transition:opacity .72s ease,transform .72s cubic-bezier(.2,.78,.22,1);}
+.fs2-reveal.is-visible{opacity:1;transform:none;}
+.fs2-reveal-delay-1{transition-delay:.08s}.fs2-reveal-delay-2{transition-delay:.16s}.fs2-reveal-delay-3{transition-delay:.24s}
 .app-view{background:rgba(7,9,8,.94)!important;}
 .theme-dark .app-topbar{background:rgba(8,10,9,.88)!important;backdrop-filter:blur(24px)!important;min-height:64px!important;}
 .theme-dark .desktop-feed-side>div,.theme-dark .mobile-profile-summary,.theme-dark .composer-card,.theme-dark .post-card,.theme-dark .directory-grid .ch,.theme-dark .message-list,.theme-dark .message-panel,.theme-dark .profile-stats>div,.theme-dark .edit-sheet{border-radius:12px!important;border-color:rgba(255,255,255,.08)!important;box-shadow:none!important;}
@@ -998,6 +1010,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .app-view input,.app-view textarea,.app-view select{border-radius:6px!important;}
 
 @media(max-width:900px){
+  .fs2-journey-nav{display:none}
   .fs2-section{padding:84px 28px;}
   .fs2-opening,.fs2-social-head,.fs2-why,.fs2-access-head{grid-template-columns:1fr;gap:36px;}
   .fs2-opening{min-height:auto;padding-top:130px;padding-bottom:110px;}
@@ -1008,11 +1021,11 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-plans{grid-template-columns:1fr;}.fs2-footer{grid-template-columns:1fr;text-align:center}.fs2-footer-links{justify-content:center}
 }
 @media(max-width:600px){
-  .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}
+  .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}.fs2-intro-cue{bottom:7dvh;width:max-content;max-width:calc(100% - 28px);font-size:9px;gap:9px}
   .fs2-flow{margin-top:-4dvh;background:linear-gradient(180deg,transparent,#080A09 2%)}
   .fs2-section{padding:68px 18px}.fs2-opening{padding-top:94px;padding-bottom:78px;gap:30px}.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:40px;line-height:1.02}.fs2-opening-copy p,.fs2-social-head p,.fs2-why-copy p,.fs2-cta p{font-size:15px}.fs2-primary,.fs2-secondary{width:100%;min-height:50px}
-  .fs2-story{height:auto}.fs2-story-sticky{height:auto;position:relative;padding:78px 14px;display:block}.fs2-story-copy{min-height:0;padding:0 4px;margin-bottom:28px}.fs2-story-copy h2{font-size:40px;line-height:1}.fs2-story-copy p{font-size:14px}.fs2-story-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.fs2-story-nav button,.fs2-story-nav button.active{width:100%;height:38px;border-radius:999px;font-size:10px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);font-weight:900}.fs2-story-nav button.active{color:#fff;background:var(--fs-green)}.fs2-product-frame{height:462px;min-height:462px;padding:8px;border-radius:10px}.fs2-product-bar{height:48px;padding:0 10px}.fs2-product-tabs span{display:none}.fs2-product-tabs span.active{display:block}.fs2-live{font-size:9px}.fs2-product-body{height:396px;margin-top:8px;padding:10px}.fs2-profile-info{padding:0 10px}.fs2-profile-info p{font-size:11px}.fs2-stats{grid-template-columns:1fr 1fr}.fs2-stats div:last-child{display:none}.fs2-people-preview{gap:7px}.fs2-person{grid-template-columns:42px minmax(0,1fr);padding:10px}.fs2-person-avatar{width:42px;height:42px}.fs2-person button{display:none}.fs2-message-preview{grid-template-columns:1fr}.fs2-thread-list{display:none}.fs2-opportunity{padding:18px}.fs2-opportunity h3{font-size:20px}.fs2-company-mark{width:46px;height:46px}.fs2-opportunity-meta span{padding:7px;font-size:10px}
-  .fs2-social{min-height:auto}.fs2-social-head{margin-bottom:42px}.fs2-social-rail{grid-template-columns:1fr}.fs2-social-item{border-right:0!important;border-bottom:1px solid #CCD5CF!important;min-height:142px;padding:22px 4px}.fs2-social-item:last-child{border-bottom:0!important}.fs2-social-item span{font-size:24px}.fs2-social-item p{max-width:300px}
+  .fs2-story{height:auto}.fs2-story-sticky{height:auto;position:relative;padding:78px 14px;display:block}.fs2-story-copy{min-height:0;padding:0 4px;margin-bottom:28px}.fs2-story-copy h2{font-size:40px;line-height:1}.fs2-story-copy p{font-size:14px}.fs2-story-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.fs2-story-nav button,.fs2-story-nav button.active{width:100%;min-height:40px;border-radius:7px;font-size:10px;justify-content:flex-start;padding:0 10px}.fs2-story-nav button.active{color:#071009;background:var(--fs-green)}.fs2-product-frame{height:462px;min-height:462px;padding:8px;border-radius:10px}.fs2-product-bar{height:48px;padding:0 10px}.fs2-product-tabs span{display:none}.fs2-product-tabs span.active{display:block}.fs2-live{font-size:9px}.fs2-product-body{height:396px;margin-top:8px;padding:10px}.fs2-profile-info{padding:0 10px}.fs2-profile-info p{font-size:11px}.fs2-stats{grid-template-columns:1fr 1fr}.fs2-stats div:last-child{display:none}.fs2-people-preview{gap:7px}.fs2-person{grid-template-columns:42px minmax(0,1fr);padding:10px}.fs2-person-avatar{width:42px;height:42px}.fs2-person button{display:none}.fs2-message-preview{grid-template-columns:1fr}.fs2-thread-list{display:none}.fs2-opportunity{padding:18px}.fs2-opportunity h3{font-size:20px}.fs2-company-mark{width:46px;height:46px}.fs2-opportunity-meta span{padding:7px;font-size:10px}
+  .fs2-social{min-height:auto}.fs2-social-head{margin-bottom:42px}.fs2-social-rail{grid-template-columns:1fr}.fs2-social-item{border-right:0!important;border-bottom:1px solid #CCD5CF!important;min-height:142px;padding:22px 4px;grid-template-columns:48px minmax(0,1fr);grid-template-rows:1fr;gap:16px}.fs2-social-item:last-child{border-bottom:0!important}.fs2-social-item p{max-width:300px}
   .fs2-why{gap:54px}.fs2-acronym-row{grid-template-columns:42px 1fr;padding:13px 0}.fs2-acronym-row span{font-size:34px}.fs2-acronym-row b{font-size:18px}
   .fs2-access-head{margin-bottom:38px}.fs2-plan{padding:24px 18px;min-height:0}.fs2-plan h3{font-size:34px}.fs2-plan-list{grid-template-columns:1fr;margin:22px 0}.fs2-cta{min-height:78dvh}.fs2-footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}.fs2-footer-links{gap:0}
   .cookie-notice{width:calc(100% - 20px);bottom:calc(10px + env(safe-area-inset-bottom))!important}.cookie-card{display:block!important;padding:12px!important}.cookie-card>div:first-child b{font-size:13px!important}.cookie-card p{font-size:11px!important}.cookie-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important;margin-top:10px!important}.cookie-actions button{padding:8px 5px!important;font-size:10px!important;min-height:36px}
@@ -1387,8 +1400,8 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .cookie-actions{grid-template-columns:1fr!important;}
   .cookie-accept{grid-column:auto;}
 }
-@media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary{transition:none!important}}
-.a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}
+@media(prefers-reduced-motion:reduce){.fs2-intro-line{animation:none;clip-path:none}.fs2-intro-line:last-child:after{display:none}.fs2-product-frame,.fs2-primary,.fs2-reveal{transition:none!important}.fs2-reveal{opacity:1!important;transform:none!important}}
+.a11y-reduce-motion .fs2-intro-line{animation:none!important;clip-path:none!important}.a11y-reduce-motion .fs2-intro-line:last-child:after{display:none!important}.a11y-reduce-motion .fs2-reveal{opacity:1!important;transform:none!important;transition:none!important}
 @supports not (overflow:clip){
   html,body,#root,.app-view,.landing-cinematic-root{overflow-x:hidden!important;}
 }
@@ -1915,6 +1928,7 @@ const GhostBtn=({children,onClick,style={}})=>(
 const iconPaths = {
   check:<path d="M20 6 9 17l-5-5"/>,
   arrowRight:<><path d="M5 12h14"/><path d="m14 7 5 5-5 5"/></>,
+  arrowDown:<><path d="M12 5v14"/><path d="m7 14 5 5 5-5"/></>,
   close:<path d="M18 6 6 18M6 6l12 12"/>,
   plus:<path d="M12 5v14M5 12h14"/>,
   trash:<><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></>,
@@ -2867,6 +2881,7 @@ function FearFlowCanvas(){
 
 function LandingExperience({setScreen,notify,onOpenPanel}){
   const [activeChapter,setActiveChapter]=useState(0);
+  const [activeSection,setActiveSection]=useState("platform");
   const storyRef=useRef(null);
   const cursorGlowRef=useRef(null);
   useEffect(()=>{
@@ -2893,6 +2908,11 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
         const next=Math.min(3,Math.floor(progress*4));
         setActiveChapter(previous=>previous===next?previous:next);
       }
+      const journeySections=[...document.querySelectorAll("[data-journey]")];
+      const marker=y+window.innerHeight*.46;
+      let current=journeySections[0];
+      journeySections.forEach(section=>{if(section.offsetTop<=marker)current=section;});
+      if(current)setActiveSection(previous=>previous===(current.dataset.journey||"platform")?previous:(current.dataset.journey||"platform"));
     };
     window.addEventListener("pointermove",move,{passive:true});
     window.addEventListener("scroll",scroll,{passive:true});
@@ -2904,11 +2924,29 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
     };
   },[]);
 
+  useEffect(()=>{
+    const reveals=[...document.querySelectorAll(".fs2-reveal")];
+    if(!("IntersectionObserver" in window)){
+      reveals.forEach(element=>element.classList.add("is-visible"));
+      return undefined;
+    }
+    const revealObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },{threshold:.14,rootMargin:"0px 0px -8%"});
+    reveals.forEach(element=>revealObserver.observe(element));
+    return()=>{revealObserver.disconnect();};
+  },[]);
+
   const chapters=[
-    {label:"01 / Identity",tab:"Profile",title:"Show people where you are going.",copy:"Build a profile around your direction, your work, and the opportunity you want next. You do not need the perfect title to become visible."},
-    {label:"02 / People",tab:"Discover",title:"Find people already moving.",copy:"Discover students, creators, early professionals, and collaborators who understand the future you are trying to build."},
-    {label:"03 / Conversation",tab:"Messages",title:"Turn interest into a real conversation.",copy:"Follow up, ask the clear question, and build relationships without needing a formal introduction first."},
-    {label:"04 / Opportunity",tab:"Deals",title:"See the opening. Take the shot.",copy:"Find jobs, gigs, internships, projects, and volunteer roles that match the direction you want to move in."},
+    {label:"Identity",tab:"Profile",icon:"user",title:"Show people where you are going.",copy:"Build a profile around your direction, your work, and the opportunity you want next. You do not need the perfect title to become visible."},
+    {label:"People",tab:"Discover",icon:"network",title:"Find people already moving.",copy:"Discover students, creators, early professionals, and collaborators who understand the future you are trying to build."},
+    {label:"Conversation",tab:"Messages",icon:"mail",title:"Turn interest into a real conversation.",copy:"Follow up, ask the clear question, and build relationships without needing a formal introduction first."},
+    {label:"Opportunity",tab:"Deals",icon:"briefcase",title:"See the opening. Take the shot.",copy:"Find jobs, gigs, internships, projects, and volunteer roles that match the direction you want to move in."},
   ];
   const chapter=chapters[activeChapter]||chapters[0];
   const people=[
@@ -2918,12 +2956,19 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
     ["MV","Mara Vale","Brand · Preparing a first pitch"],
   ];
   const socialMoves=[
-    ["01","Be seen","Create a profile that makes your direction, questions, and progress visible."],
-    ["02","Find people","Discover the students, operators, creators, and collaborators in your lane."],
-    ["03","Start talking","Use posts, follows, groups, and DMs to turn curiosity into connection."],
-    ["04","Move forward","Find opportunities and keep the relationships behind your next step moving."],
+    ["user","Be seen","Create a profile that makes your direction, questions, and progress visible."],
+    ["search","Find people","Discover the students, operators, creators, and collaborators in your lane."],
+    ["mail","Start talking","Use posts, follows, groups, and DMs to turn curiosity into connection."],
+    ["arrowRight","Move forward","Find opportunities and keep the relationships behind your next step moving."],
   ];
   const acronym=[["F","False"],["E","Evidence"],["A","Appearing"],["R","Real"]];
+  const journeyItems=[
+    ["platform","Start","sparkle"],
+    ["story","Product","diamond"],
+    ["activity","Community","network"],
+    ["pricing","Access","briefcase"],
+    ["cta","Join","arrowRight"],
+  ];
 
   const preview=()=>{
     if(activeChapter===1)return(
@@ -2954,33 +2999,37 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
     <div className="landing-root landing-cinematic-root fs2-root">
       <LandingWaveField/>
       <div ref={cursorGlowRef} className="landing-cursor-glow" aria-hidden="true"/>
+      <nav className="fs2-journey-nav" aria-label="Explore fear.social">
+        {journeyItems.map(([id,label,icon])=><button type="button" key={id} className={activeSection===id?"active":""} aria-label={label} aria-current={activeSection===id?"step":undefined} title={label} onClick={()=>scrollToSection(id)}><Icon name={icon} size={17}/></button>)}
+      </nav>
       <section className="fs2-intro" aria-labelledby="fs2-intro-title">
         <div className="landing-flow-scrim"/>
         <div className="landing-flow-grain"/>
         <div className="fs2-intro-copy">
           <h1 id="fs2-intro-title"><span className="fs2-intro-line">Your first step</span><span className="fs2-intro-line">is <span style={{color:C.accent}}>fear.</span></span></h1>
         </div>
+        <button type="button" className="fs2-intro-cue" onClick={()=>scrollToSection("platform")}>Explore fear.social <span><Icon name="arrowDown" size={16}/></span></button>
       </section>
 
       <main className="fs2-flow">
-        <section id="platform" className="fs2-section fs2-opening">
-          <div>
+        <section id="platform" data-journey="platform" className="fs2-section fs2-opening">
+          <div className="fs2-reveal">
             <div className="fs2-eyebrow">Early access is live</div>
             <h2>Your future should not depend on already knowing the right people.</h2>
           </div>
-          <div className="fs2-opening-copy">
+          <div className="fs2-opening-copy fs2-reveal fs2-reveal-delay-1">
             <p>fear.social is a social network for the moment before momentum. Build a profile, find people in your direction, start conversations, and discover the opportunities that make your next move real.</p>
             <div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Create your account <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>scrollToSection("activity")}>See how it works</button></div>
           </div>
         </section>
 
-        <section ref={storyRef} className="fs2-story" aria-label="How fear.social moves with you">
+        <section id="story" ref={storyRef} data-journey="story" className="fs2-story" aria-label="How fear.social moves with you">
           <div className="fs2-story-sticky">
             <div className="fs2-story-copy">
-              <div className="fs2-story-number">{chapter.label}</div>
+              <div className="fs2-story-number"><span><Icon name={chapter.icon} size={17}/></span>{chapter.label}</div>
               <h2>{chapter.title}</h2>
               <p>{chapter.copy}</p>
-              <div className="fs2-story-nav" aria-label="Product chapters">{chapters.map((item,index)=><button type="button" key={item.label} className={activeChapter===index?"active":""} aria-label={`Show ${item.tab}`} aria-pressed={activeChapter===index} onClick={()=>setActiveChapter(index)}>{item.tab}</button>)}</div>
+              <div className="fs2-story-nav" aria-label="Product chapters">{chapters.map((item,index)=><button type="button" key={item.label} className={activeChapter===index?"active":""} aria-label={`Show ${item.tab}`} aria-pressed={activeChapter===index} onClick={()=>setActiveChapter(index)}><Icon name={item.icon} size={14}/>{item.tab}</button>)}</div>
             </div>
             <div className="fs2-product-frame" aria-label={`${chapter.tab} product preview`}>
               <div className="fs2-product-bar"><span className="fs2-product-brand">fear<span>.</span>social</span><div className="fs2-product-tabs">{chapters.map((item,index)=><span key={item.tab} className={activeChapter===index?"active":""}>{item.tab}</span>)}</div><span className="fs2-live">Product preview</span></div>
@@ -2989,26 +3038,26 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
           </div>
         </section>
 
-        <section id="activity" className="fs2-section fs2-social">
-          <div className="fs2-social-head"><div><div className="fs2-eyebrow">Social by design</div><h2>Built for the person you are becoming.</h2></div><p>This is not another job board and it is not only for founders. It is a network where the small moves before the breakthrough become visible, social, and easier to keep making.</p></div>
-          <div className="fs2-social-rail">{socialMoves.map(([num,title,copy])=><div className="fs2-social-item" key={title}><span>{num}</span><div><b>{title}</b><p>{copy}</p></div></div>)}</div>
+        <section id="activity" data-journey="activity" className="fs2-section fs2-social">
+          <div className="fs2-social-head"><div className="fs2-reveal"><div className="fs2-eyebrow">Social by design</div><h2>Built for the person you are becoming.</h2></div><p className="fs2-reveal fs2-reveal-delay-1">This is not another job board and it is not only for founders. It is a network where the small moves before the breakthrough become visible, social, and easier to keep making.</p></div>
+          <div className="fs2-social-rail">{socialMoves.map(([icon,title,copy],index)=><div className={`fs2-social-item fs2-reveal fs2-reveal-delay-${Math.min(index,3)}`} key={title}><span className="fs2-move-icon"><Icon name={icon} size={20}/></span><div><b>{title}</b><p>{copy}</p></div></div>)}</div>
         </section>
 
         <section className="fs2-section fs2-why">
-          <div className="fs2-why-copy"><div className="fs2-eyebrow">Why the name</div><h2>Fear feels like proof. It usually is not.</h2><p>False Evidence Appearing Real describes the moment uncertainty starts speaking like fact. The outcome is unknown, the first message feels exposed, and waiting feels safer. fear.social gives you somewhere to take the step anyway.</p><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("why")}>Read the story</button></div></div>
-          <div className="fs2-acronym" aria-label="False Evidence Appearing Real">{acronym.map(([letter,word])=><div className="fs2-acronym-row" key={letter}><span>{letter}</span><b>{word}</b></div>)}</div>
+          <div className="fs2-why-copy fs2-reveal"><div className="fs2-eyebrow">Why the name</div><h2>Fear feels like proof. It usually is not.</h2><p>False Evidence Appearing Real describes the moment uncertainty starts speaking like fact. The outcome is unknown, the first message feels exposed, and waiting feels safer. fear.social gives you somewhere to take the step anyway.</p><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("why")}>Read the story</button></div></div>
+          <div className="fs2-acronym fs2-reveal fs2-reveal-delay-1" aria-label="False Evidence Appearing Real">{acronym.map(([letter,word])=><div className="fs2-acronym-row" key={letter}><span>{letter}</span><b>{word}</b></div>)}</div>
         </section>
 
-        <section id="pricing" className="fs2-section fs2-access">
-          <div className="fs2-access-head"><div><div className="fs2-eyebrow">Start now. Grow later.</div><h2>Early access is open.</h2></div><p>The social platform is free to join today. FEAR Pro will add a focused toolkit for the work, habits, media, technology, and information behind your next chapter.</p></div>
+        <section id="pricing" data-journey="pricing" className="fs2-section fs2-access">
+          <div className="fs2-access-head"><div className="fs2-reveal"><div className="fs2-eyebrow">Start now. Grow later.</div><h2>Early access is open.</h2></div><p className="fs2-reveal fs2-reveal-delay-1">The social platform is free to join today. FEAR Pro will add a focused toolkit for the work, habits, media, technology, and information behind your next chapter.</p></div>
           <div className="fs2-plans">
-            <article className="fs2-plan"><div className="fs2-plan-label">Available now</div><h3>fear.social</h3><p>Your profile, people, posts, groups, messages, and opportunities in one social network built for first moves.</p><div className="fs2-plan-list"><span>Public or private profile</span><span>Posts, likes, comments, saves</span><span>People and groups</span><span>Messages and opportunities</span></div><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Join free</button><button className="fs2-secondary" style={{color:"#111",borderColor:"#D7DED9",background:"#fff"}} onClick={()=>setScreen("login")}>Log in</button></div></article>
-            <article id="board" className="fs2-plan pro"><div className="fs2-plan-label">Coming with FEAR Pro</div><h3>fear. board</h3><p>A future workspace connecting personal branding, lifestyle guidance, production, advanced AI workflows, market intelligence, mentorship, and fear.club.</p><div className="fs2-plan-list"><span>fear.agency</span><span>fear.style</span><span>fear.prod</span><span>fear AI Pro + finance</span></div><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("board")}>Preview what is coming</button></div></article>
+            <article className="fs2-plan fs2-reveal"><div className="fs2-plan-label">Available now</div><h3>fear.social</h3><p>Your profile, people, posts, groups, messages, and opportunities in one social network built for first moves.</p><div className="fs2-plan-list"><span>Public or private profile</span><span>Posts, likes, comments, saves</span><span>People and groups</span><span>Messages and opportunities</span></div><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Join free</button><button className="fs2-secondary" style={{color:"#111",borderColor:"#D7DED9",background:"#fff"}} onClick={()=>setScreen("login")}>Log in</button></div></article>
+            <article id="board" className="fs2-plan pro fs2-reveal fs2-reveal-delay-1"><div className="fs2-plan-label">Coming with FEAR Pro</div><h3>fear. board</h3><p>A future workspace connecting personal branding, lifestyle guidance, production, advanced AI workflows, market intelligence, mentorship, and fear.club.</p><div className="fs2-plan-list"><span>fear.agency</span><span>fear.style</span><span>fear.prod</span><span>fear AI Pro + finance</span></div><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("board")}>Preview what is coming</button></div></article>
           </div>
         </section>
 
-        <section id="cta" className="fs2-section fs2-cta">
-          <div className="fs2-cta-inner"><div className="fs2-eyebrow" style={{justifyContent:"center"}}>Your move</div><h2>Become easier to find.<br/>Make the future easier to reach.</h2><p>Create your free account, tell people where you are going, and meet the ones who can help you move.</p><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Take your first step <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>setScreen("login")}>I already have an account</button></div></div>
+        <section id="cta" data-journey="cta" className="fs2-section fs2-cta">
+          <div className="fs2-cta-inner fs2-reveal"><div className="fs2-eyebrow" style={{justifyContent:"center"}}>Your move</div><h2>Become easier to find.<br/>Make the future easier to reach.</h2><p>Create your free account, tell people where you are going, and meet the ones who can help you move.</p><div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Take your first step <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>setScreen("login")}>I already have an account</button></div></div>
         </section>
       </main>
 
