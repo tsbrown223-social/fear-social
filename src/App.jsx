@@ -706,6 +706,10 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-intro-line{display:block;width:max-content;max-width:100%;margin:auto;overflow:hidden;clip-path:inset(0 100% 0 0);animation:typeReveal 1.65s steps(24,end) forwards;}
 .fs2-intro-line:last-child{animation-delay:1.7s;}
 .fs2-intro-line:last-child:after{content:"";display:inline-block;width:.07em;height:.76em;background:var(--fs-green);margin-left:.08em;animation:caretBlink .78s steps(1,end) infinite;}
+.fs2-intro-signup{position:absolute;left:50%;top:calc(50% + 122px);z-index:4;transform:translateX(-50%);display:inline-flex;align-items:center;gap:9px;min-height:42px;padding:0 15px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:rgba(8,10,9,.58);color:rgba(255,255,255,.9);font-size:10px;font-weight:900;letter-spacing:1.25px;text-transform:uppercase;backdrop-filter:blur(18px);box-shadow:0 10px 36px rgba(0,0,0,.2);transition:color .2s ease,background .2s ease,border-color .2s ease,transform .2s ease;white-space:nowrap;}
+.fs2-intro-signup:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fs-green);box-shadow:0 0 0 4px rgba(22,199,78,.11);flex:0 0 auto;}
+.fs2-intro-signup:hover{color:#fff;background:rgba(18,22,19,.82);border-color:rgba(22,199,78,.52);transform:translate(-50%,-2px);}
+.fs2-intro-signup:focus-visible{outline:3px solid rgba(22,199,78,.38);outline-offset:3px;}
 .fs2-intro-cue{position:absolute;left:50%;bottom:9dvh;z-index:3;transform:translateX(-50%);display:inline-flex;align-items:center;gap:12px;background:transparent;border:0;color:rgba(255,255,255,.52);font-size:10px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;padding:10px;}
 .fs2-intro-cue span{width:34px;height:34px;border:1px solid rgba(255,255,255,.16);border-radius:50%;display:grid;place-items:center;color:var(--fs-green);transition:background .2s ease,border-color .2s ease,transform .2s ease;}
 .fs2-intro-cue:hover{color:#fff}.fs2-intro-cue:hover span{background:rgba(22,199,78,.1);border-color:rgba(22,199,78,.5);transform:translateY(3px)}
@@ -1048,6 +1052,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 }
 @media(max-width:600px){
   .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}.fs2-intro-cue{bottom:7dvh;width:max-content;max-width:calc(100% - 28px);font-size:9px;gap:9px}
+  .fs2-intro-signup{top:calc(50% + 86px);min-height:44px;padding:0 14px;font-size:9px;letter-spacing:1.05px;}
   .fs2-flow{margin-top:-4dvh;background:linear-gradient(180deg,transparent,#080A09 2%)}
   .fs2-section{padding:68px 18px}.fs2-opening{padding-top:94px;padding-bottom:78px;gap:30px}.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:40px;line-height:1.02}.fs2-opening-copy p,.fs2-social-head p,.fs2-why-copy p,.fs2-cta p{font-size:15px}.fs2-primary,.fs2-secondary{width:100%;min-height:50px}
   .fs2-numbers{padding:82px 20px}.fs2-numbers-heading{margin-bottom:46px;gap:22px}.fs2-numbers-heading h2{font-size:40px;line-height:1}.fs2-numbers-heading>p{font-size:14px}.fs2-number-grid{grid-template-columns:1fr}.fs2-number{min-height:190px;padding:25px 4px;border-right:0!important;border-bottom:1px solid #C8D1CB}.fs2-number:last-child{border-bottom:0}.fs2-number strong{font-size:58px}.fs2-number p{margin-top:20px;padding-top:0;max-width:34ch}
@@ -3107,6 +3112,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
       <section className="fs2-intro" aria-labelledby="fs2-intro-title">
         <div className="landing-flow-scrim"/>
         <div className="landing-flow-grain"/>
+        <button type="button" className="fs2-intro-signup" onClick={()=>setScreen("signup")} aria-label="Sign up for fear.social now">Sign up now</button>
         <div className="fs2-intro-copy">
           <h1 id="fs2-intro-title"><span className="fs2-intro-line">Your first step</span><span className="fs2-intro-line">is <span style={{color:C.accent}}>fear.</span></span></h1>
         </div>
