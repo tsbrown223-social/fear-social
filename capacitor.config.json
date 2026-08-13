@@ -1,0 +1,28 @@
+{
+  "appId": "social.fear.app",
+  "appName": "fear.social",
+  "webDir": "dist",
+  "ios": {
+    "scheme": "fear.social",
+    "contentInset": "automatic",
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile"
+  },
+  "server": {
+    "iosScheme": "capacitor",
+    "allowNavigation": [
+      "fear.social"
+    ]
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "LIGHT",
+      "overlaysWebView": false,
+      "backgroundColor": "#0B0D0C"
+    },
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
+    }
+  }
+}

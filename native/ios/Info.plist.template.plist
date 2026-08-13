@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSCameraUsageDescription</key>
+  <string>fear.social uses the camera when you choose to capture a profile photo or create a photo or video post.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>fear.social uses the microphone when you choose to record a video post.</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>fear.social accesses photos and videos only when you choose media for your profile or a post.</string>
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>fear.social can save media to your library only when you explicitly choose to save it.</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>social.fear.app.auth</string>
+      <key>CFBundleURLSchemes</key>
+      <array><string>fearsocial</string></array>
+    </dict>
+  </array>
+</dict>
+</plist>

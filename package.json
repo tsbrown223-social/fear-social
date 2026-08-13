@@ -11,7 +11,13 @@
     "deploy": "npm run build && wrangler pages deploy dist --project-name=fear-social --commit-dirty=true",
     "db:migrate": "wrangler d1 migrations apply fear-social-db --remote --config wrangler.local.toml",
     "db:migrate:local": "wrangler d1 migrations apply fear-social-db --local --config wrangler.local.toml",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "ios:install": "npm install @capacitor/core@8.4.2 @capacitor/ios@8.4.2 @capacitor/app@8.1.1 @capacitor/browser@8.0.4 @capacitor/haptics@8 @capacitor/keyboard@8 @capacitor/status-bar@8 && npm install --save-dev @capacitor/cli@8.4.2",
+    "mobile:build": "npm run build && npx cap sync ios",
+    "ios:add": "npm run build && npx cap add ios && node scripts/prepare-ios.mjs",
+    "ios:sync": "npm run build && npx cap sync ios && node scripts/prepare-ios.mjs",
+    "ios:open": "npx cap open ios",
+    "ios:check": "node scripts/ios-readiness-check.mjs"
   },
   "dependencies": {
     "react": "^18.3.0",

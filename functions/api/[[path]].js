@@ -10,6 +10,21 @@ const SECURITY_RESPONSE_HEADERS = {
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
 };
 
+const NATIVE_APP_ORIGINS = new Set(["capacitor://localhost", "ionic://localhost"]);
+const appendCorsHeaders = (headers, request, env = {}) => {
+  const origin = request.headers.get("origin") || "";
+  const allowedWebOrigin = env.PUBLIC_APP_ORIGIN || "https://fear.social";
+  if (origin && (origin === allowedWebOrigin || NATIVE_APP_ORIGINS.has(origin))) {
+    headers.set("access-control-allow-origin", origin);
+    headers.set("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS");
+    headers.set("access-control-allow-headers", "content-type, x-fear-token, x-client-request-id");
+    headers.set("access-control-max-age", "86400");
+    headers.set("vary", "Origin");
+    headers.set("cross-origin-resource-policy", "cross-origin");
+  }
+  return headers;
+};
+
 const json = (body, init = {}) =>
   new Response(JSON.stringify(body), {
     ...init,
@@ -810,10 +825,19 @@ async function createSession(db, userId, token, request) {
   return sessionToken;
 }
 
-const oauthErrorRedirect = (message) => {
+const oauthErrorRedirect = (message, nativeFlow = false) => {
   const params = new URLSearchParams({ oauth: "error", message: String(message || "Sign-in failed").slice(0, 160) });
-  return new Response(null, { status: 302, headers: { location: `/#login?${params.toString()}` } });
+  return new Response(null, { status: 302, headers: { location: nativeFlow ? `fearsocial://auth?${params.toString()}` : `/#login?${params.toString()}` } });
 };
+
+const oauthSuccessRedirect = (token, nativeFlow = false) =>
+  new Response(null, {
+    status: 302,
+    headers: {
+      location: nativeFlow ? `fearsocial://auth#token=${encodeURIComponent(token)}` : "/#app",
+      "set-cookie": sessionCookie(token),
+    },
+  });
 
 const pemToArrayBuffer = (pem = "") => {
   const clean = String(pem)
@@ -2479,6 +2503,7 @@ async function handleRequest(context) {
   if (method === "GET" && path === "/auth/providers") {
     return json({
       google: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+      apple: Boolean(env.APPLE_CLIENT_ID && env.APPLE_TEAM_ID && env.APPLE_KEY_ID && env.APPLE_PRIVATE_KEY),
     });
   }
 
@@ -2489,11 +2514,12 @@ async function handleRequest(context) {
     const url = new URL(request.url);
     const intent = url.searchParams.get("intent") === "signup" ? "signup" : "login";
     const acceptedTerms = url.searchParams.get("acceptedTerms") === "true";
+    const nativeFlow = url.searchParams.get("native") === "true";
     if (intent === "signup" && !acceptedTerms) {
       return json({ error: "Accept the Terms and Conditions before creating an account with Google." }, { status: 400 });
     }
     const redirectUri = env.GOOGLE_REDIRECT_URI || `${url.origin}/api/auth/google/callback`;
-    const state = randomHex(16);
+    const state = `${nativeFlow ? "native_" : "web_"}${randomHex(16)}`;
     const params = new URLSearchParams({
       client_id: env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
@@ -2513,17 +2539,18 @@ async function handleRequest(context) {
   if (method === "GET" && path === "/auth/google/callback") {
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return oauthErrorRedirect("Google sign-in is not configured");
     const url = new URL(request.url);
+    const state = url.searchParams.get("state") || "";
+    const nativeFlow = state.startsWith("native_");
     const providerError = cleanText(url.searchParams.get("error") || "", 80);
     if (providerError) {
-      return oauthErrorRedirect(providerError === "access_denied" ? "Google sign-in was canceled." : "Google could not complete sign-in.");
+      return oauthErrorRedirect(providerError === "access_denied" ? "Google sign-in was canceled." : "Google could not complete sign-in.", nativeFlow);
     }
     const code = url.searchParams.get("code") || "";
-    const state = url.searchParams.get("state") || "";
     const oauthState = await db
       .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'google' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
       .bind(state)
       .first();
-    if (!code || !oauthState) return oauthErrorRedirect("That Google sign-in request expired. Please try again.");
+    if (!code || !oauthState) return oauthErrorRedirect("That Google sign-in request expired. Please try again.", nativeFlow);
     await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -2537,13 +2564,13 @@ async function handleRequest(context) {
       }),
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenData.access_token) return oauthErrorRedirect("Google could not complete sign-in. Please try again.");
+    if (!tokenResponse.ok || !tokenData.access_token) return oauthErrorRedirect("Google could not complete sign-in. Please try again.", nativeFlow);
     const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
       headers: { authorization: `Bearer ${tokenData.access_token}` },
     });
     const googleProfile = await profileResponse.json().catch(() => ({}));
-    if (!profileResponse.ok) return oauthErrorRedirect("Google profile access failed. Please try again.");
-    if (googleProfile.email_verified !== true) return oauthErrorRedirect("Google has not verified the email on that account.");
+    if (!profileResponse.ok) return oauthErrorRedirect("Google profile access failed. Please try again.", nativeFlow);
+    if (googleProfile.email_verified !== true) return oauthErrorRedirect("Google has not verified the email on that account.", nativeFlow);
     const linked = await createOrLinkOAuthUser(db, request, {
       provider: "google",
       subject: googleProfile.sub,
@@ -2553,23 +2580,23 @@ async function handleRequest(context) {
       allowCreate: oauthState.intent === "signup",
       acceptedTerms: Boolean(oauthState.accepted_terms),
     });
-    if (linked.error) return oauthErrorRedirect(linked.error);
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location: "/#app",
-        "set-cookie": sessionCookie(linked.token),
-      },
-    });
+    if (linked.error) return oauthErrorRedirect(linked.error, nativeFlow);
+    return oauthSuccessRedirect(linked.token, nativeFlow);
   }
 
   if (method === "GET" && path === "/auth/apple/start") {
-    if (!env.APPLE_CLIENT_ID) {
+    if (!env.APPLE_CLIENT_ID || !env.APPLE_TEAM_ID || !env.APPLE_KEY_ID || !env.APPLE_PRIVATE_KEY) {
       return json({ error: "Apple sign-in is not configured yet. Add APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, and APPLE_PRIVATE_KEY in Cloudflare Pages." }, { status: 501 });
     }
     const url = new URL(request.url);
+    const intent = url.searchParams.get("intent") === "signup" ? "signup" : "login";
+    const acceptedTerms = url.searchParams.get("acceptedTerms") === "true";
+    const nativeFlow = url.searchParams.get("native") === "true";
+    if (intent === "signup" && !acceptedTerms) {
+      return json({ error: "Accept the Terms and Conditions before creating an account with Apple." }, { status: 400 });
+    }
     const redirectUri = env.APPLE_REDIRECT_URI || `${url.origin}/api/auth/apple/callback`;
-    const state = randomHex(16);
+    const state = `${nativeFlow ? "native_" : "web_"}${randomHex(16)}`;
     const params = new URLSearchParams({
       client_id: env.APPLE_CLIENT_ID,
       redirect_uri: redirectUri,
@@ -2578,7 +2605,7 @@ async function handleRequest(context) {
       scope: "name email",
       state,
     });
-    await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at) VALUES (?, 'apple', ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString()]);
+    await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at, intent, accepted_terms) VALUES (?, 'apple', ?, ?, ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString(), intent, acceptedTerms ? 1 : 0]);
     return json({ ok: true, redirectUrl: `https://appleid.apple.com/auth/authorize?${params.toString()}` });
   }
 
@@ -2589,16 +2616,17 @@ async function handleRequest(context) {
     const url = new URL(request.url);
     const code = body.code || url.searchParams.get("code") || "";
     const state = body.state || url.searchParams.get("state") || "";
+    const nativeFlow = state.startsWith("native_");
     const error = body.error || url.searchParams.get("error") || "";
-    if (error) return oauthErrorRedirect(`Apple sign-in failed: ${error}`);
+    if (error) return oauthErrorRedirect(`Apple sign-in failed: ${error}`, nativeFlow);
     const oauthState = await db
       .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'apple' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
       .bind(state)
       .first();
-    if (!code || !oauthState) return oauthErrorRedirect("Invalid Apple sign-in state");
+    if (!code || !oauthState) return oauthErrorRedirect("That Apple sign-in request expired. Please try again.", nativeFlow);
     await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
     const clientSecret = await createAppleClientSecret(env);
-    if (!clientSecret) return oauthErrorRedirect("Apple sign-in is missing a client secret");
+    if (!clientSecret) return oauthErrorRedirect("Apple sign-in is missing a client secret", nativeFlow);
     const tokenResponse = await fetch("https://appleid.apple.com/auth/token", {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -2611,9 +2639,9 @@ async function handleRequest(context) {
       }),
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenData.id_token) return oauthErrorRedirect("Apple token exchange failed");
+    if (!tokenResponse.ok || !tokenData.id_token) return oauthErrorRedirect("Apple token exchange failed", nativeFlow);
     const appleProfile = await verifyAppleIdentityToken(tokenData.id_token, env.APPLE_CLIENT_ID);
-    if (!appleProfile?.sub) return oauthErrorRedirect("Apple identity token could not be verified");
+    if (!appleProfile?.sub) return oauthErrorRedirect("Apple identity token could not be verified", nativeFlow);
     let appleUser = {};
     if (body.user) {
       try {
@@ -2629,15 +2657,11 @@ async function handleRequest(context) {
       email: appleProfile.email || appleUser.email,
       name: appleName || appleProfile.email?.split("@")[0],
       picture: "",
+      allowCreate: oauthState.intent === "signup",
+      acceptedTerms: Boolean(oauthState.accepted_terms),
     });
-    if (linked.error) return oauthErrorRedirect(linked.error);
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location: "/#app",
-        "set-cookie": sessionCookie(linked.token),
-      },
-    });
+    if (linked.error) return oauthErrorRedirect(linked.error, nativeFlow);
+    return oauthSuccessRedirect(linked.token, nativeFlow);
   }
 
   if (method === "POST" && path === "/verify-email") {
@@ -3797,25 +3821,29 @@ export const onRequest = async (context) => {
   const startedAt = Date.now();
   try {
     const response = await handleRequest(context);
-    const headers = new Headers(response.headers);
+    const headers = appendCorsHeaders(new Headers(response.headers), context.request, context.env);
     headers.set("x-request-id", requestId);
     headers.set("x-fear-api-version", "2026-07");
     headers.set("server-timing", `app;dur=${Math.max(0, Date.now() - startedAt)}`);
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
     if (error instanceof Response) {
-      const headers = new Headers(error.headers);
+      const headers = appendCorsHeaders(new Headers(error.headers), context.request, context.env);
       headers.set("x-request-id", requestId);
       headers.set("x-fear-api-version", "2026-07");
       return new Response(error.body, { status: error.status, statusText: error.statusText, headers });
     }
     console.error("Unhandled API error", { requestId, message: error?.message, stack: error?.stack });
     if (error?.message === "SECURE_PASSWORD_HASHING_UNAVAILABLE") {
-      return json(
+      const response = json(
         { error: "Secure password processing is temporarily unavailable. Please try again.", code: "PASSWORD_SECURITY_UNAVAILABLE", requestId },
         { status: 503, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } }
       );
+      const headers = appendCorsHeaders(new Headers(response.headers), context.request, context.env);
+      return new Response(response.body, { status: response.status, headers });
     }
-    return json({ error: "Server error", code: "INTERNAL_ERROR", requestId }, { status: 500, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } });
+    const response = json({ error: "Server error", code: "INTERNAL_ERROR", requestId }, { status: 500, headers: { "x-request-id": requestId, "x-fear-api-version": "2026-07" } });
+    const headers = appendCorsHeaders(new Headers(response.headers), context.request, context.env);
+    return new Response(response.body, { status: response.status, headers });
   }
 };

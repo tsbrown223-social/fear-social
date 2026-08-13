@@ -1,5 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
+const WEB_ORIGIN = "https://fear.social";
+const IS_NATIVE_APP = Boolean(window?.Capacitor?.isNativePlatform?.());
+const apiUrl = path => `${IS_NATIVE_APP ? WEB_ORIGIN : ""}/api${path}`;
+const nativePlugin = name => window?.Capacitor?.Plugins?.[name];
+const nativeHaptic = style => nativePlugin("Haptics")?.impact?.({ style }).catch?.(()=>{});
+const openExternalAuth = async url => {
+  const browserPlugin=nativePlugin("Browser");
+  if(IS_NATIVE_APP&&browserPlugin?.open){
+    await browserPlugin.open({url,presentationStyle:"popover"});
+    return;
+  }
+  window.location.assign(url);
+};
+
 const GR = "linear-gradient(135deg, #090B0D 0%, #14171B 72%, #16C74E 100%)";
 const GR2 = "linear-gradient(135deg, #050607 0%, #0B0D10 62%, #102417 100%)";
 const GRT = { background:GR, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" };
@@ -707,6 +721,17 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
 .fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-family:Georgia,serif;font-size:68px;line-height:.97;letter-spacing:0;text-wrap:balance;}
 .fs2-opening-copy{align-self:end;padding-bottom:8px;}
 .fs2-opening-copy p{color:rgba(255,255,255,.58);font-size:17px;line-height:1.75;margin-bottom:28px;}
+.fs2-numbers{position:relative;padding:150px max(28px,calc((100vw - 1180px)/2));background:#F3F6F4;color:#0B0E0C;border-bottom:1px solid #CCD5CF;}
+.fs2-numbers-heading{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.6fr);column-gap:76px;align-items:end;margin-bottom:84px;}
+.fs2-numbers-heading .fs2-eyebrow{grid-column:1/-1;color:#12813A;margin-bottom:26px;}
+.fs2-numbers-heading h2{font-family:Georgia,serif;font-size:68px;line-height:.96;text-wrap:balance;}
+.fs2-numbers-heading>p{font-size:16px;line-height:1.75;color:#5E6861;max-width:520px;}
+.fs2-number-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid #C8D1CB;border-bottom:1px solid #C8D1CB;}
+.fs2-number{min-height:270px;padding:30px 26px;border-right:1px solid #C8D1CB;display:flex;flex-direction:column;align-items:flex-start;}
+.fs2-number:last-child{border-right:0;}
+.fs2-number strong{font-family:Georgia,serif;font-size:72px;line-height:.9;color:#0B0E0C;font-weight:700;}
+.fs2-number>span{margin-top:17px;color:#13843B;font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;}
+.fs2-number p{margin-top:auto;padding-top:30px;color:#68716B;font-size:13px;line-height:1.65;max-width:24ch;}
 .fs2-actions{display:flex;gap:10px;flex-wrap:wrap;}
 .fs2-primary,.fs2-secondary{min-height:48px;border-radius:999px;padding:0 20px;font-size:14px;font-weight:900;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;}
 .fs2-primary{background:var(--fs-green);color:#fff;box-shadow:0 18px 48px rgba(22,199,78,.2);}
@@ -1015,6 +1040,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-opening,.fs2-social-head,.fs2-why,.fs2-access-head{grid-template-columns:1fr;gap:36px;}
   .fs2-opening{min-height:auto;padding-top:130px;padding-bottom:110px;}
   .fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:54px;}
+  .fs2-numbers{padding:108px 28px}.fs2-numbers-heading{grid-template-columns:1fr;gap:28px;margin-bottom:60px}.fs2-numbers-heading h2{font-size:54px}.fs2-number-grid{grid-template-columns:repeat(2,1fr)}.fs2-number:nth-child(2){border-right:0}.fs2-number:nth-child(-n+2){border-bottom:1px solid #C8D1CB}
   .fs2-story-sticky{grid-template-columns:1fr;gap:26px;padding:92px 28px 32px;align-content:center;}
   .fs2-story-copy{min-height:230px;}.fs2-story-copy h2{font-size:48px;}.fs2-product-frame{height:440px;min-height:440px;transform:none;}.fs2-product-body{height:362px;padding:14px;}.fs2-cover{height:90px}.fs2-profile-preview{grid-template-rows:90px auto}.fs2-avatar{width:68px;height:68px;margin-top:-34px;border-width:4px;font-size:21px}.fs2-profile-info h3{font-size:26px;margin-top:8px}.fs2-stats{margin-top:12px}.fs2-message-preview{grid-template-columns:130px minmax(0,1fr)}
   .fs2-social-rail{grid-template-columns:repeat(2,1fr);}.fs2-social-item:nth-child(2){border-right:0}.fs2-social-item:nth-child(-n+2){border-bottom:1px solid #CCD5CF}
@@ -1024,6 +1050,7 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .fs2-intro{height:104dvh}.fs2-intro h1{font-size:44px;line-height:.98}.fs2-intro-copy{padding:16px}.fs2-intro-cue{bottom:7dvh;width:max-content;max-width:calc(100% - 28px);font-size:9px;gap:9px}
   .fs2-flow{margin-top:-4dvh;background:linear-gradient(180deg,transparent,#080A09 2%)}
   .fs2-section{padding:68px 18px}.fs2-opening{padding-top:94px;padding-bottom:78px;gap:30px}.fs2-opening h2,.fs2-social h2,.fs2-why h2,.fs2-access h2,.fs2-cta h2{font-size:40px;line-height:1.02}.fs2-opening-copy p,.fs2-social-head p,.fs2-why-copy p,.fs2-cta p{font-size:15px}.fs2-primary,.fs2-secondary{width:100%;min-height:50px}
+  .fs2-numbers{padding:82px 20px}.fs2-numbers-heading{margin-bottom:46px;gap:22px}.fs2-numbers-heading h2{font-size:40px;line-height:1}.fs2-numbers-heading>p{font-size:14px}.fs2-number-grid{grid-template-columns:1fr}.fs2-number{min-height:190px;padding:25px 4px;border-right:0!important;border-bottom:1px solid #C8D1CB}.fs2-number:last-child{border-bottom:0}.fs2-number strong{font-size:58px}.fs2-number p{margin-top:20px;padding-top:0;max-width:34ch}
   .fs2-story{height:auto}.fs2-story-sticky{height:auto;position:relative;padding:78px 14px;display:block}.fs2-story-copy{min-height:0;padding:0 4px;margin-bottom:28px}.fs2-story-copy h2{font-size:40px;line-height:1}.fs2-story-copy p{font-size:14px}.fs2-story-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.fs2-story-nav button,.fs2-story-nav button.active{width:100%;min-height:40px;border-radius:7px;font-size:10px;justify-content:flex-start;padding:0 10px}.fs2-story-nav button.active{color:#071009;background:var(--fs-green)}.fs2-product-frame{height:462px;min-height:462px;padding:8px;border-radius:10px}.fs2-product-bar{height:48px;padding:0 10px}.fs2-product-tabs span{display:none}.fs2-product-tabs span.active{display:block}.fs2-live{font-size:9px}.fs2-product-body{height:396px;margin-top:8px;padding:10px}.fs2-profile-info{padding:0 10px}.fs2-profile-info p{font-size:11px}.fs2-stats{grid-template-columns:1fr 1fr}.fs2-stats div:last-child{display:none}.fs2-people-preview{gap:7px}.fs2-person{grid-template-columns:42px minmax(0,1fr);padding:10px}.fs2-person-avatar{width:42px;height:42px}.fs2-person button{display:none}.fs2-message-preview{grid-template-columns:1fr}.fs2-thread-list{display:none}.fs2-opportunity{padding:18px}.fs2-opportunity h3{font-size:20px}.fs2-company-mark{width:46px;height:46px}.fs2-opportunity-meta span{padding:7px;font-size:10px}
   .fs2-social{min-height:auto}.fs2-social-head{margin-bottom:42px}.fs2-social-rail{grid-template-columns:1fr}.fs2-social-item{border-right:0!important;border-bottom:1px solid #CCD5CF!important;min-height:142px;padding:22px 4px;grid-template-columns:48px minmax(0,1fr);grid-template-rows:1fr;gap:16px}.fs2-social-item:last-child{border-bottom:0!important}.fs2-social-item p{max-width:300px}
   .fs2-why{gap:54px}.fs2-acronym-row{grid-template-columns:42px 1fr;padding:13px 0}.fs2-acronym-row span{font-size:34px}.fs2-acronym-row b{font-size:18px}
@@ -1809,6 +1836,70 @@ input[type="search"]::-webkit-search-decoration,input[type="search"]::-webkit-se
   .app-view-intro h1{font-size:25px!important;}
   .post-actions button{font-size:10px!important;}
 }
+
+/* Native-ready product polish: shared across web, installed iOS, and compact screens. */
+.auth-oauth-stack{display:grid;gap:9px;}
+.auth-apple-button,.auth-google-button{width:100%;min-height:50px;border-radius:8px;font-size:14px;font-weight:850;display:flex;align-items:center;justify-content:center;gap:11px;box-shadow:none;}
+.auth-apple-button{border:1px solid #050505;background:#050505;color:#fff;}
+.auth-apple-button:hover{background:#1A1A1A;border-color:#1A1A1A;}
+.auth-apple-button:disabled,.auth-google-button:disabled{cursor:not-allowed;opacity:.55;}
+.signup-form-panel{border-left:1px solid rgba(255,255,255,.08);}
+.signup-form-panel .auth-card{width:100%;max-width:390px;}
+.signup-copy>div{animation:authCopyIn .45s ease-out both;}
+@keyframes authCopyIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+html.native-app,html.native-app body,#root{min-height:100%;}
+html.native-app{background:#0B0D0C;overscroll-behavior:none;}
+html.native-app body{min-height:100dvh;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+html.native-app button,html.native-app a,html.native-app input,html.native-app textarea{touch-action:manipulation;}
+html.native-app input,html.native-app textarea,html.native-app select{font-size:16px!important;}
+html.native-app .app-topbar{padding-top:env(safe-area-inset-top)!important;height:calc(56px + env(safe-area-inset-top))!important;min-height:calc(56px + env(safe-area-inset-top))!important;}
+html.native-app .app-shell{padding-bottom:calc(82px + env(safe-area-inset-bottom))!important;}
+html.native-app .mobile-bottom-nav{height:calc(66px + env(safe-area-inset-bottom))!important;padding-bottom:max(5px,env(safe-area-inset-bottom))!important;}
+html.native-app .signup-root,.native-app .verify-shell{min-height:100dvh!important;padding-top:env(safe-area-inset-top)!important;padding-bottom:env(safe-area-inset-bottom)!important;}
+html.native-app .app-more-menu{top:calc(62px + env(safe-area-inset-top));}
+html.native-app.native-keyboard-open .mobile-bottom-nav{display:none!important;}
+html.native-app.native-keyboard-open .app-shell{padding-bottom:14px!important;}
+html.native-app.native-keyboard-open .message-panel{min-height:calc(100dvh - 72px - env(safe-area-inset-top))!important;}
+html.native-offline .app-connection-state i{background:#F1A23C!important;box-shadow:0 0 0 4px rgba(241,162,60,.12)!important;}
+
+/* Restrained editorial rhythm shared by the public story and product. */
+.fs2-section,.fs2-why,.fs2-pricing,.fs2-final{scroll-margin-top:92px;}
+.fs2-section h2,.fs2-why h2,.fs2-pricing h2,.fs2-final h2{letter-spacing:0;text-wrap:balance;}
+.fs2-section p,.fs2-why p,.fs2-pricing p,.fs2-final p{max-width:68ch;}
+.fs2-card,.fs2-plan{box-shadow:none!important;}
+.fs2-card:hover,.fs2-plan:hover{transform:none!important;}
+
+@media(max-width:760px){
+  html,body,#root{width:100%;max-width:100%;overflow-x:clip;}
+  .signup-root{display:block!important;min-height:100dvh!important;background:#F5F7F5!important;}
+  .signup-brand{position:absolute!important;top:max(18px,env(safe-area-inset-top))!important;left:18px!important;z-index:5!important;color:#fff!important;}
+  .signup-copy{min-height:270px!important;padding:82px 22px 34px!important;align-items:flex-end!important;justify-content:flex-start!important;}
+  .signup-copy>div{max-width:100%!important;}
+  .signup-copy>div>div:first-child{font-size:clamp(38px,12vw,52px)!important;line-height:.98!important;margin-bottom:16px!important;}
+  .signup-copy p{font-size:14px!important;line-height:1.6!important;margin-bottom:0!important;max-width:34ch!important;}
+  .signup-copy>div>div:last-child{display:none!important;}
+  .signup-form-panel{width:100%!important;min-height:calc(100dvh - 270px)!important;padding:28px 18px calc(30px + env(safe-area-inset-bottom))!important;align-items:flex-start!important;border:0!important;border-radius:0!important;}
+  .signup-form-panel .auth-card{max-width:440px!important;margin:0 auto!important;}
+  .auth-title{font-size:31px!important;}
+  .auth-intro{margin-bottom:18px!important;}
+  .auth-tabs button,.auth-field input,.auth-google-button,.auth-apple-button,.auth-form>button,.auth-help-row button{min-height:48px!important;}
+  .verify-card{padding:26px 19px!important;border-radius:16px!important;}
+  .verify-card h1{font-size:34px!important;}
+  .verify-actions{grid-template-columns:1fr!important;}
+  .app-view-intro{border-bottom:0!important;padding-bottom:10px!important;}
+  .app-view-intro h1{max-width:19ch!important;text-wrap:balance;}
+  .app-view-intro p{max-width:45ch!important;}
+  .mobile-profile-summary,.fs-app-composer,.post-card,.profile-directory-card,.message-list,.message-panel,.settings-grid>div{border-radius:7px!important;}
+  .profile-directory-card,.post-card,.settings-grid>div{min-width:0!important;overflow:hidden!important;}
+  .profile-directory-card *,.post-card *,.settings-grid *{min-width:0;}
+  .profile-directory-card h3,.profile-directory-card p,.post-card p{overflow-wrap:anywhere;}
+  .messages-grid{width:100%!important;overflow:hidden!important;}
+  .message-panel{max-height:none!important;}
+  .message-compose{position:sticky!important;bottom:0!important;padding-bottom:max(8px,env(safe-area-inset-bottom))!important;background:var(--app-panel)!important;}
+  .mobile-bottom-nav button{min-height:48px!important;}
+  .fs2-section,.fs2-why,.fs2-pricing,.fs2-final{padding-left:20px!important;padding-right:20px!important;}
+}
 `;
 
 const Tag=({label,style={},className=""})=><span className={`tag-chip ${className}`.trim()} style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:6,padding:"3px 9px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
@@ -1919,6 +2010,11 @@ const GoogleMark=()=>(
     <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.43l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/>
     <path fill="#FBBC05" d="M6.39 13.86A6.02 6.02 0 0 1 6.07 12c0-.65.11-1.28.32-1.86V7.52H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.48l3.35-2.62Z"/>
     <path fill="#EA4335" d="M12 6.01c1.47 0 2.79.51 3.83 1.5L18.7 4.64A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.96 5.52l3.35 2.62C7.18 7.77 9.39 6.01 12 6.01Z"/>
+  </svg>
+);
+const AppleMark=()=>(
+  <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+    <path d="M16.7 12.8c0-2.5 2.1-3.7 2.2-3.8-1.2-1.7-3-1.9-3.7-1.9-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.3 2.5 1.3-.1 1.8-.8 3.4-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.2-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-3.1-1.2-3.1-4.1ZM14.2 5.5c.7-.9 1.2-2.1 1.1-3.3-1.1 0-2.4.7-3.2 1.6-.7.8-1.3 2-1.1 3.2 1.2.1 2.5-.6 3.2-1.5Z"/>
   </svg>
 );
 const GhostBtn=({children,onClick,style={}})=>(
@@ -2118,7 +2214,7 @@ async function api(path,options={}){
   const abortFromCaller=()=>controller.abort();
   options.signal?.addEventListener?.("abort",abortFromCaller,{once:true});
   try{
-    const res=await fetch(`/api${path}`,{...options,headers,credentials:"same-origin",signal:controller.signal});
+    const res=await fetch(apiUrl(path),{...options,headers,credentials:IS_NATIVE_APP?"omit":"same-origin",signal:controller.signal});
     const data=await res.json().catch(()=>({}));
     if(data.token){
       try{localStorage.setItem("fear-session-token",data.token);}catch{}
@@ -2149,9 +2245,9 @@ async function api(path,options={}){
 async function streamAiChat(payload,{signal,onEvent}={}){
   const token=getSessionToken();
   const requestId=crypto?.randomUUID?.()||`web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const response=await fetch("/api/ai/chat",{
+  const response=await fetch(apiUrl("/ai/chat"),{
     method:"POST",
-    credentials:"same-origin",
+    credentials:IS_NATIVE_APP?"omit":"same-origin",
     signal,
     headers:{
       accept:"application/x-ndjson",
@@ -2961,6 +3057,12 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
     ["mail","Start talking","Use posts, follows, groups, and DMs to turn curiosity into connection."],
     ["arrowRight","Move forward","Find opportunities and keep the relationships behind your next step moving."],
   ];
+  const productNumbers=[
+    ["$0","to begin","Create a profile and enter early access without a card."],
+    ["1","place to move","Keep your identity, people, conversations, and opportunities together."],
+    ["4","ways forward","Be seen, find people, start talking, and act on an opening."],
+    ["24h","review target","Reports enter a moderation queue with a clear response target."],
+  ];
   const acronym=[["F","False"],["E","Evidence"],["A","Appearing"],["R","Real"]];
   const journeyItems=[
     ["platform","Start","sparkle"],
@@ -3020,6 +3122,21 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
           <div className="fs2-opening-copy fs2-reveal fs2-reveal-delay-1">
             <p>fear.social is a social network for the moment before momentum. Build a profile, find people in your direction, start conversations, and discover the opportunities that make your next move real.</p>
             <div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Create your account <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>scrollToSection("activity")}>See how it works</button></div>
+          </div>
+        </section>
+
+        <section className="fs2-numbers" aria-labelledby="fs2-numbers-title">
+          <div className="fs2-numbers-heading fs2-reveal">
+            <div className="fs2-eyebrow">Built to lower the barrier</div>
+            <h2 id="fs2-numbers-title">Less friction.<br/>More forward motion.</h2>
+            <p>No inflated promises and no crowded dashboard before you begin. Early access is designed around the few things that help a first move become a real one.</p>
+          </div>
+          <div className="fs2-number-grid">
+            {productNumbers.map(([number,label,copy],index)=><article className={`fs2-number fs2-reveal fs2-reveal-delay-${Math.min(index,3)}`} key={label}>
+              <strong>{number}</strong>
+              <span>{label}</span>
+              <p>{copy}</p>
+            </article>)}
           </div>
         </section>
 
@@ -3729,7 +3846,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   const [step,setStep]=useState(0);
   const [busy,setBusy]=useState(false);
   const [oauthBusy,setOauthBusy]=useState(false);
-  const [authProviders,setAuthProviders]=useState({google:false});
+  const [authProviders,setAuthProviders]=useState({google:false,apple:false});
   const [authMessage,setAuthMessage]=useState(null);
   const [resendSeconds,setResendSeconds]=useState(0);
   useEffect(()=>{
@@ -3743,7 +3860,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   useEffect(()=>{
     let active=true;
     api("/auth/providers").then(providers=>{
-      if(active)setAuthProviders({google:Boolean(providers.google)});
+      if(active)setAuthProviders({google:Boolean(providers.google),apple:Boolean(providers.apple)});
     }).catch(()=>{});
     return()=>{active=false;};
   },[]);
@@ -3771,20 +3888,48 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     setOauthBusy(true);
     setAuthMessage(null);
     try{
-      const response=await api(`/auth/google/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}`,{timeout:20000});
+      const response=await api(`/auth/google/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}&native=${IS_NATIVE_APP?"true":"false"}`,{timeout:20000});
       const redirect=new URL(response.redirectUrl);
       if(redirect.origin!=="https://accounts.google.com")throw new Error("Unexpected Google sign-in destination");
-      window.location.assign(redirect.toString());
+      await openExternalAuth(redirect.toString());
     }catch(err){
       setOauthBusy(false);
       setAuthMessage({type:"error",text:err.message||"Google sign-in is unavailable right now."});
     }
   };
   const googleButton=authProviders.google?(
+    <button type="button" onClick={startGoogle} disabled={oauthBusy||busy} className="bs auth-google-button" aria-busy={oauthBusy}>
+      <GoogleMark/>{oauthBusy?"Opening Google…":"Continue with Google"}
+    </button>
+  ):null;
+  const startApple=async()=>{
+    if(oauthBusy)return;
+    const intent=mode==="signup"?"signup":"login";
+    if(intent==="signup"&&!acceptedTerms){
+      setAuthMessage({type:"error",text:"Accept the Terms and Conditions before creating an account with Apple."});
+      return;
+    }
+    setOauthBusy(true);
+    setAuthMessage(null);
+    try{
+      const response=await api(`/auth/apple/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}&native=${IS_NATIVE_APP?"true":"false"}`,{timeout:20000});
+      const redirect=new URL(response.redirectUrl);
+      if(redirect.origin!=="https://appleid.apple.com")throw new Error("Unexpected Apple sign-in destination");
+      await openExternalAuth(redirect.toString());
+    }catch(err){
+      setOauthBusy(false);
+      setAuthMessage({type:"error",text:err.message||"Apple sign-in is unavailable right now."});
+    }
+  };
+  const appleButton=authProviders.apple?(
+    <button type="button" onClick={startApple} disabled={oauthBusy||busy} className="bs auth-apple-button" aria-busy={oauthBusy}>
+      <AppleMark/>{oauthBusy?"Opening Apple…":"Continue with Apple"}
+    </button>
+  ):null;
+  const hasSocialAuth=authProviders.google||authProviders.apple;
+  const socialButtons=hasSocialAuth?(
     <>
-      <button type="button" onClick={startGoogle} disabled={oauthBusy||busy} className="bs auth-google-button" aria-busy={oauthBusy}>
-        <GoogleMark/>{oauthBusy?"Opening Google…":"Continue with Google"}
-      </button>
+      <div className="auth-oauth-stack">{appleButton}{googleButton}</div>
       <div className="auth-divider">or use email</div>
     </>
   ):null;
@@ -4057,12 +4202,12 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           {mode==="signup"?<>
             <div className="auth-kicker"><span/> Early access is live</div>
             <h1 className="auth-title">Create your account</h1>
-            <p className="auth-intro">{authProviders.google?"Use Google for the fastest setup, or create an account with email.":"One short form, then a 6-digit email code. Your username can be personalized later."}</p>
-            {authProviders.google&&<label className={`auth-terms auth-oauth-terms ${acceptedTerms?"is-accepted":""}`}>
+            <p className="auth-intro">{hasSocialAuth?"Use Apple or Google for the fastest setup, or create an account with email.":"One short form, then a 6-digit email code. Your username can be personalized later."}</p>
+            {hasSocialAuth&&<label className={`auth-terms auth-oauth-terms ${acceptedTerms?"is-accepted":""}`}>
               <input aria-label="Agree to Terms and Conditions for Google signup" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
               <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
             </label>}
-            {googleButton}
+            {socialButtons}
             <div className="signup-fast-note"><Icon name="mail" size={16} color="currentColor"/> Step 1 of 2: account details</div>
             <form className="auth-form" onSubmit={event=>{event.preventDefault();requestCode(false);}}>
               <div className="auth-field">
@@ -4082,7 +4227,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
                 </div>
                 <small id="signup-password-help" className={form.password&&form.password.length<8?"auth-error":""}>Use at least 8 characters.</small>
               </div>
-              {!authProviders.google&&<label className={`auth-terms ${acceptedTerms?"is-accepted":""}`}>
+              {!hasSocialAuth&&<label className={`auth-terms ${acceptedTerms?"is-accepted":""}`}>
                 <input aria-label="Agree to Terms and Conditions" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
                 <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
               </label>}
@@ -4093,7 +4238,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
           </>:mode==="login"?<>
             <h1 className="auth-title">{loginCodeStep?"Check your email":"Welcome back"}</h1>
             <p className="auth-intro">{loginCodeStep?`Enter the secure code sent to ${recoveryDestination||"the email on your account"}.`:"Use the email or username already connected to your account."}</p>
-            {!loginCodeStep&&googleButton}
+            {!loginCodeStep&&socialButtons}
             <form className="auth-form" onSubmit={event=>{event.preventDefault();loginCodeStep?loginWithCode():loginWithPassword();}}>
               {!loginCodeStep?<>
                 <div className="auth-field">
@@ -6630,6 +6775,10 @@ export default function App(){
   const [accessibility,setAccessibility]=useLocalState("fear-accessibility",{largeText:false,highContrast:false,reduceMotion:false});
   const [cookieConsent,setCookieConsent]=useLocalState("fear-cookie-consent",{choice:null,analytics:false,marketing:false});
   const [themeMode,setThemeMode]=useLocalState("fear-theme","dark");
+  useEffect(()=>{
+    if(!IS_NATIVE_APP)return;
+    nativePlugin("StatusBar")?.setStyle?.({style:themeMode==="light"?"DARK":"LIGHT"}).catch?.(()=>{});
+  },[themeMode]);
   const [routeHash,setRouteHash]=useState(()=>window.location.hash||"");
   useEffect(()=>{
     const onHashChange=()=>setRouteHash(window.location.hash||"");
@@ -6651,6 +6800,7 @@ export default function App(){
     avatarUrl:"",
   });
   const setScreen=useCallback((next)=>{
+    if(IS_NATIVE_APP)nativeHaptic("Light");
     setScreenState(next);
     window.scrollTo({top:0,left:0,behavior:"auto"});
     const nextHash=next==="app"?"#app":next==="login"?"#login":next==="signup"?"#signup":next==="board"?"#board":next==="why"?"#why-fear":"";
