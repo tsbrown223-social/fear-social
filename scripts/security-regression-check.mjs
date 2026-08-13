@@ -36,6 +36,16 @@ assert.match(
   /throw new Error\("SECURE_PASSWORD_HASHING_UNAVAILABLE"\)/,
   "PBKDF2 failure must stop password processing."
 );
+assert.match(
+  worker,
+  /nonce:\s*state/,
+  "Apple authorization must bind the identity token to the single-use OAuth state."
+);
+assert.match(
+  worker,
+  /verifyAppleIdentityToken\(tokenData\.id_token,\s*env\.APPLE_CLIENT_ID,\s*state\)/,
+  "Apple identity-token verification must enforce the OAuth nonce."
+);
 assert.doesNotMatch(
   worker,
   /UPDATE users SET token = \?/,

@@ -6,6 +6,8 @@ const root = process.cwd();
 const appDir = resolve(root, "ios/App/App");
 const plistPath = resolve(appDir, "Info.plist");
 const sourceManifest = resolve(root, "native/ios/PrivacyInfo.xcprivacy");
+const sourceEntitlements = resolve(root, "native/ios/App.entitlements");
+const projectPath = resolve(root, "ios/App/App.xcodeproj/project.pbxproj");
 
 if (!existsSync(appDir) || !existsSync(plistPath)) {
   console.error("The iOS project does not exist yet. Install full Xcode, run npm install, then run npm run ios:add.");
@@ -14,6 +16,7 @@ if (!existsSync(appDir) || !existsSync(plistPath)) {
 
 await mkdir(appDir, { recursive: true });
 await cp(sourceManifest, resolve(appDir, "PrivacyInfo.xcprivacy"));
+await cp(sourceEntitlements, resolve(appDir, "App.entitlements"));
 
 let plist = await readFile(plistPath, "utf8");
 const entries = [
@@ -32,4 +35,16 @@ if (!plist.includes("<string>fearsocial</string>")) {
   plist = plist.replace("</dict>\n</plist>", `${deepLink}</dict>\n</plist>`);
 }
 await writeFile(plistPath, plist);
-console.log("iOS privacy manifest, permission descriptions, and OAuth deep link are ready.");
+
+if (existsSync(projectPath)) {
+  let project = await readFile(projectPath, "utf8");
+  if (!project.includes("CODE_SIGN_ENTITLEMENTS = App/App.entitlements;")) {
+    project = project.replace(
+      /(PRODUCT_BUNDLE_IDENTIFIER = social\.fear\.app;)/g,
+      "CODE_SIGN_ENTITLEMENTS = App/App.entitlements;\n\t\t\t\t$1"
+    );
+    await writeFile(projectPath, project);
+  }
+}
+
+console.log("iOS privacy manifest, Sign in with Apple entitlement, permission descriptions, and OAuth deep link are ready.");

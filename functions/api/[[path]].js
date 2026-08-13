@@ -878,7 +878,7 @@ async function createAppleClientSecret(env) {
   return `${signingInput}.${base64UrlEncode(signature)}`;
 }
 
-async function verifyAppleIdentityToken(idToken, clientId) {
+async function verifyAppleIdentityToken(idToken, clientId, expectedNonce = "") {
   const [headerPart, payloadPart, signaturePart] = String(idToken || "").split(".");
   if (!headerPart || !payloadPart || !signaturePart) return null;
   let header;
@@ -887,6 +887,7 @@ async function verifyAppleIdentityToken(idToken, clientId) {
   } catch {
     return null;
   }
+  if (header?.alg !== "RS256" || !header?.kid) return null;
   const jwksResponse = await fetch("https://appleid.apple.com/auth/keys", { headers: { accept: "application/json" } });
   const jwks = await jwksResponse.json().catch(() => ({}));
   if (!jwksResponse.ok || !Array.isArray(jwks.keys)) return null;
@@ -909,8 +910,11 @@ async function verifyAppleIdentityToken(idToken, clientId) {
   const payload = decodeJwtPayload(idToken);
   const now = Math.floor(Date.now() / 1000);
   if (payload?.iss !== "https://appleid.apple.com") return null;
-  if (payload?.aud !== clientId) return null;
+  const audiences = Array.isArray(payload?.aud) ? payload.aud : [payload?.aud];
+  if (!audiences.includes(clientId)) return null;
   if (Number(payload?.exp || 0) < now) return null;
+  if (Number(payload?.iat || 0) > now + 300) return null;
+  if (expectedNonce && payload?.nonce !== expectedNonce) return null;
   return payload;
 }
 
@@ -2604,6 +2608,7 @@ async function handleRequest(context) {
       response_mode: "form_post",
       scope: "name email",
       state,
+      nonce: state,
     });
     await safeRun(db, "INSERT INTO oauth_states (state, provider, redirect_uri, expires_at, intent, accepted_terms) VALUES (?, 'apple', ?, ?, ?, ?)", [state, redirectUri, new Date(Date.now() + 10 * 60 * 1000).toISOString(), intent, acceptedTerms ? 1 : 0]);
     return json({ ok: true, redirectUrl: `https://appleid.apple.com/auth/authorize?${params.toString()}` });
@@ -2618,14 +2623,22 @@ async function handleRequest(context) {
     const state = body.state || url.searchParams.get("state") || "";
     const nativeFlow = state.startsWith("native_");
     const error = body.error || url.searchParams.get("error") || "";
-    if (error) return oauthErrorRedirect(`Apple sign-in failed: ${error}`, nativeFlow);
+    if (error) {
+      const canceled = error === "user_cancelled_authorize" || error === "access_denied";
+      return oauthErrorRedirect(canceled ? "Apple sign-in was canceled." : "Apple could not complete sign-in. Please try again.", nativeFlow);
+    }
     const oauthState = await db
       .prepare("SELECT * FROM oauth_states WHERE state = ? AND provider = 'apple' AND datetime(expires_at) > datetime('now') AND used_at IS NULL")
       .bind(state)
       .first();
     if (!code || !oauthState) return oauthErrorRedirect("That Apple sign-in request expired. Please try again.", nativeFlow);
     await safeRun(db, "UPDATE oauth_states SET used_at = CURRENT_TIMESTAMP WHERE state = ?", [state]);
-    const clientSecret = await createAppleClientSecret(env);
+    let clientSecret = null;
+    try {
+      clientSecret = await createAppleClientSecret(env);
+    } catch {
+      return oauthErrorRedirect("Apple sign-in is temporarily unavailable. Please try email or Google.", nativeFlow);
+    }
     if (!clientSecret) return oauthErrorRedirect("Apple sign-in is missing a client secret", nativeFlow);
     const tokenResponse = await fetch("https://appleid.apple.com/auth/token", {
       method: "POST",
@@ -2639,9 +2652,12 @@ async function handleRequest(context) {
       }),
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenData.id_token) return oauthErrorRedirect("Apple token exchange failed", nativeFlow);
-    const appleProfile = await verifyAppleIdentityToken(tokenData.id_token, env.APPLE_CLIENT_ID);
-    if (!appleProfile?.sub) return oauthErrorRedirect("Apple identity token could not be verified", nativeFlow);
+    if (!tokenResponse.ok || !tokenData.id_token) return oauthErrorRedirect("Apple could not complete sign-in. Please try again.", nativeFlow);
+    const appleProfile = await verifyAppleIdentityToken(tokenData.id_token, env.APPLE_CLIENT_ID, state);
+    if (!appleProfile?.sub) return oauthErrorRedirect("Apple identity verification failed. Please start again.", nativeFlow);
+    if (appleProfile.email_verified !== true && appleProfile.email_verified !== "true") {
+      return oauthErrorRedirect("Apple has not verified the email on that account.", nativeFlow);
+    }
     let appleUser = {};
     if (body.user) {
       try {

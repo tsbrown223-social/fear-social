@@ -23,6 +23,8 @@ Because the app offers Google as a primary account login, Apple guideline 4.8 ge
 
 Register `fearsocial` as the callback URL scheme in the Xcode target. `npm run ios:add` copies the supplied configuration into the generated project. Google and Apple native flows return through `fearsocial://auth` and exchange only a short-lived, single-use OAuth state on the server.
 
+The preparation script also installs `App.entitlements` and sets `CODE_SIGN_ENTITLEMENTS` for the generated target. In Xcode, confirm **Signing & Capabilities > Sign in with Apple** is present before archiving. For the web authorization flow, `APPLE_CLIENT_ID` must be the Services ID associated with the primary App ID, and Apple must list `fear.social` plus the exact HTTPS callback above. Configure Apple Private Email Relay for mail sent from `contact@fear.social`.
+
 ## App Store Connect disclosures
 
 - Privacy policy URL: `https://fear.social/#privacy`

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 const required = [
   "capacitor.config.json",
   "native/ios/PrivacyInfo.xcprivacy",
+  "native/ios/App.entitlements",
   "native/ios/Info.plist.additions.xml",
   "public/fear-social-logo-social-1024.png",
   "src/native.js",
@@ -15,6 +16,7 @@ if (missing.length) {
 }
 
 execFileSync("plutil", ["-lint", "native/ios/PrivacyInfo.xcprivacy"], { stdio: "inherit" });
+execFileSync("plutil", ["-lint", "native/ios/App.entitlements"], { stdio: "inherit" });
 const config = JSON.parse(readFileSync("capacitor.config.json", "utf8"));
 if (config.appId !== "social.fear.app" || config.webDir !== "dist") {
   console.error("Capacitor appId or webDir is not configured as expected.");
@@ -28,6 +30,7 @@ try {
   xcodeReady = false;
 }
 console.log("Web/native configuration: ready");
+console.log("Sign in with Apple entitlement: ready");
 console.log(`Full Xcode toolchain: ${xcodeReady ? "ready" : "not installed or not selected"}`);
 console.log(`Generated iOS project: ${existsSync("ios/App/App.xcodeproj") ? "ready" : "pending npm install + npm run ios:add"}`);
 if (!xcodeReady) {

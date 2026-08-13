@@ -56,6 +56,20 @@ Google sign-in links verified Google identities to existing fear.social accounts
 
 The Google button is hidden automatically until both client credentials are configured.
 
+### Sign in with Apple
+
+Apple authentication follows the same account-linking rules as Google: a verified Apple identity links to an existing account with the same email without replacing its password, while first-time sign-up requires agreement to the current Terms and Conditions. Apple can return a private relay address; fear.social treats that verified relay address as the account email.
+
+- Create an Apple App ID for `social.fear.app` with Sign in with Apple enabled.
+- Create and associate a Services ID for the website. Use the Services ID as `APPLE_CLIENT_ID`.
+- Registered domain: `fear.social`
+- Return URL: `https://fear.social/api/auth/apple/callback`
+- Create a Sign in with Apple key and store its `.p8` contents only as the encrypted Cloudflare secret `APPLE_PRIVATE_KEY`.
+- Cloudflare secrets: `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, and `APPLE_PRIVATE_KEY`
+- Cloudflare variable: `APPLE_REDIRECT_URI=https://fear.social/api/auth/apple/callback`
+
+The Apple button remains hidden until all four credentials are present. The OAuth request uses a single-use state and nonce, and the callback verifies Apple’s signed identity token before creating a session. Configure Apple’s private email relay for the `fear.social` sending domain so messages from `contact@fear.social` reach users who choose Hide My Email.
+
 ## Build
 
 ```bash

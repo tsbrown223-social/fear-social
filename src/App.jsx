@@ -3845,7 +3845,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
   const [code,setCode]=useState("");
   const [step,setStep]=useState(0);
   const [busy,setBusy]=useState(false);
-  const [oauthBusy,setOauthBusy]=useState(false);
+  const [oauthBusy,setOauthBusy]=useState("");
   const [authProviders,setAuthProviders]=useState({google:false,apple:false});
   const [authMessage,setAuthMessage]=useState(null);
   const [resendSeconds,setResendSeconds]=useState(0);
@@ -3870,7 +3870,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
     const params=new URLSearchParams(hash.slice(hash.indexOf("?")+1));
     if(params.get("oauth")!=="error")return;
     setMode("login");
-    setAuthMessage({type:"error",text:params.get("message")||"Google sign-in did not finish. Please try again."});
+    setAuthMessage({type:"error",text:params.get("message")||"Sign-in did not finish. Please try again."});
     window.history.replaceState(null,"","#login");
   },[]);
   const emailReady=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(form.email.trim());
@@ -3885,7 +3885,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setAuthMessage({type:"error",text:"Accept the Terms and Conditions before creating an account with Google."});
       return;
     }
-    setOauthBusy(true);
+    setOauthBusy("google");
     setAuthMessage(null);
     try{
       const response=await api(`/auth/google/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}&native=${IS_NATIVE_APP?"true":"false"}`,{timeout:20000});
@@ -3893,13 +3893,13 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       if(redirect.origin!=="https://accounts.google.com")throw new Error("Unexpected Google sign-in destination");
       await openExternalAuth(redirect.toString());
     }catch(err){
-      setOauthBusy(false);
+      setOauthBusy("");
       setAuthMessage({type:"error",text:err.message||"Google sign-in is unavailable right now."});
     }
   };
   const googleButton=authProviders.google?(
-    <button type="button" onClick={startGoogle} disabled={oauthBusy||busy} className="bs auth-google-button" aria-busy={oauthBusy}>
-      <GoogleMark/>{oauthBusy?"Opening Google…":"Continue with Google"}
+    <button type="button" onClick={startGoogle} disabled={Boolean(oauthBusy)||busy} className="bs auth-google-button" aria-busy={oauthBusy==="google"}>
+      <GoogleMark/>{oauthBusy==="google"?"Opening Google…":"Continue with Google"}
     </button>
   ):null;
   const startApple=async()=>{
@@ -3909,7 +3909,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       setAuthMessage({type:"error",text:"Accept the Terms and Conditions before creating an account with Apple."});
       return;
     }
-    setOauthBusy(true);
+    setOauthBusy("apple");
     setAuthMessage(null);
     try{
       const response=await api(`/auth/apple/start?intent=${intent}&acceptedTerms=${acceptedTerms?"true":"false"}&native=${IS_NATIVE_APP?"true":"false"}`,{timeout:20000});
@@ -3917,13 +3917,13 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
       if(redirect.origin!=="https://appleid.apple.com")throw new Error("Unexpected Apple sign-in destination");
       await openExternalAuth(redirect.toString());
     }catch(err){
-      setOauthBusy(false);
+      setOauthBusy("");
       setAuthMessage({type:"error",text:err.message||"Apple sign-in is unavailable right now."});
     }
   };
   const appleButton=authProviders.apple?(
-    <button type="button" onClick={startApple} disabled={oauthBusy||busy} className="bs auth-apple-button" aria-busy={oauthBusy}>
-      <AppleMark/>{oauthBusy?"Opening Apple…":"Continue with Apple"}
+    <button type="button" onClick={startApple} disabled={Boolean(oauthBusy)||busy} className="bs auth-apple-button" aria-busy={oauthBusy==="apple"}>
+      <AppleMark/>{oauthBusy==="apple"?"Opening Apple…":"Continue with Apple"}
     </button>
   ):null;
   const hasSocialAuth=authProviders.google||authProviders.apple;
@@ -4204,7 +4204,7 @@ function SignupPage({setScreen,notify,setProfile,initialMode="signup"}){
             <h1 className="auth-title">Create your account</h1>
             <p className="auth-intro">{hasSocialAuth?"Use Apple or Google for the fastest setup, or create an account with email.":"One short form, then a 6-digit email code. Your username can be personalized later."}</p>
             {hasSocialAuth&&<label className={`auth-terms auth-oauth-terms ${acceptedTerms?"is-accepted":""}`}>
-              <input aria-label="Agree to Terms and Conditions for Google signup" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
+              <input aria-label="Agree to Terms and Conditions for social sign-up" type="checkbox" checked={acceptedTerms} onChange={event=>setAcceptedTerms(event.target.checked)}/>
               <span>I agree to the <button type="button" onClick={event=>{event.preventDefault();setShowTerms(true);}}>Terms and Conditions</button> and community rules.</span>
             </label>}
             {socialButtons}
