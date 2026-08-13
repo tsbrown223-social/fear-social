@@ -1873,7 +1873,7 @@ html.native-offline .app-connection-state i{background:#F1A23C!important;box-sha
 @media(max-width:760px){
   html,body,#root{width:100%;max-width:100%;overflow-x:clip;}
   .signup-root{display:block!important;min-height:100dvh!important;background:#F5F7F5!important;}
-  .signup-brand{position:absolute!important;top:max(18px,env(safe-area-inset-top))!important;left:18px!important;z-index:5!important;color:#fff!important;}
+  .signup-brand{position:absolute!important;top:max(18px,env(safe-area-inset-top))!important;left:18px!important;z-index:5!important;max-width:calc(100% - 36px)!important;color:#0D0F14!important;white-space:nowrap!important;}
   .signup-copy{min-height:270px!important;padding:82px 22px 34px!important;align-items:flex-end!important;justify-content:flex-start!important;}
   .signup-copy>div{max-width:100%!important;}
   .signup-copy>div>div:first-child{font-size:clamp(38px,12vw,52px)!important;line-height:.98!important;margin-bottom:16px!important;}
