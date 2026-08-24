@@ -1905,6 +1905,71 @@ html.native-offline .app-connection-state i{background:#F1A23C!important;box-sha
   .mobile-bottom-nav button{min-height:48px!important;}
   .fs2-section,.fs2-why,.fs2-pricing,.fs2-final{padding-left:20px!important;padding-right:20px!important;}
 }
+
+/* Mobile product cleanup: quieter hierarchy, faster scanning, reachable actions. */
+@media(max-width:760px){
+  .app-shell{padding:12px max(14px,env(safe-area-inset-right)) calc(88px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))!important;}
+  .app-view-intro{padding:12px 0 14px!important;margin-bottom:14px!important;}
+  .app-view-intro span{margin-bottom:5px!important;}
+  .app-view-intro h1{font-size:clamp(26px,8.4vw,31px)!important;line-height:1.06!important;max-width:18ch!important;}
+  .app-view-intro p{font-size:12.5px!important;line-height:1.5!important;margin-top:7px!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .app-content-stage[data-view="messages"] .app-view-intro{padding:8px 0 10px!important;margin-bottom:10px!important;}
+  .app-content-stage[data-view="messages"] .app-view-intro span,
+  .app-content-stage[data-view="messages"] .app-view-intro p{display:none!important;}
+  .app-content-stage[data-view="messages"] .app-view-intro h1{font-size:27px!important;}
+  .mobile-section-tabs{margin-bottom:14px!important;}
+  .fs-app-composer{padding:13px!important;margin-bottom:14px!important;}
+  .fs-app-composer textarea{min-height:82px!important;line-height:1.45!important;}
+  .composer-post-types{gap:5px!important;}
+  .composer-post-types .post-type-btn{min-width:72px!important;min-height:36px!important;padding:7px 10px!important;}
+  .composer-tools{gap:7px!important;}
+  .filter-row{margin-bottom:12px!important;}
+
+  .profile-directory-card{padding:14px!important;}
+  .profile-directory-card-header{gap:11px!important;}
+  .profile-directory-card-header .avatar-shell>div:first-child{width:50px!important;height:50px!important;}
+  .profile-directory-card-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-top:14px!important;}
+  .profile-directory-card-actions .profile-card-followers{padding-bottom:2px!important;}
+  .profile-directory-card-actions button:nth-of-type(1),
+  .profile-directory-card-actions button:nth-of-type(4){min-height:42px!important;font-size:12px!important;}
+  .profile-directory-card-actions button:nth-of-type(2),
+  .profile-directory-card-actions button:nth-of-type(3){min-height:36px!important;background:transparent!important;border-color:var(--app-line)!important;font-size:11px!important;opacity:.82;}
+
+  .messages-grid{gap:10px!important;}
+  .message-list{gap:7px!important;}
+  .dm-thread-button{flex-basis:min(74vw,250px)!important;min-height:66px!important;padding:9px!important;}
+  .message-panel{padding:11px!important;}
+  .message-panel-header{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:9px!important;padding-bottom:9px!important;}
+  .message-panel-header>div:first-child>div:first-child{width:42px!important;height:42px!important;}
+  .message-panel-actions{grid-column:1/-1!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;}
+  .message-panel-actions button,.message-panel-actions button:last-child:nth-child(odd){grid-column:auto!important;min-height:36px!important;padding:6px 4px!important;font-size:10px!important;}
+  .message-feed{min-height:150px!important;max-height:42svh!important;padding:12px 0!important;}
+  .message-compose{grid-template-columns:minmax(0,1fr) 72px!important;padding-top:8px!important;}
+  .message-compose input{min-height:46px!important;}
+  .message-compose button{width:72px!important;min-width:72px!important;min-height:46px!important;}
+
+  .profile-page-actions{gap:7px!important;}
+  .profile-page-actions .profile-settings-button{display:inline-flex!important;align-items:center!important;gap:7px!important;}
+  .profile-page-actions .profile-settings-button span{display:inline!important;font-size:12px;font-weight:900;}
+  .profile-page-about{gap:9px!important;margin-top:10px!important;}
+  .profile-page-about>section{padding:16px!important;border-radius:8px!important;}
+  .profile-stats{gap:8px!important;}
+  .profile-stat-button{padding:13px!important;min-height:82px!important;}
+
+  .notification-row{grid-template-columns:40px minmax(0,1fr) auto!important;gap:10px!important;padding:13px 2px!important;border-width:0 0 1px!important;border-radius:0!important;background:transparent!important;}
+  .notification-row.activity-unread{background:linear-gradient(90deg,rgba(22,199,78,.08),transparent 82%)!important;}
+  .notification-row.activity-unread>button:last-child{grid-column:auto!important;width:auto!important;min-width:44px!important;min-height:38px!important;padding:7px 8px!important;}
+
+  .app-topbar>.app-menu-backdrop{background:rgba(3,5,4,.48)!important;backdrop-filter:blur(2px);}
+  .app-more-menu{box-shadow:0 26px 80px rgba(0,0,0,.34)!important;}
+}
+
+@media(max-width:360px){
+  .app-shell{padding-left:11px!important;padding-right:11px!important;}
+  .message-panel-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .message-panel-actions button:last-child{grid-column:1/-1!important;}
+  .profile-directory-card-actions{gap:6px!important;}
+}
 `;
 
 const Tag=({label,style={},className=""})=><span className={`tag-chip ${className}`.trim()} style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:6,padding:"3px 9px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
@@ -6520,7 +6585,7 @@ function ProfilePanel({profile,setEditProfile,onCreatePost,onOpenSettings,stats,
           <div className="profile-page-actions" style={{alignSelf:"center"}}>
             <button onClick={onCreatePost} className="bs" style={{background:C.accent,color:"#fff",border:"none",borderRadius:999,padding:"11px 17px",fontWeight:900,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap"}}><Icon name="sparkle" size={15} color="currentColor"/> Create post</button>
             <button onClick={()=>setEditProfile(true)} className="bs profile-edit-button" style={{background:"#fff",color:C.text,border:`1px solid ${C.border}`,borderRadius:999,padding:"11px 17px",fontWeight:900,whiteSpace:"nowrap"}}>Edit profile</button>
-            <button onClick={onOpenSettings} className="bs" aria-label="Open settings" title="Settings" style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:11}}><Icon name="settings" size={17} color="currentColor"/></button>
+            <button onClick={onOpenSettings} className="bs profile-settings-button" aria-label="Open settings" title="Settings" style={{background:"#fff",color:C.muted,border:`1px solid ${C.border}`,borderRadius:999,padding:11}}><Icon name="settings" size={17} color="currentColor"/><span>Settings</span></button>
           </div>
         </div>
         {profile.headline&&<div style={{fontSize:16,fontWeight:900,color:C.text,marginTop:18,overflowWrap:"anywhere"}}>{profile.headline}</div>}
