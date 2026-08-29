@@ -26,6 +26,20 @@ const FEAR_BOARD_TOOLS = [
   {name:"fear AI Pro",icon:"brain",label:"Advanced AI workspaces",copy:"Move beyond the free fear AI chat with deeper project workspaces, reusable business context, and guided building tools."},
   {name:"fear.finance",icon:"briefcase",label:"Markets and financial news",copy:"Stay current with the market information, financial context, and news you need to remain informed and in the loop."},
 ];
+const CAREER_PATH_LIBRARY={
+  Exploring:{role:"Career explorer",promise:"Turn a broad direction into one testable next move.",skills:["clear direction","visible proof","real conversations"],steps:["Choose one field to explore for the next 30 days","Make one small proof-of-interest project","Talk with two people already doing the work","Apply to one low-risk opening and learn from the response"]},
+  Finance:{role:"Financial analyst",promise:"Build the analytical proof and market fluency that entry finance roles reward.",skills:["financial analysis","spreadsheet modeling","market research"],steps:["Learn the three core financial statements","Build and explain one simple company model","Publish a short market or company analysis","Speak with analysts and apply to targeted entry roles"]},
+  Tech:{role:"Technology operator",promise:"Pair technical fluency with visible proof that you can help a product move.",skills:["product thinking","technical literacy","project execution"],steps:["Choose a product, engineering, data, or operations lane","Complete one small working project or teardown","Document what you built and what you learned","Connect with operators and target role-specific openings"]},
+  "Brand Management":{role:"Brand coordinator",promise:"Turn taste and curiosity into a portfolio that shows commercial judgment.",skills:["brand strategy","audience research","campaign planning"],steps:["Choose a brand category and study three strong examples","Create one concise brand or campaign brief","Publish the thinking behind your concept","Ask brand operators for feedback and target coordinator roles"]},
+  Fashion:{role:"Fashion marketing coordinator",promise:"Connect your point of view to the commercial and cultural work behind fashion.",skills:["trend research","merchandising awareness","visual storytelling"],steps:["Choose a fashion lane and map the companies in it","Build a compact trend, campaign, or merchandising concept","Turn the concept into a visible portfolio piece","Meet people in the lane and pursue assistant or coordinator openings"]},
+  Food:{role:"Food brand and operations coordinator",promise:"Show that you understand both the customer experience and the work behind it.",skills:["customer insight","operations","local marketing"],steps:["Choose restaurant, CPG, hospitality, or food media","Audit one real customer journey","Create one improvement or launch concept","Share it, collect feedback, and target first-step roles"]},
+  Health:{role:"Health program coordinator",promise:"Build credible proof that you can organize people, information, and care-focused work.",skills:["program support","health communication","community coordination"],steps:["Choose a health, wellness, or care operations lane","Learn the role's privacy and compliance basics","Create one educational or program concept","Find mission-aligned organizations and targeted openings"]},
+  Psychology:{role:"People and research coordinator",promise:"Turn curiosity about people into structured research and useful support.",skills:["qualitative research","people operations","clear communication"],steps:["Choose research, people operations, or community support","Practice one interview or survey method","Create a short insight report from your findings","Connect with practitioners and pursue coordinator roles"]},
+  Creative:{role:"Creative producer",promise:"Build a body of work that proves you can take an idea from brief to delivery.",skills:["concept development","production planning","portfolio storytelling"],steps:["Choose a medium and a clear creative lane","Create one constrained project with a real brief","Publish the work and your process","Collaborate once and target junior creative openings"]},
+  Education:{role:"Education program coordinator",promise:"Show that you can turn learning goals into organized, human experiences.",skills:["program design","facilitation","learner support"],steps:["Choose classroom, edtech, nonprofit, or student services","Design one small learning resource or workshop","Test it with a real learner and revise it","Connect with program leaders and pursue coordinator roles"]},
+  Other:{role:"Career builder",promise:"Turn your direction into proof, people, and a realistic opening.",skills:["clear communication","project ownership","relationship building"],steps:["Name the work you want to be trusted with","Create one proof project around that work","Share it and ask for specific feedback","Use what you learn to target people and opportunities"]},
+};
+const CAREER_FIELDS=Object.keys(CAREER_PATH_LIBRARY).filter(field=>field!=="Other");
 const C = {
   bg:"#F0F2F5", card:"#FFFFFF", border:"#E2E6EE", accent:"#16C74E",
   aLight:"#E8FBF0", aSoft:"#B8F5CE", text:"#0D0F14", tSoft:"#2A2D38",
@@ -1970,6 +1984,123 @@ html.native-offline .app-connection-state i{background:#F1A23C!important;box-sha
   .message-panel-actions button:last-child{grid-column:1/-1!important;}
   .profile-directory-card-actions{gap:6px!important;}
 }
+
+/* fear Path: profile-aware career direction, built to stay useful after signup. */
+.fs2-path-showcase{padding:132px max(28px,calc((100vw - 1180px)/2));background:#F4F7F4;color:#0B0D0C;display:grid;grid-template-columns:minmax(0,.8fr) minmax(520px,1.2fr);gap:72px;align-items:center;position:relative;overflow:hidden;}
+.fs2-path-showcase:before{content:"";position:absolute;inset:8% -16% auto 46%;height:78%;background:radial-gradient(circle at 50% 50%,rgba(22,199,78,.16),transparent 68%);pointer-events:none;}
+.fs2-path-copy,.fs2-path-preview{position:relative;z-index:1;min-width:0;}
+.fs2-path-copy h2{font-family:Georgia,serif;font-size:clamp(46px,5.2vw,78px);line-height:.97;letter-spacing:0;margin:0 0 24px;max-width:9ch;}
+.fs2-path-copy>p{font-size:17px;line-height:1.75;color:#59625D;max-width:540px;margin-bottom:28px;}
+.fs2-path-points{display:grid;gap:13px;margin-top:30px;}
+.fs2-path-point{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:center;font-size:14px;font-weight:800;color:#2C342F;}
+.fs2-path-point span:first-child{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#E4F8E9;color:#10A53D;}
+.fs2-path-preview{background:#0D100E;color:#fff;border:1px solid #202721;border-radius:8px;padding:22px;box-shadow:0 34px 90px rgba(15,35,20,.18);}
+.fs2-path-preview-head{display:flex;gap:18px;align-items:center;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1);}
+.fs2-path-score{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;background:conic-gradient(#16C74E 0 78%,rgba(255,255,255,.1) 78%);position:relative;}
+.fs2-path-score:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#0D100E;}
+.fs2-path-score strong{position:relative;z-index:1;font-size:23px;}
+.fs2-path-preview-head small,.career-path-muted{color:#89948D;}
+.fs2-path-preview-head h3{font-size:25px;margin:3px 0 6px;letter-spacing:0;}
+.fs2-path-stages{display:grid;gap:8px;margin-top:18px;}
+.fs2-path-stage{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:7px;}
+.fs2-path-stage>span:first-child{width:32px;height:32px;border-radius:7px;background:rgba(22,199,78,.13);color:#32DD68;display:grid;place-items:center;font-size:11px;font-weight:950;}
+.fs2-path-stage b{display:block;font-size:13px;margin-bottom:3px;}
+.fs2-path-stage small{display:block;color:#8D9790;font-size:11px;line-height:1.4;}
+.fs2-path-stage>span:last-child{font-size:10px;font-weight:900;color:#32DD68;text-transform:uppercase;}
+.fs2-trust{padding:132px max(28px,calc((100vw - 1180px)/2));background:#0A0C0B;color:#fff;}
+.fs2-trust-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.62fr);gap:70px;align-items:end;margin-bottom:54px;}
+.fs2-trust-head h2{font-family:Georgia,serif;font-size:clamp(46px,5vw,76px);line-height:.98;letter-spacing:0;max-width:11ch;margin:0;}
+.fs2-trust-head p{color:#909A94;line-height:1.75;font-size:16px;}
+.fs2-trust-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;}
+.fs2-trust-column{padding:26px;min-width:0;}
+.fs2-trust-column+div{border-left:1px solid rgba(255,255,255,.1);background:rgba(22,199,78,.055);}
+.fs2-trust-column h3{font-size:14px;text-transform:uppercase;letter-spacing:1.3px;color:#89938D;margin-bottom:20px;}
+.fs2-trust-column+div h3{color:#33DA68;}
+.fs2-trust-row{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid rgba(255,255,255,.08);}
+.fs2-trust-row:first-of-type{border-top:0;}
+.fs2-trust-row b{display:block;font-size:15px;margin-bottom:4px;}
+.fs2-trust-row p{font-size:13px;line-height:1.55;color:#8E9892;margin:0;}
+
+.career-path{display:grid;gap:16px;min-width:0;}
+.career-path-hero{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;background:linear-gradient(135deg,#0B0E0C 0%,#111813 72%,#0C2915 100%);border:1px solid #26352B;border-radius:8px;padding:28px;color:#fff;overflow:hidden;position:relative;}
+.career-path-hero:after{content:"";position:absolute;width:280px;height:280px;right:-120px;top:-155px;border-radius:50%;background:radial-gradient(circle,rgba(22,199,78,.3),transparent 68%);pointer-events:none;}
+.career-path-hero>div{min-width:0;position:relative;z-index:1;}
+.career-path-kicker{font-size:10px;font-weight:950;letter-spacing:1.8px;text-transform:uppercase;color:#3BE26E;margin-bottom:10px;}
+.career-path-hero h2{font-family:Georgia,serif;font-size:clamp(34px,4vw,55px);line-height:1;letter-spacing:0;margin:0 0 12px;overflow-wrap:anywhere;}
+.career-path-hero p{font-size:14px;line-height:1.65;color:#A7B0AA;max-width:60ch;margin:0;}
+.career-path-score{align-self:center;justify-self:end;text-align:right;}
+.career-path-score strong{display:block;font-size:48px;line-height:1;color:#fff;}
+.career-path-score span{display:block;font-size:10px;font-weight:950;letter-spacing:1.2px;text-transform:uppercase;color:#43E277;margin-top:8px;}
+.career-path-score small{display:block;font-size:11px;color:#7E8A82;margin-top:7px;line-height:1.4;}
+.career-path-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px;align-items:start;}
+.career-path-panel{background:var(--app-panel,#fff);border:1px solid var(--app-line,#DDE2DE);border-radius:8px;padding:22px;min-width:0;}
+.career-path-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;}
+.career-path-panel h3{font-size:20px;line-height:1.2;letter-spacing:0;margin:0;}
+.career-path-panel p{overflow-wrap:anywhere;}
+.career-path-setup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;}
+.career-path-field{display:grid;gap:6px;min-width:0;}
+.career-path-field.full{grid-column:1/-1;}
+.career-path-field label{font-size:10px;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:var(--app-muted,#6B736E);}
+.career-path-field input,.career-path-field select{width:100%;min-width:0;min-height:45px;padding:10px 11px;border:1px solid var(--app-line,#DDE2DE);border-radius:7px;background:var(--app-bg,#F6F8F6);color:var(--app-copy,#0D0F0E);font:inherit;font-size:13px;}
+.career-path-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;}
+.career-path-primary,.career-path-secondary{min-height:42px;border-radius:7px;padding:9px 14px;font-size:12px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+.career-path-primary{background:#16C74E;color:#071109;border:1px solid #16C74E;}
+.career-path-secondary{background:transparent;color:var(--app-copy,#101410);border:1px solid var(--app-line,#DDE2DE);}
+.career-path-steps{display:grid;gap:9px;}
+.career-path-step{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--app-line,#DDE2DE);border-radius:7px;padding:13px;background:var(--app-bg,#F7F8F7);}
+.career-path-step.done{opacity:.65;}
+.career-path-step-num{width:38px;height:38px;border-radius:7px;display:grid;place-items:center;background:#E6F9EB;color:#12A73E;font-size:11px;font-weight:950;}
+.career-path-step.done .career-path-step-num{background:#16C74E;color:#071109;}
+.career-path-step b{display:block;font-size:13px;line-height:1.35;margin-bottom:4px;}
+.career-path-step small{display:block;color:var(--app-muted,#747D77);font-size:11px;line-height:1.45;}
+.career-path-check{width:32px;height:32px;border:1px solid var(--app-line,#DDE2DE);border-radius:7px;background:var(--app-panel,#fff);color:#13B544;display:grid;place-items:center;cursor:pointer;}
+.career-path-side{display:grid;gap:16px;}
+.career-path-list{display:grid;gap:9px;}
+.career-path-match{border:1px solid var(--app-line,#DDE2DE);border-radius:7px;padding:13px;background:var(--app-bg,#F7F8F7);min-width:0;}
+.career-path-match-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.career-path-match b{font-size:13px;line-height:1.35;overflow-wrap:anywhere;}
+.career-path-match strong{font-size:12px;color:#12AD40;white-space:nowrap;}
+.career-path-match p{font-size:11px;line-height:1.5;color:var(--app-muted,#727A75);margin:6px 0 0;}
+.career-path-person{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--app-line,#DDE2DE);}
+.career-path-person:first-child{border-top:0;}
+.career-path-person-name{font-size:12px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.career-path-person small{display:block;color:var(--app-muted,#737D76);font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.career-path-disclaimer{font-size:10px!important;line-height:1.5!important;color:var(--app-muted,#747C77)!important;margin-top:12px!important;}
+
+@media(max-width:900px){
+  .fs2-path-showcase{grid-template-columns:1fr;gap:46px;padding-top:96px;padding-bottom:96px;}
+  .fs2-path-copy h2{max-width:11ch;}
+  .fs2-trust-head{grid-template-columns:1fr;gap:24px;}
+  .career-path-grid{grid-template-columns:1fr;}
+}
+@media(max-width:760px){
+  .fs2-path-showcase,.fs2-trust{padding:80px 20px!important;}
+  .fs2-path-showcase{gap:34px;}
+  .fs2-path-copy h2,.fs2-trust-head h2{font-size:clamp(40px,13vw,56px);line-height:1;max-width:100%;}
+  .fs2-path-copy>p,.fs2-trust-head p{font-size:15px;line-height:1.68;}
+  .fs2-path-preview{padding:14px;}
+  .fs2-path-preview-head{align-items:flex-start;gap:12px;}
+  .fs2-path-score{width:68px;height:68px;}
+  .fs2-path-preview-head h3{font-size:19px;}
+  .fs2-path-stage{grid-template-columns:32px minmax(0,1fr);padding:11px;}
+  .fs2-path-stage>span:last-child{grid-column:2;}
+  .fs2-trust-grid{grid-template-columns:1fr;}
+  .fs2-trust-column+div{border-left:0;border-top:1px solid rgba(255,255,255,.1);}
+  .career-path{gap:12px;}
+  .career-path-hero{grid-template-columns:1fr;padding:20px;gap:20px;}
+  .career-path-hero h2{font-size:35px;max-width:11ch;}
+  .career-path-score{justify-self:start;text-align:left;}
+  .career-path-score strong{font-size:40px;}
+  .career-path-panel{padding:16px;}
+  .career-path-setup{grid-template-columns:1fr;}
+  .career-path-field.full{grid-column:auto;}
+  .career-path-panel-head{display:grid;gap:10px;}
+  .career-path-step{grid-template-columns:36px minmax(0,1fr) 32px;gap:9px;padding:11px;}
+  .career-path-step-num{width:34px;height:34px;}
+  .career-path-primary,.career-path-secondary{flex:1 1 130px;min-height:46px;}
+  .career-path-person{grid-template-columns:38px minmax(0,1fr);}
+  .career-path-person button{grid-column:2;width:100%;}
+}
 `;
 
 const Tag=({label,style={},className=""})=><span className={`tag-chip ${className}`.trim()} style={{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",fontSize:10,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",borderRadius:6,padding:"3px 9px",whiteSpace:"nowrap",wordBreak:"keep-all",verticalAlign:"middle",...style}}>{label}</span>;
@@ -2519,7 +2650,7 @@ function Navbar({setScreen,notify,onOpenPanel,forceVisible=false}){
     };
   },[]);
   const visible=forceVisible||scrolled;
-  const links=[["Product","platform"],["Why fear","why-fear"],["Proof","activity"],["Pricing","pricing"],["Board","board"],["Join","cta"]];
+  const links=[["Product","platform"],["Path","path"],["Why fear","why-fear"],["Proof","activity"],["Pricing","pricing"],["Board","board"],["Join","cta"]];
   const navTo=id=>{
     if(id==="why-fear") return setScreen("why");
     if(document.getElementById(id)) return scrollToSection(id);
@@ -3136,6 +3267,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
   const acronym=[["F","False"],["E","Evidence"],["A","Appearing"],["R","Real"]];
   const journeyItems=[
     ["platform","Start","sparkle"],
+    ["path","Path","zap"],
     ["story","Product","diamond"],
     ["activity","Community","network"],
     ["pricing","Access","briefcase"],
@@ -3191,7 +3323,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
             <h2>Your future should not depend on already knowing the right people.</h2>
           </div>
           <div className="fs2-opening-copy fs2-reveal fs2-reveal-delay-1">
-            <p>fear.social is a social network for the moment before momentum. Build a profile, find people in your direction, start conversations, and discover the opportunities that make your next move real.</p>
+            <p>fear.social turns the direction in your profile into a practical Path: the roles that fit, the gaps to close, the people to know, and one clear move to make next. The social network keeps every step connected to real humans and real opportunities.</p>
             <div className="fs2-actions"><button className="fs2-primary" onClick={()=>setScreen("signup")}>Create your account <Icon name="arrowRight" size={16}/></button><button className="fs2-secondary" onClick={()=>scrollToSection("activity")}>See how it works</button></div>
           </div>
         </section>
@@ -3208,6 +3340,34 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
               <span>{label}</span>
               <p>{copy}</p>
             </article>)}
+          </div>
+        </section>
+
+        <section id="path" data-journey="path" className="fs2-path-showcase" aria-labelledby="fs2-path-title">
+          <div className="fs2-path-copy fs2-reveal">
+            <div className="fs2-eyebrow">Your profile becomes a plan</div>
+            <h2 id="fs2-path-title">Know where to move next.</h2>
+            <p>Tell fear what you want to become, what you already know, and how much time you can give it. Your Path turns those signals into an explainable career brief you can actually act on.</p>
+            <div className="fs2-path-points">
+              <div className="fs2-path-point"><span><Icon name="diamond" size={17}/></span><span>Roles and openings ranked around your direction</span></div>
+              <div className="fs2-path-point"><span><Icon name="check" size={17}/></span><span>A weekly plan that remembers what you finish</span></div>
+              <div className="fs2-path-point"><span><Icon name="network" size={17}/></span><span>People, posts, and conversations connected to the plan</span></div>
+            </div>
+            <div className="fs2-actions" style={{marginTop:30}}><button className="fs2-primary" onClick={()=>setScreen("signup")}>Build my Path <Icon name="arrowRight" size={16}/></button></div>
+          </div>
+          <div className="fs2-path-preview fs2-reveal fs2-reveal-delay-1" aria-label="Sample personalized career Path">
+            <div className="fs2-path-preview-head">
+              <div className="fs2-path-score"><strong>78%</strong></div>
+              <div><small>Profile alignment · strong confidence</small><h3>Brand coordinator</h3><p style={{fontSize:12,color:"#8D9790",margin:0}}>Built from a sample member profile, stated goal, and saved opportunities.</p></div>
+            </div>
+            <div className="fs2-path-stages">
+              {[
+                ["01","Choose the lane","Brand strategy · consumer and culture","Done"],
+                ["02","Build visible proof","Create one concise campaign brief","This week"],
+                ["03","Find the people","Meet two coordinators in the field","Next"],
+                ["04","Take the shot","Apply to three targeted openings","Upcoming"],
+              ].map(([number,title,copy,status])=><div className="fs2-path-stage" key={number}><span>{number}</span><div><b>{title}</b><small>{copy}</small></div><span>{status}</span></div>)}
+            </div>
           </div>
         </section>
 
@@ -3231,6 +3391,32 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
           <div className="fs2-social-rail">{socialMoves.map(([icon,title,copy],index)=><div className={`fs2-social-item fs2-reveal fs2-reveal-delay-${Math.min(index,3)}`} key={title}><span className="fs2-move-icon"><Icon name={icon} size={20}/></span><div><b>{title}</b><p>{copy}</p></div></div>)}</div>
         </section>
 
+        <section className="fs2-trust" aria-labelledby="fs2-trust-title">
+          <div className="fs2-trust-head fs2-reveal">
+            <div><div className="fs2-eyebrow">Why fear, not another prompt</div><h2 id="fs2-trust-title">Advice should know where you are going.</h2></div>
+            <p>A general AI can produce a polished answer. fear is designed to keep a durable picture of your direction, show the signals behind a recommendation, and connect the answer to action inside your network.</p>
+          </div>
+          <div className="fs2-trust-grid fs2-reveal fs2-reveal-delay-1">
+            <div className="fs2-trust-column">
+              <h3>Everyday generative AI</h3>
+              {[
+                ["Starts with a blank prompt","You have to restate your situation and judge what context matters."],
+                ["Produces an answer","Useful language can still leave the next real action disconnected."],
+                ["Can sound more certain than it is","A confident response does not automatically show its assumptions."],
+              ].map(([title,copy])=><div className="fs2-trust-row" key={title}><Icon name="close" size={17}/><div><b>{title}</b><p>{copy}</p></div></div>)}
+            </div>
+            <div className="fs2-trust-column">
+              <h3>Your fear Path</h3>
+              {[
+                ["Starts with your profile","Your field, goals, experience, location, and preferences stay connected."],
+                ["Connects guidance to the product","Each plan points toward relevant people, opportunities, and visible proof."],
+                ["Explains what shaped the result","Alignment, confidence, strengths, and missing information remain visible."],
+              ].map(([title,copy])=><div className="fs2-trust-row" key={title}><Icon name="check" size={17} color={C.accent}/><div><b>{title}</b><p>{copy}</p></div></div>)}
+            </div>
+          </div>
+          <p style={{fontSize:11,color:"#707A73",marginTop:18}}>fear Path offers guidance, not a guarantee of employment or professional outcomes. Members stay in control of every decision and application.</p>
+        </section>
+
         <section className="fs2-section fs2-why">
           <div className="fs2-why-copy fs2-reveal"><div className="fs2-eyebrow">Why the name</div><h2>Fear feels like proof. It usually is not.</h2><p>False Evidence Appearing Real describes the moment uncertainty starts speaking like fact. The outcome is unknown, the first message feels exposed, and waiting feels safer. fear.social gives you somewhere to take the step anyway.</p><div className="fs2-actions"><button className="fs2-secondary" onClick={()=>setScreen("why")}>Read the story</button></div></div>
           <div className="fs2-acronym fs2-reveal fs2-reveal-delay-1" aria-label="False Evidence Appearing Real">{acronym.map(([letter,word])=><div className="fs2-acronym-row" key={letter}><span>{letter}</span><b>{word}</b></div>)}</div>
@@ -3249,7 +3435,7 @@ function LandingExperience({setScreen,notify,onOpenPanel}){
         </section>
       </main>
 
-      <footer className="fs2-footer"><div className="fs2-footer-brand">fear<span>.</span>social</div><small>© 2026 fear.social · Empowering tomorrow's founders today.</small><div className="fs2-footer-links"><button onClick={()=>setScreen("why")}>Why fear?</button><button onClick={()=>onOpenPanel("privacy")}>Privacy</button><button onClick={()=>onOpenPanel("terms")}>Terms</button><button onClick={()=>onOpenPanel("accessibility")}>Accessibility</button><button onClick={()=>notify("Contact: contact@fear.social","info")}>Contact</button></div></footer>
+      <footer className="fs2-footer"><div className="fs2-footer-brand">fear<span>.</span>social</div><small>© 2026 fear.social · Your first step is fear.</small><div className="fs2-footer-links"><button onClick={()=>setScreen("why")}>Why fear?</button><button onClick={()=>onOpenPanel("privacy")}>Privacy</button><button onClick={()=>onOpenPanel("terms")}>Terms</button><button onClick={()=>onOpenPanel("accessibility")}>Accessibility</button><button onClick={()=>notify("Contact: contact@fear.social","info")}>Contact</button></div></footer>
     </div>
   );
 }
@@ -4402,6 +4588,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   const [connections,setConnections]=useLocalState("fear-connections",{followersByUserId:{},followingByUserId:{}});
   const [accessRequests,setAccessRequests]=useLocalState("fear-access-requests",{incoming:[]});
   const [interfaceSettings,setInterfaceSettings]=useLocalState("fear-interface-settings",{layout:"comfortable",density:"standard",rightRail:true});
+  const [careerPreferences,setCareerPreferences]=useLocalState("fear-career-preferences",{field:"",role:"",stage:"Exploring",weeklyTime:"2-4 hours",workStyle:"Open",configured:false});
+  const [careerProgress,setCareerProgress]=useLocalState("fear-career-progress",{completed:[],updatedAt:""});
   const [connectionState,setConnectionState]=useState(navigator.onLine?"connecting":"offline");
   const [userDeals,setUserDeals]=useLocalState("fear-user-deals",[]);
   const [savedDeals,setSavedDeals]=useLocalState("fear-saved-deals",[]);
@@ -4744,6 +4932,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   },[selectedProfile,setView,view]);
   const tabs=[
     ["feed","Feed"],
+    ["path","Path"],
     ["discover","Discover"],
     ["messages","Messages"],
     ["groups","Groups"],
@@ -4751,6 +4940,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   ];
   const viewMeta={
     feed:{eyebrow:"Your space",title:"Make the next move visible",copy:"Share what you are working toward, find useful momentum, and keep your future moving in public."},
+    path:{eyebrow:"Your direction",title:"A plan built around you",copy:"Turn your profile into explainable role matches, practical steps, relevant people, and opportunities you can act on."},
     discover:{eyebrow:"People",title:"Find your next connection",copy:"Explore people by direction, field, and the move they are trying to make."},
     messages:{eyebrow:"Conversations",title:"Messages",copy:"Keep every useful introduction and next move in one focused place."},
     notifications:{eyebrow:"Your network",title:"Activity",copy:"Connections, replies, invitations, and requests that need your attention."},
@@ -4759,9 +4949,9 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   };
   const mobileTabs=[
     ["feed","Feed","home"],
+    ["path","Path","zap"],
     ["discover","Discover","search"],
     ["messages","Messages","mail"],
-    ["notifications","Activity","heart"],
     ["profile","Profile","user"],
   ];
   const initials=(profile.name||"Your Name").split(" ").map(s=>s[0]).slice(0,2).join("").toUpperCase()||"YO";
@@ -4823,6 +5013,18 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
   };
   const allDeals=[...userDeals,...DEALS];
   const rankedDeals=allDeals.map((deal,index)=>({...deal,...opportunityScore(deal),saved:savedDeals.includes(deal.id),_index:index})).sort((a,b)=>(b.score-a.score)||(a._index-b._index));
+  const saveCareerPreferences=async preferences=>{
+    const nextProfile={...profile,industry:preferences.field||profile.industry,goal:profile.goal||preferences.role};
+    setProfile(nextProfile);
+    setProfileDraft(nextProfile);
+    notify("Your Path is ready");
+    try{
+      const data=await callBackend("/profile",{method:"PUT",body:JSON.stringify({profile:nextProfile})});
+      if(data.profile){setProfile(current=>({...current,...data.profile}));setProfileDraft(current=>({...current,...data.profile}));}
+    }catch{
+      notify("Your Path is saved here. Profile sync will retry when you are back online.","error");
+    }
+  };
   const toggleDealSave=id=>setSavedDeals(ids=>ids.includes(id)?ids.filter(savedId=>savedId!==id):[...ids,id]);
   const signalDealInterest=deal=>notify(`Interest noted for ${deal.title}`);
   const postOpportunity=async draft=>{
@@ -5395,6 +5597,8 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
           <button type="button" className="app-menu-backdrop" aria-label="Close navigation menu" onClick={()=>setNavMenuOpen(false)}/>
           <div className="app-more-menu" role="menu" aria-label="More fear.social navigation">
             <div className="app-more-profile"><Av i={initials} src={profile.avatarUrl} positionX={profile.avatarPositionX} positionY={profile.avatarPositionY} scale={profile.avatarScale} size={42} grad online/><div><b>{profile.name||"Your profile"}</b><span>{profile.handle||"@yourhandle"}</span></div></div>
+            <button role="menuitem" onClick={()=>setView("path")}><Icon name="zap" size={17}/><span><b>Your Path</b><small>Roles, steps, people, and openings</small></span></button>
+            <button role="menuitem" onClick={()=>setView("notifications")}><Icon name="heart" size={17}/><span><b>Activity{unread>0?` · ${unread}`:""}</b><small>Replies, requests, and invitations</small></span></button>
             <button role="menuitem" onClick={()=>setView("ai")}><Icon name="brain" size={17}/><span><b>fear AI</b><small>Think through your next move</small></span></button>
             <button role="menuitem" onClick={()=>setView("events")}><Icon name="calendar" size={17}/><span><b>fear.club</b><small>Coming with FEAR Pro</small></span></button>
             <button role="menuitem" onClick={()=>setView("settings")}><Icon name="settings" size={17}/><span><b>Settings</b><small>Privacy, appearance, and account</small></span></button>
@@ -5516,6 +5720,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
+        {view==="path"&&<CareerPathView profile={profile} people={people.filter(person=>!blockedIds.has(person.id))} deals={rankedDeals} preferences={careerPreferences} setPreferences={setCareerPreferences} progress={careerProgress} setProgress={setCareerProgress} onSavePreferences={saveCareerPreferences} onEditProfile={openProfileStudio} onOpenDeals={()=>setView("opportunities")} onOpenProfile={person=>openProfile(person,"path")} onCreatePost={createProfilePost}/>}
         {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div>{p.bio&&<p className="profile-card-body" style={bodyCopy}>{p.bio}</p>}{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
@@ -6129,6 +6334,95 @@ function GroupsView({groups,people,createGroup,joinGroup,leaveGroup,inviteToGrou
     </div>
   );
 }
+function CareerPathView({profile,people,deals,preferences,setPreferences,progress,setProgress,onSavePreferences,onEditProfile,onOpenDeals,onOpenProfile,onCreatePost}){
+  const initialField=preferences.field||profile.industry||"Exploring";
+  const rawGoal=String(profile.goal||"").trim();
+  const profileRoleHint=rawGoal.length<=42&&!/^(build|publish|find|learn|create|start|grow|meet|apply|become better)\b/i.test(rawGoal)?rawGoal:"";
+  const [editing,setEditing]=useState(!preferences.configured);
+  const [draft,setDraft]=useState({...preferences,field:initialField,role:preferences.role||profileRoleHint,stage:preferences.stage||"Exploring",weeklyTime:preferences.weeklyTime||"2-4 hours",workStyle:preferences.workStyle||"Open"});
+  useEffect(()=>setDraft(current=>({...current,...preferences,field:preferences.field||profile.industry||current.field||"Exploring",role:preferences.role||profileRoleHint||current.role||""})),[preferences,profileRoleHint,profile.industry]);
+  const field=draft.field||initialField;
+  const pathTemplate=CAREER_PATH_LIBRARY[field]||CAREER_PATH_LIBRARY.Other;
+  const targetRole=(draft.role||profileRoleHint||pathTemplate.role).trim();
+  const profileSignals=[profile.name,profile.industry,profile.goal,profile.lookingFor,profile.headline,profile.bio,profile.location];
+  const completedSignals=profileSignals.filter(value=>String(value||"").trim()).length;
+  const configuredSignals=[draft.field,draft.role,draft.stage,draft.weeklyTime,draft.workStyle].filter(value=>String(value||"").trim()).length;
+  const alignment=Math.min(92,38+completedSignals*6+configuredSignals*2);
+  const confidence=completedSignals>=6?"Strong":completedSignals>=4?"Growing":"Early";
+  const missing=[!profile.industry&&"field",!profile.goal&&"target role",!profile.bio&&"bio",!profile.location&&"location",!profile.lookingFor&&"what you are looking for"].filter(Boolean);
+  const completed=new Set(progress.completed||[]);
+  const stepIds=pathTemplate.steps.map((_,index)=>`${field}-${index}`);
+  const completedCount=stepIds.filter(id=>completed.has(id)).length;
+  const matchingPeople=(people||[]).filter(person=>person.id!==profile.id&&(person.industry===field||String(person.bio||"").toLowerCase().includes(field.toLowerCase()))).slice(0,3);
+  const fallbackPeople=(people||[]).filter(person=>person.id!==profile.id&&!matchingPeople.some(match=>match.id===person.id)).slice(0,Math.max(0,3-matchingPeople.length));
+  const pathPeople=[...matchingPeople,...fallbackPeople].slice(0,3);
+  const topDeals=(deals||[]).filter(deal=>field==="Exploring"||deal.tag===field||String(deal.title||"").toLowerCase().includes(field.toLowerCase())).slice(0,3);
+  const visibleDeals=topDeals.length?topDeals:(deals||[]).slice(0,3);
+  const save=async()=>{
+    const next={...draft,field,role:targetRole,configured:true,updatedAt:new Date().toISOString()};
+    setPreferences(next);
+    await onSavePreferences(next);
+    setEditing(false);
+  };
+  const toggleStep=id=>setProgress(current=>{
+    const ids=new Set(current.completed||[]);
+    if(ids.has(id))ids.delete(id);else ids.add(id);
+    return {...current,completed:[...ids],updatedAt:new Date().toISOString()};
+  });
+  const nextIndex=stepIds.findIndex(id=>!completed.has(id));
+  return <section className="career-path" aria-label="Your personalized career Path">
+    <div className="career-path-hero">
+      <div>
+        <div className="career-path-kicker">Your fear Path · {completedCount} of {pathTemplate.steps.length} moves complete</div>
+        <h2>{targetRole||pathTemplate.role}</h2>
+        <p>{pathTemplate.promise} Your plan uses the direction you chose, your profile signals, and the opportunities currently available inside fear.social.</p>
+      </div>
+      <div className="career-path-score" aria-label={`${alignment} percent profile alignment with ${confidence.toLowerCase()} confidence`}>
+        <strong>{alignment}%</strong><span>Profile alignment</span><small>{confidence} confidence<br/>Not a hiring prediction</small>
+      </div>
+    </div>
+
+    {editing&&<div className="career-path-panel">
+      <div className="career-path-panel-head"><div><div className="career-path-kicker">Shape the recommendation</div><h3>Tell fear where you want to move.</h3></div><p className="career-path-muted" style={{fontSize:12,maxWidth:330,margin:0}}>You can change this whenever your direction changes. Your social profile remains the source of truth.</p></div>
+      <div className="career-path-setup">
+        <div className="career-path-field"><label htmlFor="path-field">Field</label><select id="path-field" value={draft.field||"Exploring"} onChange={event=>setDraft(value=>({...value,field:event.target.value}))}><option>Exploring</option>{CAREER_FIELDS.map(option=><option key={option}>{option}</option>)}</select></div>
+        <div className="career-path-field"><label htmlFor="path-role">Role or direction</label><input id="path-role" value={draft.role||""} onChange={event=>setDraft(value=>({...value,role:event.target.value}))} placeholder={pathTemplate.role}/></div>
+        <div className="career-path-field"><label htmlFor="path-stage">Where are you now?</label><select id="path-stage" value={draft.stage||"Exploring"} onChange={event=>setDraft(value=>({...value,stage:event.target.value}))}>{["Exploring","Learning","Building proof","Applying","Changing fields"].map(option=><option key={option}>{option}</option>)}</select></div>
+        <div className="career-path-field"><label htmlFor="path-time">Time each week</label><select id="path-time" value={draft.weeklyTime||"2-4 hours"} onChange={event=>setDraft(value=>({...value,weeklyTime:event.target.value}))}>{["Under 2 hours","2-4 hours","5-8 hours","9+ hours"].map(option=><option key={option}>{option}</option>)}</select></div>
+        <div className="career-path-field full"><label htmlFor="path-work">Work preference</label><select id="path-work" value={draft.workStyle||"Open"} onChange={event=>setDraft(value=>({...value,workStyle:event.target.value}))}>{["Open","Remote","Hybrid","In person","Project or gig first"].map(option=><option key={option}>{option}</option>)}</select></div>
+      </div>
+      <div className="career-path-actions"><button className="career-path-primary" onClick={save}><Icon name="check" size={15}/> Build my Path</button>{preferences.configured&&<button className="career-path-secondary" onClick={()=>setEditing(false)}>Cancel</button>}</div>
+    </div>}
+
+    <div className="career-path-grid">
+      <div className="career-path-panel">
+        <div className="career-path-panel-head"><div><div className="career-path-kicker">This is how you get closer</div><h3>Your next four moves</h3></div><button className="career-path-secondary" onClick={()=>setEditing(true)}><Icon name="edit" size={14}/> Adjust Path</button></div>
+        <div className="career-path-steps">
+          {pathTemplate.steps.map((step,index)=>{
+            const id=stepIds[index];const done=completed.has(id);const current=index===nextIndex;
+            return <div className={`career-path-step ${done?"done":""}`} key={id}><span className="career-path-step-num">{done?<Icon name="check" size={15}/>:String(index+1).padStart(2,"0")}</span><div><b>{step}</b><small>{done?"Completed":current?`Your next move · designed for ${draft.weeklyTime||"this week"}`:"Comes after the move above"}</small></div><button className="career-path-check" onClick={()=>toggleStep(id)} aria-label={done?`Mark ${step} incomplete`:`Mark ${step} complete`} aria-pressed={done}><Icon name={done?"refresh":"check"} size={15}/></button></div>;
+          })}
+        </div>
+        <div className="career-path-actions"><button className="career-path-primary" onClick={onCreatePost}><Icon name="megaphone" size={15}/> Share progress</button><button className="career-path-secondary" onClick={onEditProfile}><Icon name="user" size={15}/> Improve profile</button></div>
+        {missing.length>0&&<p className="career-path-disclaimer">Add your {missing.slice(0,3).join(", ")} to improve the confidence of future matches.</p>}
+      </div>
+
+      <aside className="career-path-side">
+        <div className="career-path-panel">
+          <div className="career-path-kicker">Openings for this direction</div><h3 style={{marginBottom:14}}>Matched opportunities</h3>
+          <div className="career-path-list">{visibleDeals.map(deal=><div className="career-path-match" key={deal.id}><div className="career-path-match-top"><b>{deal.title}</b><strong>{deal.score||"--"}%</strong></div><p>{deal.company} · {deal.location||"Flexible"}</p><p>{(deal.reasons||[])[0]||`Relevant to your ${field} direction`}</p></div>)}</div>
+          <div className="career-path-actions"><button className="career-path-secondary" onClick={onOpenDeals}>See all opportunities <Icon name="arrowRight" size={14}/></button></div>
+        </div>
+        <div className="career-path-panel">
+          <div className="career-path-kicker">People make the plan real</div><h3 style={{marginBottom:10}}>People in your orbit</h3>
+          <div>{pathPeople.map(person=><div className="career-path-person" key={person.id}><Av i={person.av} src={person.avatarUrl} positionX={person.avatarPositionX} positionY={person.avatarPositionY} scale={person.avatarScale} size={38}/><div><div className="career-path-person-name">{person.name}</div><small>{person.industry||person.loc||"fear.social member"}</small></div><button className="career-path-secondary" onClick={()=>onOpenProfile(person)}>View</button></div>)}</div>
+        </div>
+      </aside>
+    </div>
+    <p className="career-path-disclaimer">fear Path provides personalized guidance based on the information available in your profile and the current fear.social network. It does not guarantee employment, admission, income, or any professional outcome.</p>
+  </section>;
+}
+
 function OpportunitiesView({deals,savedDeals,toggleSave,signalInterest,postOpportunity,profile}){
   const [mode,setMode]=useState("matched");
   const [kind,setKind]=useState("All");
