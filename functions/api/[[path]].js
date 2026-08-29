@@ -3205,6 +3205,72 @@ async function handleRequest(context) {
     });
   }
 
+  if (method === "GET" && path === "/career-path") {
+    const row = await db.prepare("SELECT * FROM career_paths WHERE user_id = ?").bind(user.id).first();
+    let completedSteps = [];
+    try {
+      const parsed = JSON.parse(row?.completed_steps || "[]");
+      completedSteps = Array.isArray(parsed) ? parsed.map((step) => cleanText(step, 100)).filter(Boolean).slice(0, 40) : [];
+    } catch {
+      completedSteps = [];
+    }
+    return json({
+      careerPath: {
+        preferences: {
+          field: row?.field || "",
+          role: row?.target_role || "",
+          stage: row?.stage || "Exploring",
+          weeklyTime: row?.weekly_time || "2-4 hours",
+          workStyle: row?.work_style || "Open",
+          configured: Boolean(row?.configured),
+          updatedAt: row?.updated_at || "",
+        },
+        progress: { completed: completedSteps, updatedAt: row?.updated_at || "" },
+      },
+    });
+  }
+
+  if (method === "PUT" && path === "/career-path") {
+    const limited = await enforceRateLimit(db, request, "career-path-update", 30, 600);
+    if (limited) return limited;
+    const input = body.preferences || {};
+    const progress = body.progress || {};
+    const allowedStages = new Set(["Exploring", "Learning", "Building proof", "Applying", "Changing fields"]);
+    const allowedTimes = new Set(["Under 2 hours", "2-4 hours", "5-8 hours", "9+ hours"]);
+    const allowedStyles = new Set(["Open", "Remote", "Hybrid", "In person", "Project or gig first"]);
+    const field = cleanText(input.field || "", 40);
+    const role = cleanText(input.role || "", 100);
+    const stage = allowedStages.has(input.stage) ? input.stage : "Exploring";
+    const weeklyTime = allowedTimes.has(input.weeklyTime) ? input.weeklyTime : "2-4 hours";
+    const workStyle = allowedStyles.has(input.workStyle) ? input.workStyle : "Open";
+    const completed = Array.isArray(progress.completed)
+      ? [...new Set(progress.completed.map((step) => cleanText(step, 100)).filter(Boolean))].slice(0, 40)
+      : [];
+    await db
+      .prepare(
+        `INSERT INTO career_paths (user_id, field, target_role, stage, weekly_time, work_style, configured, completed_steps, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(user_id) DO UPDATE SET
+           field = excluded.field,
+           target_role = excluded.target_role,
+           stage = excluded.stage,
+           weekly_time = excluded.weekly_time,
+           work_style = excluded.work_style,
+           configured = excluded.configured,
+           completed_steps = excluded.completed_steps,
+           updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(user.id, field, role, stage, weeklyTime, workStyle, input.configured ? 1 : 0, JSON.stringify(completed))
+      .run();
+    const saved = await db.prepare("SELECT updated_at FROM career_paths WHERE user_id = ?").bind(user.id).first();
+    return json({
+      careerPath: {
+        preferences: { field, role, stage, weeklyTime, workStyle, configured: Boolean(input.configured), updatedAt: saved?.updated_at || "" },
+        progress: { completed, updatedAt: saved?.updated_at || "" },
+      },
+    });
+  }
+
   if (method === "PUT" && path === "/profile") {
     const limited = await enforceRateLimit(db, request, "profile-update", 20, 600);
     if (limited) return limited;

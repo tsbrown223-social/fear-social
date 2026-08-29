@@ -4677,15 +4677,22 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     if(data.notifications)setNotifications(data.notifications);
     if(data.connections)setConnections(data.connections);
     if(data.accessRequests)setAccessRequests(data.accessRequests);
+    if(data.careerPath?.preferences)setCareerPreferences(data.careerPath.preferences);
+    if(data.careerPath?.progress)setCareerProgress(data.careerPath.progress);
     if(typeof data.unreadNotifications==="number")setUnreadNotifications(data.unreadNotifications);
     if(data.stats)setStats(data.stats);
-  },[mergeLiveMessages,setAccessRequests,setConnections,setEvents,setGroups,setMentors,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
+  },[mergeLiveMessages,setAccessRequests,setCareerPreferences,setCareerProgress,setConnections,setEvents,setGroups,setMentors,setNotifications,setPeople,setPosts,setProfile,setStats,setUnreadNotifications,setUserDeals]);
   const callBackend=useCallback(async(path,options={})=>{
     const data=await api(path,options);
     setConnectionState("online");
     applyBackendState(data);
     return data;
   },[applyBackendState]);
+  useEffect(()=>{
+    let active=true;
+    callBackend("/career-path").catch(()=>{if(active)setConnectionState(navigator.onLine?"connecting":"offline");});
+    return()=>{active=false;};
+  },[callBackend]);
   const signalAiStop=useCallback(()=>{
     const generationId=aiGenerationIdRef.current;
     if(generationId)void callBackend(`/ai/generations/${encodeURIComponent(generationId)}/stop`,{method:"POST",body:"{}"}).catch(()=>{});
@@ -5021,9 +5028,16 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
     try{
       const data=await callBackend("/profile",{method:"PUT",body:JSON.stringify({profile:nextProfile})});
       if(data.profile){setProfile(current=>({...current,...data.profile}));setProfileDraft(current=>({...current,...data.profile}));}
+      await callBackend("/career-path",{method:"PUT",body:JSON.stringify({preferences,progress:careerProgress})});
     }catch{
       notify("Your Path is saved here. Profile sync will retry when you are back online.","error");
     }
+  };
+  const saveCareerProgress=progress=>{
+    setCareerProgress(progress);
+    callBackend("/career-path",{method:"PUT",body:JSON.stringify({preferences:careerPreferences,progress})}).catch(()=>{
+      notify("Progress is saved here and will sync when you are back online.","error");
+    });
   };
   const toggleDealSave=id=>setSavedDeals(ids=>ids.includes(id)?ids.filter(savedId=>savedId!==id):[...ids,id]);
   const signalDealInterest=deal=>notify(`Interest noted for ${deal.title}`);
@@ -5720,7 +5734,7 @@ function PlatformApp({notify,setScreen,signOut,profile,setProfile,accessibility,
             </aside>}
           </div>
         )}
-        {view==="path"&&<CareerPathView profile={profile} people={people.filter(person=>!blockedIds.has(person.id))} deals={rankedDeals} preferences={careerPreferences} setPreferences={setCareerPreferences} progress={careerProgress} setProgress={setCareerProgress} onSavePreferences={saveCareerPreferences} onEditProfile={openProfileStudio} onOpenDeals={()=>setView("opportunities")} onOpenProfile={person=>openProfile(person,"path")} onCreatePost={createProfilePost}/>}
+        {view==="path"&&<CareerPathView profile={profile} people={people.filter(person=>!blockedIds.has(person.id))} deals={rankedDeals} preferences={careerPreferences} setPreferences={setCareerPreferences} progress={careerProgress} onProgressChange={saveCareerProgress} onSavePreferences={saveCareerPreferences} onEditProfile={openProfileStudio} onOpenDeals={()=>setView("opportunities")} onOpenProfile={person=>openProfile(person,"path")} onCreatePost={createProfilePost}/>}
         {view==="discover"&&<Directory hideHeading title="Discover people" eyebrow="Network" items={people.filter(p=>!blockedIds.has(p.id)&&matchesSearch([p.name,p.handle,p.industry,p.bio,p.headline,p.lookingFor,p.loc,p.location]))} render={p=><div key={p.id} className="ch profile-link profile-directory-card" role="button" tabIndex={0} onClick={()=>openProfile(p,"discover")} onKeyDown={e=>activateOnEnter(e,()=>openProfile(p,"discover"))} style={cardStyle}><div className="profile-directory-card-header" style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:10,minWidth:0}}><Av i={p.av} src={p.avatarUrl} positionX={p.avatarPositionX} positionY={p.avatarPositionY} scale={p.avatarScale} size={56} online={p.online}/><div style={{flex:"1 1 0",minWidth:0}}><b style={{display:"block",fontSize:18,lineHeight:1.15,overflowWrap:"anywhere",color:C.text}}><NameWithVerified name={p.name} person={p} size={16}/></b><div className="profile-card-meta" style={{fontSize:12,color:C.dim,overflowWrap:"anywhere",marginTop:4}}>{p.handle} · {p.loc||"Location not set"}</div></div></div><div className="profile-directory-card-tags" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}><IT label={p.industry||"Exploring"} style={{maxWidth:"100%"}}/>{p.privateProfile&&<Tag label={p.locked?"Private":"Private access"} style={{background:C.aLight,color:C.accent}}/>}{p.headline&&<Tag label={p.headline} className="industry-tag" style={{"--tag-bg":C.aLight,"--tag-color":C.accent,"--tag-border":"transparent",maxWidth:"100%"}}/>}</div>{p.bio&&<p className="profile-card-body" style={bodyCopy}>{p.bio}</p>}{p.lookingFor&&<div className="profile-card-looking" style={{fontSize:12,color:C.muted,marginTop:12,overflowWrap:"anywhere"}}><b style={{color:C.text}}>Looking for:</b> {p.lookingFor}</div>}<div className="profile-directory-card-actions" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:18,minWidth:0,flexWrap:"wrap"}}><span className="profile-card-followers" style={{fontSize:12,color:C.muted,minWidth:120,flex:"1 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmt(p.followers)} followers</span><button onClick={e=>{e.stopPropagation();openProfile(p,"discover");}} className="bs profile-card-secondary-btn" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.text}}>View</button><button onClick={e=>{e.stopPropagation();reportContent("user",p.id,`${p.name}'s profile`);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.muted}}>Report</button><button onClick={e=>{e.stopPropagation();blockUser(p);}} className="bs" style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:9,padding:"7px 11px",fontSize:12,fontWeight:900,color:C.coral}}>Block</button><GBtn sm aria-busy={pendingConnectionIds.includes(p.id)} disabled={p.accessStatus==="pending"||pendingConnectionIds.includes(p.id)} onClick={e=>{e.stopPropagation();connect(p.id);}}>{pendingConnectionIds.includes(p.id)?"Working...":connectionButtonLabel(p)}</GBtn></div></div>}/>}
         {view==="events"&&<FearClubComingSoonView onPreview={()=>setScreen("board")}/>}
         {view==="messages"&&<MessagesView messages={messages} setMessages={setMessages} sendMessage={sendMessage} deleteChat={deleteChat} editMessage={editMessage} deleteMessage={deleteMessage} unsendMessage={unsendMessage} activeConversationId={activeConversationId} onBlockUser={blockUser} onReport={reportContent} profileId={profile.id} syncMessageText={syncMessageText}/>}
@@ -6334,7 +6348,7 @@ function GroupsView({groups,people,createGroup,joinGroup,leaveGroup,inviteToGrou
     </div>
   );
 }
-function CareerPathView({profile,people,deals,preferences,setPreferences,progress,setProgress,onSavePreferences,onEditProfile,onOpenDeals,onOpenProfile,onCreatePost}){
+function CareerPathView({profile,people,deals,preferences,setPreferences,progress,onProgressChange,onSavePreferences,onEditProfile,onOpenDeals,onOpenProfile,onCreatePost}){
   const initialField=preferences.field||profile.industry||"Exploring";
   const rawGoal=String(profile.goal||"").trim();
   const profileRoleHint=rawGoal.length<=42&&!/^(build|publish|find|learn|create|start|grow|meet|apply|become better)\b/i.test(rawGoal)?rawGoal:"";
@@ -6364,11 +6378,11 @@ function CareerPathView({profile,people,deals,preferences,setPreferences,progres
     await onSavePreferences(next);
     setEditing(false);
   };
-  const toggleStep=id=>setProgress(current=>{
-    const ids=new Set(current.completed||[]);
+  const toggleStep=id=>{
+    const ids=new Set(progress.completed||[]);
     if(ids.has(id))ids.delete(id);else ids.add(id);
-    return {...current,completed:[...ids],updatedAt:new Date().toISOString()};
-  });
+    onProgressChange({...progress,completed:[...ids],updatedAt:new Date().toISOString()});
+  };
   const nextIndex=stepIds.findIndex(id=>!completed.has(id));
   return <section className="career-path" aria-label="Your personalized career Path">
     <div className="career-path-hero">
